@@ -1,0 +1,44 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: myvault
+      POSTGRES_PASSWORD: myvault
+      POSTGRES_DB: myvault
+    ports:
+      - "5432:5432"
+    volumes:
+      - myvault_pg_data:/var/lib/postgresql/data
+
+  backend:
+    build: ./backend
+    ports:
+      - "4000:4000"
+    environment:
+      DATABASE_URL: "postgresql://myvault:myvault@postgres:5432/myvault?schema=public"
+      JWT_SECRET: "dev-secret-change-me"
+      STORAGE_DRIVER: "local"
+      PORT: "4000"
+    depends_on:
+      - postgres
+    volumes:
+      - ./backend/uploads:/app/uploads
+
+  admin-web:
+    build: ./admin-web
+    ports:
+      - "3001:3000"
+    environment:
+      NEXT_PUBLIC_API_BASE_URL: "http://localhost:4000"
+    depends_on:
+      - backend
+
+  landing-web:
+    build: ./landing-web
+    ports:
+      - "3000:3000"
+
+volumes:
+  myvault_pg_data:

@@ -1,0 +1,125 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  STUDENT
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum ContentType {
+  NOTES
+  QUESTION_BANK
+  SYLLABUS
+  LAB_MANUAL
+}
+
+enum JobListingType {
+  INTERNSHIP
+  PLACEMENT
+  GOVT_JOB
+}
+
+model User {
+  id           String   @id @default(uuid())
+  hallTicket   String   @unique
+  fullName     String
+  email        String?  @unique
+  passwordHash String
+  role         Role     @default(STUDENT)
+  courseType   String   @default("btech") // btech | degree
+  branch       String
+  semester     Int
+  createdAt    DateTime @default(now())
+
+  bookmarks     Bookmark[]
+  notifications DeviceToken[]
+}
+
+model Subject {
+  id          String            @id @default(uuid())
+  name        String
+  code        String
+  branch      String
+  semester    Int
+  subjectType String            @default("academic")
+  contents    AcademicContent[]
+
+  @@index([branch, semester])
+}
+
+model AcademicContent {
+  id          String      @id @default(uuid())
+  subjectId   String
+  subject     Subject     @relation(fields: [subjectId], references: [id])
+  title       String
+  contentType ContentType
+  s3Key       String
+  fileUrl     String
+  uploadedAt  DateTime    @default(now())
+
+  @@index([subjectId, contentType])
+}
+
+model JobListing {
+  id          String         @id @default(uuid())
+  type        JobListingType
+  title       String
+  company     String
+  description String?
+  applyUrl    String
+  deadline    DateTime?
+  s3Key       String?
+  fileUrl     String?
+  branch      String?
+  postedAt    DateTime       @default(now())
+  bookmarks   Bookmark[]
+
+  @@index([type, deadline])
+}
+
+model Bookmark {
+  id           String     @id @default(uuid())
+  userId       String
+  user         User       @relation(fields: [userId], references: [id])
+  jobListingId String
+  jobListing   JobListing @relation(fields: [jobListingId], references: [id])
+  createdAt    DateTime   @default(now())
+
+  @@unique([userId, jobListingId])
+}
+
+model Result {
+  id         String   @id @default(uuid())
+  hallTicket String
+  semester   Int
+  s3Key      String
+  fileUrl    String
+  uploadedAt DateTime @default(now())
+
+  @@index([hallTicket, semester])
+}
+
+model AptitudeQuestion {
+  id            String   @id @default(uuid())
+  category      String // quantitative | logical | verbal
+  question      String
+  options       String[] // JSON-encoded options via Prisma string array
+  correctOption Int
+  createdAt     DateTime @default(now())
+}
+
+model DeviceToken {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  token     String   @unique
+  platform  String   @default("android")
+  createdAt DateTime @default(now())
+}

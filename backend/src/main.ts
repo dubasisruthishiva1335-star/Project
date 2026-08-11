@@ -18,10 +18,10 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api/docs', app, document);
 
-  const port = process.env.PORT || 4000;
-  await app.listen(port);
+  const port = Number(process.env.PORT) || 4000;
+  await app.listen(port, '0.0.0.0');
   // eslint-disable-next-line no-console
-  console.log(`MyVault API running on http://localhost:${port}`);
-  console.log(`Swagger docs at http://localhost:${port}/api/docs`);
+  console.log(`MyVault API running on http://0.0.0.0:${port}`);
+  console.log(`Swagger docs at http://0.0.0.0:${port}/api/docs`);
 }
 bootstrap();

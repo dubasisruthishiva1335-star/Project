@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../core/api_client.dart';
 import '../../core/colors.dart';
 
-/// Instant fade-in with a state redirect to /login or /home, avoiding the
-/// "infinite loading hang" the product docs call out.
+/// Instant splash screen with robust GoRouter navigation redirect.
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -22,9 +22,24 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   }
 
   Future<void> _redirect() async {
-    final token = await ApiClient.instance.readToken();
-    if (!mounted) return;
-    Navigator.of(context).pushReplacementNamed(token != null ? '/home' : '/login');
+    // Brief delay to allow initial animation
+    await Future.delayed(const Duration(milliseconds: 400));
+    try {
+      final token = await ApiClient.instance.readToken().timeout(
+            const Duration(seconds: 2),
+            onTimeout: () => null,
+          );
+      if (!mounted) return;
+      if (token != null && token.isNotEmpty) {
+        context.go('/home');
+      } else {
+        context.go('/login');
+      }
+    } catch (_) {
+      if (mounted) {
+        context.go('/login');
+      }
+    }
   }
 
   @override

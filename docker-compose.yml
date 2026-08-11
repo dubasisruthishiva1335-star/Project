@@ -35,10 +35,5 @@ services:
     depends_on:
       - backend
 
-  landing-web:
-    build: ./landing-web
-    ports:
-      - "3000:3000"
-
 volumes:
   myvault_pg_data:

@@ -1,9 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
-/// Central Dio client. Backend URL can be swapped on-device via the
-/// hidden Developer Settings screen (double-tap the logo on Login),
-/// without a rebuild — see features/dev_settings.
+/// Central Dio client configured for live Railway production backend.
 class ApiClient {
   ApiClient._internal();
   static final ApiClient instance = ApiClient._internal();
@@ -11,12 +9,15 @@ class ApiClient {
   static const _storage = FlutterSecureStorage();
   static const _tokenKey = 'myvault_jwt';
   static const _baseUrlKey = 'myvault_base_url';
-  static const defaultBaseUrl = 'https://myvault-f08x.onrender.com';
+  static const defaultBaseUrl = 'https://romantic-serenity-production-3e5b.up.railway.app';
 
   late final Dio dio = _buildDio();
 
   Dio _buildDio() {
-    final d = Dio(BaseOptions(connectTimeout: const Duration(seconds: 10)));
+    final d = Dio(BaseOptions(
+      connectTimeout: const Duration(seconds: 5),
+      receiveTimeout: const Duration(seconds: 5),
+    ));
     d.interceptors.add(InterceptorsWrapper(
       onRequest: (options, handler) async {
         options.baseUrl = await getBaseUrl();

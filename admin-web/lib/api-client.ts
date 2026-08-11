@@ -11,7 +11,7 @@
 // project (this assumes a cookie/localStorage JWT set at login).
 
 const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:4000";
+  process.env.NEXT_PUBLIC_API_BASE_URL ?? "https://romantic-serenity-production-3e5b.up.railway.app";
 
 export class ApiError extends Error {
   status: number;

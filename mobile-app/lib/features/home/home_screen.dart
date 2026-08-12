@@ -9,12 +9,13 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final tiles = [
       _HomeTile('Academic Hub', Icons.menu_book_rounded, () => context.go('/academic-hub')),
-      _HomeTile('Internships', Icons.work_outline_rounded, () {}),
-      _HomeTile('Placements', Icons.business_center_outlined, () {}),
-      _HomeTile('Results', Icons.grade_outlined, () {}),
-      _HomeTile('Govt Jobs', Icons.account_balance_outlined, () {}),
-      _HomeTile('Aptitude', Icons.psychology_outlined, () {}),
+      _HomeTile('Internships', Icons.work_outline_rounded, () => context.go('/internships')),
+      _HomeTile('Placements', Icons.business_center_outlined, () => context.go('/placements')),
+      _HomeTile('Results', Icons.grade_outlined, () => context.go('/results')),
+      _HomeTile('Govt Jobs', Icons.account_balance_outlined, () => context.go('/govt-jobs')),
+      _HomeTile('Aptitude', Icons.psychology_outlined, () => context.go('/aptitude')),
     ];
+
 
     return Scaffold(
       backgroundColor: MyVaultColors.obsidian,

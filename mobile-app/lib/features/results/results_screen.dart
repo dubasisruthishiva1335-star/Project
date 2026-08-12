@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../core/colors.dart';
 import '../../core/api_client.dart';
@@ -48,38 +49,44 @@ class _ResultsScreenState extends State<ResultsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: MyVaultColors.obsidian,
-      appBar: AppBar(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) context.go('/home');
+      },
+      child: Scaffold(
         backgroundColor: MyVaultColors.obsidian,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white70),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        title: ShaderMask(
-          shaderCallback: (b) => MyVaultColors.accentGradient.createShader(b),
-          child: const Text(
-            'My Results',
-            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+        appBar: AppBar(
+          backgroundColor: MyVaultColors.obsidian,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white70),
+            onPressed: () => context.go('/home'),
+          ),
+          title: ShaderMask(
+            shaderCallback: (b) => MyVaultColors.accentGradient.createShader(b),
+            child: const Text(
+              'My Results',
+              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+            ),
           ),
         ),
-      ),
-      body: _loading
-          ? const Center(child: CircularProgressIndicator(color: MyVaultColors.accentCyan))
-          : _error != null
-              ? _buildError()
-              : _results.isEmpty
-                  ? _buildEmpty()
-                  : RefreshIndicator(
-                      onRefresh: _loadResults,
-                      color: MyVaultColors.accentCyan,
-                      child: ListView.builder(
-                        padding: const EdgeInsets.all(16),
-                        itemCount: _results.length,
-                        itemBuilder: (ctx, i) => _buildCard(_results[i]),
+        body: _loading
+            ? const Center(child: CircularProgressIndicator(color: MyVaultColors.accentCyan))
+            : _error != null
+                ? _buildError()
+                : _results.isEmpty
+                    ? _buildEmpty()
+                    : RefreshIndicator(
+                        onRefresh: _loadResults,
+                        color: MyVaultColors.accentCyan,
+                        child: ListView.builder(
+                          padding: const EdgeInsets.all(16),
+                          itemCount: _results.length,
+                          itemBuilder: (ctx, i) => _buildCard(_results[i]),
+                        ),
                       ),
-                    ),
+      ),
     );
   }
 
@@ -157,7 +164,7 @@ class _ResultsScreenState extends State<ResultsScreen> {
                 child: ElevatedButton.icon(
                   onPressed: () async {
                     final uri = Uri.tryParse(result['fileUrl'] as String);
-                    if (uri != null) {
+                    if (uri != null && await canLaunchUrl(uri)) {
                       await launchUrl(uri, mode: LaunchMode.externalApplication);
                     }
                   },

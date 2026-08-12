@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../core/colors.dart';
 import '../../core/api_client.dart';
@@ -73,48 +74,54 @@ class _JobListingsScreenState extends State<JobListingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: MyVaultColors.obsidian,
-      appBar: AppBar(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) context.go('/home');
+      },
+      child: Scaffold(
         backgroundColor: MyVaultColors.obsidian,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white70),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        title: Row(
-          children: [
-            Icon(widget.icon, color: _accentColor, size: 20),
-            const SizedBox(width: 8),
-            ShaderMask(
-              shaderCallback: (b) => MyVaultColors.accentGradient.createShader(b),
-              child: Text(
-                widget.title,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                  fontSize: 18,
+        appBar: AppBar(
+          backgroundColor: MyVaultColors.obsidian,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white70),
+            onPressed: () => context.go('/home'),
+          ),
+          title: Row(
+            children: [
+              Icon(widget.icon, color: _accentColor, size: 20),
+              const SizedBox(width: 8),
+              ShaderMask(
+                shaderCallback: (b) => MyVaultColors.accentGradient.createShader(b),
+                child: Text(
+                  widget.title,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    fontSize: 18,
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
-      ),
-      body: _loading
-          ? const Center(child: CircularProgressIndicator(color: MyVaultColors.accentCyan))
-          : _error != null
-              ? _buildError()
-              : _jobs.isEmpty
-                  ? _buildEmpty()
-                  : RefreshIndicator(
-                      onRefresh: _loadJobs,
-                      color: MyVaultColors.accentCyan,
-                      child: ListView.builder(
-                        padding: const EdgeInsets.all(16),
-                        itemCount: _jobs.length,
-                        itemBuilder: (ctx, i) => _buildCard(_jobs[i]),
+        body: _loading
+            ? const Center(child: CircularProgressIndicator(color: MyVaultColors.accentCyan))
+            : _error != null
+                ? _buildError()
+                : _jobs.isEmpty
+                    ? _buildEmpty()
+                    : RefreshIndicator(
+                        onRefresh: _loadJobs,
+                        color: MyVaultColors.accentCyan,
+                        child: ListView.builder(
+                          padding: const EdgeInsets.all(16),
+                          itemCount: _jobs.length,
+                          itemBuilder: (ctx, i) => _buildCard(_jobs[i]),
+                        ),
                       ),
-                    ),
+      ),
     );
   }
 
@@ -131,8 +138,8 @@ class _JobListingsScreenState extends State<JobListingsScreen> {
         color: MyVaultColors.glassFill,
         border: Border.all(
           color: isExpired
-              ? Colors.red.withOpacity(0.2)
-              : _accentColor.withOpacity(0.25),
+              ? Colors.red.withValues(alpha: 0.2)
+              : _accentColor.withValues(alpha: 0.25),
         ),
       ),
       child: Padding(
@@ -140,7 +147,6 @@ class _JobListingsScreenState extends State<JobListingsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header row
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -150,7 +156,7 @@ class _JobListingsScreenState extends State<JobListingsScreen> {
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(10),
                     gradient: LinearGradient(
-                      colors: [_accentColor.withOpacity(0.3), _accentColor.withOpacity(0.1)],
+                      colors: [_accentColor.withValues(alpha: 0.3), _accentColor.withValues(alpha: 0.1)],
                     ),
                   ),
                   child: Icon(widget.icon, color: _accentColor, size: 22),
@@ -187,7 +193,7 @@ class _JobListingsScreenState extends State<JobListingsScreen> {
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(6),
-                      color: Colors.red.withOpacity(0.15),
+                      color: Colors.red.withValues(alpha: 0.15),
                     ),
                     child: const Text(
                       'Expired',
@@ -209,7 +215,6 @@ class _JobListingsScreenState extends State<JobListingsScreen> {
 
             const SizedBox(height: 12),
 
-            // Info chips row
             Wrap(
               spacing: 8,
               runSpacing: 6,
@@ -229,7 +234,6 @@ class _JobListingsScreenState extends State<JobListingsScreen> {
               ],
             ),
 
-            // Action buttons
             if (job['applyUrl'] != null || job['fileUrl'] != null) ...[
               const SizedBox(height: 14),
               Row(
@@ -257,10 +261,10 @@ class _JobListingsScreenState extends State<JobListingsScreen> {
                       child: OutlinedButton.icon(
                         onPressed: () => _openUrl(job['fileUrl']),
                         icon: const Icon(Icons.download_rounded, size: 15),
-                        label: const Text('Download'),
+                        label: const Text('Download PDF'),
                         style: OutlinedButton.styleFrom(
                           foregroundColor: _accentColor,
-                          side: BorderSide(color: _accentColor.withOpacity(0.5)),
+                          side: BorderSide(color: _accentColor.withValues(alpha: 0.5)),
                           padding: const EdgeInsets.symmetric(vertical: 10),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
@@ -298,7 +302,7 @@ class _JobListingsScreenState extends State<JobListingsScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.wifi_off_rounded, color: Colors.white24, size: 60),
+            const Icon(Icons.wifi_off_rounded, color: Colors.white24, size: 60),
             const SizedBox(height: 16),
             Text(_error!, textAlign: TextAlign.center,
                 style: const TextStyle(color: Colors.white54, fontSize: 14)),

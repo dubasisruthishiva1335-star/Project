@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../core/colors.dart';
 import '../../core/api_client.dart';
 
@@ -16,7 +17,6 @@ class _AptitudeScreenState extends State<AptitudeScreen> {
   String? _selectedCategory;
   final List<String> _categories = ['All', 'Quantitative', 'Logical', 'Verbal', 'Technical'];
 
-  // Track which answers are revealed
   final Map<int, bool> _revealed = {};
 
   @override
@@ -48,78 +48,83 @@ class _AptitudeScreenState extends State<AptitudeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: MyVaultColors.obsidian,
-      appBar: AppBar(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) context.go('/home');
+      },
+      child: Scaffold(
         backgroundColor: MyVaultColors.obsidian,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white70),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        title: ShaderMask(
-          shaderCallback: (b) => MyVaultColors.accentGradient.createShader(b),
-          child: const Text(
-            'Aptitude Practice',
-            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+        appBar: AppBar(
+          backgroundColor: MyVaultColors.obsidian,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white70),
+            onPressed: () => context.go('/home'),
           ),
-        ),
-      ),
-      body: Column(
-        children: [
-          // Category filter chips
-          SizedBox(
-            height: 48,
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              children: _categories.map((cat) {
-                final selected = (_selectedCategory ?? 'All') == cat;
-                return Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: FilterChip(
-                    label: Text(cat),
-                    selected: selected,
-                    onSelected: (_) {
-                      setState(() => _selectedCategory = cat);
-                      _loadQuestions(category: cat);
-                    },
-                    selectedColor: MyVaultColors.accentBlue.withOpacity(0.3),
-                    backgroundColor: MyVaultColors.glassFill,
-                    side: BorderSide(
-                      color: selected
-                          ? MyVaultColors.accentBlue
-                          : MyVaultColors.glassBorder,
-                    ),
-                    labelStyle: TextStyle(
-                      color: selected ? MyVaultColors.accentCyan : Colors.white60,
-                      fontWeight: selected ? FontWeight.bold : FontWeight.normal,
-                    ),
-                    checkmarkColor: MyVaultColors.accentCyan,
-                  ),
-                );
-              }).toList(),
+          title: ShaderMask(
+            shaderCallback: (b) => MyVaultColors.accentGradient.createShader(b),
+            child: const Text(
+              'Aptitude Practice',
+              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
             ),
           ),
+        ),
+        body: Column(
+          children: [
+            SizedBox(
+              height: 48,
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                children: _categories.map((cat) {
+                  final selected = (_selectedCategory ?? 'All') == cat;
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: FilterChip(
+                      label: Text(cat),
+                      selected: selected,
+                      onSelected: (_) {
+                        setState(() => _selectedCategory = cat);
+                        _loadQuestions(category: cat);
+                      },
+                      selectedColor: MyVaultColors.accentBlue.withValues(alpha: 0.3),
+                      backgroundColor: MyVaultColors.glassFill,
+                      side: BorderSide(
+                        color: selected
+                            ? MyVaultColors.accentBlue
+                            : MyVaultColors.glassBorder,
+                      ),
+                      labelStyle: TextStyle(
+                        color: selected ? MyVaultColors.accentCyan : Colors.white60,
+                        fontWeight: selected ? FontWeight.bold : FontWeight.normal,
+                      ),
+                      checkmarkColor: MyVaultColors.accentCyan,
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
 
-          Expanded(
-            child: _loading
-                ? const Center(child: CircularProgressIndicator(color: MyVaultColors.accentCyan))
-                : _error != null
-                    ? _buildError()
-                    : _questions.isEmpty
-                        ? _buildEmpty()
-                        : RefreshIndicator(
-                            onRefresh: () => _loadQuestions(category: _selectedCategory),
-                            color: MyVaultColors.accentCyan,
-                            child: ListView.builder(
-                              padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-                              itemCount: _questions.length,
-                              itemBuilder: (ctx, i) => _buildCard(i, _questions[i]),
+            Expanded(
+              child: _loading
+                  ? const Center(child: CircularProgressIndicator(color: MyVaultColors.accentCyan))
+                  : _error != null
+                      ? _buildError()
+                      : _questions.isEmpty
+                          ? _buildEmpty()
+                          : RefreshIndicator(
+                              onRefresh: () => _loadQuestions(category: _selectedCategory),
+                              color: MyVaultColors.accentCyan,
+                              child: ListView.builder(
+                                padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                                itemCount: _questions.length,
+                                itemBuilder: (ctx, i) => _buildCard(i, _questions[i]),
+                              ),
                             ),
-                          ),
-          ),
-        ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -138,15 +143,14 @@ class _AptitudeScreenState extends State<AptitudeScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Question number + category
             Row(
               children: [
                 Container(
                   width: 28,
                   height: 28,
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                     shape: BoxShape.circle,
-                    gradient: const LinearGradient(
+                    gradient: LinearGradient(
                       colors: [MyVaultColors.accentBlue, MyVaultColors.accentCyan],
                     ),
                   ),
@@ -163,7 +167,7 @@ class _AptitudeScreenState extends State<AptitudeScreen> {
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(6),
-                      color: MyVaultColors.accentBlue.withOpacity(0.15),
+                      color: MyVaultColors.accentBlue.withValues(alpha: 0.15),
                     ),
                     child: Text(
                       q['category'].toString().toUpperCase(),
@@ -183,7 +187,6 @@ class _AptitudeScreenState extends State<AptitudeScreen> {
               style: const TextStyle(color: Colors.white, fontSize: 14, height: 1.5),
             ),
 
-            // Options if available
             if (q['options'] != null) ...[
               const SizedBox(height: 12),
               ...((q['options'] as List<dynamic>).asMap().entries.map((entry) {
@@ -197,11 +200,11 @@ class _AptitudeScreenState extends State<AptitudeScreen> {
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(8),
                     color: isCorrect
-                        ? const Color(0xFF00C48C).withOpacity(0.15)
+                        ? const Color(0xFF00C48C).withValues(alpha: 0.15)
                         : MyVaultColors.glassFill,
                     border: Border.all(
                       color: isCorrect
-                          ? const Color(0xFF00C48C).withOpacity(0.5)
+                          ? const Color(0xFF00C48C).withValues(alpha: 0.5)
                           : MyVaultColors.glassBorder,
                     ),
                   ),
@@ -235,7 +238,6 @@ class _AptitudeScreenState extends State<AptitudeScreen> {
 
             const SizedBox(height: 12),
 
-            // Reveal / explanation button
             if (!revealed)
               SizedBox(
                 width: double.infinity,
@@ -245,7 +247,7 @@ class _AptitudeScreenState extends State<AptitudeScreen> {
                   label: const Text('Show Answer'),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: MyVaultColors.accentCyan,
-                    side: BorderSide(color: MyVaultColors.accentCyan.withOpacity(0.4)),
+                    side: BorderSide(color: MyVaultColors.accentCyan.withValues(alpha: 0.4)),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                   ),
                 ),
@@ -256,14 +258,14 @@ class _AptitudeScreenState extends State<AptitudeScreen> {
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(10),
-                  color: const Color(0xFF00C48C).withOpacity(0.08),
-                  border: Border.all(color: const Color(0xFF00C48C).withOpacity(0.25)),
+                  color: const Color(0xFF00C48C).withValues(alpha: 0.08),
+                  border: Border.all(color: const Color(0xFF00C48C).withValues(alpha: 0.25)),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      children: const [
+                    const Row(
+                      children: [
                         Icon(Icons.check_circle_rounded, color: Color(0xFF00C48C), size: 15),
                         SizedBox(width: 6),
                         Text('Answer', style: TextStyle(color: Color(0xFF00C48C), fontWeight: FontWeight.bold, fontSize: 13)),

@@ -60,14 +60,10 @@ export default function DashboardPage() {
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"notes" | "jobs" | "students" | "results">("notes");
   const [searchQuery, setSearchQuery] = useState("");
+  const [editingItem, setEditingItem] = useState<{ id: string; type: "notes" | "jobs"; title: string; subtitle?: string } | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  useEffect(() => {
-    const token = typeof window !== "undefined" ? localStorage.getItem("myvault_admin_token") : null;
-    if (!token) {
-      router.push("/login");
-      return;
-    }
-
+  const refreshData = () => {
     Promise.all([
       apiRequest<Overview>("/admin/analytics/overview"),
       apiRequest<RecentUploads>("/admin/analytics/recent-uploads"),
@@ -84,7 +80,48 @@ export default function DashboardPage() {
           setError(err instanceof ApiError ? err.message : "Failed to load dashboard data.");
         }
       });
+  };
+
+  useEffect(() => {
+    refreshData();
   }, [router]);
+
+  const handleDelete = async (type: "notes" | "jobs" | "results", id: string) => {
+    if (!confirm("Are you sure you want to delete this item? It will be removed from both Website and Mobile App immediately.")) {
+      return;
+    }
+    setDeletingId(id);
+    try {
+      const endpoint = type === "notes" ? `/admin/notes/${id}` : type === "jobs" ? `/admin/job-listings/${id}` : `/admin/results/${id}`;
+      await apiRequest(endpoint, { method: "DELETE" });
+      refreshData();
+    } catch (err) {
+      alert("Failed to delete item: " + (err instanceof Error ? err.message : "Unknown error"));
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingItem) return;
+    try {
+      if (editingItem.type === "notes") {
+        await apiRequest(`/admin/notes/${editingItem.id}`, {
+          method: "PATCH",
+          body: JSON.stringify({ title: editingItem.title }),
+        });
+      } else {
+        await apiRequest(`/admin/job-listings/${editingItem.id}`, {
+          method: "PATCH",
+          body: JSON.stringify({ title: editingItem.title, company: editingItem.subtitle }),
+        });
+      }
+      setEditingItem(null);
+      refreshData();
+    } catch (err) {
+      alert("Failed to update item: " + (err instanceof Error ? err.message : "Unknown error"));
+    }
+  };
 
   const cards: Array<{
     id: "students" | "notes" | "jobs" | "results";
@@ -139,7 +176,7 @@ export default function DashboardPage() {
           Admin Control Center
         </h1>
         <p className="mt-1 text-sm text-white/50">
-          Live management and itemized preview of all uploaded academic resources, job listings, exam results, and registered students.
+          Edit and delete resources, job listings, and results. Any change made here updates the Mobile App in real-time.
         </p>
       </div>
 
@@ -168,31 +205,28 @@ export default function DashboardPage() {
                 <p className="text-3xl font-black text-accentCyan">{c.value ?? "—"}</p>
               </div>
               <p className="mt-3 text-xs font-bold text-white/90">{c.label}</p>
-              <p className="mt-0.5 text-[11px] text-accentCyan font-medium">Click to view items ↓</p>
+              <p className="mt-0.5 text-[11px] text-accentCyan font-medium">Click to manage items ↓</p>
             </button>
           );
         })}
       </div>
 
-      {/* Itemized Feed Section */}
+      {/* Itemized Management Table */}
       <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-6 backdrop-blur-xl">
         <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
           <div>
             <h2 className="text-lg font-bold text-white flex items-center gap-2">
               <span>
-                {activeTab === "notes" && "📚 Academic Materials List"}
-                {activeTab === "jobs" && "💼 Job & Internship Listings"}
+                {activeTab === "notes" && "📚 Manage Academic Materials"}
+                {activeTab === "jobs" && "💼 Manage Job & Internship Listings"}
                 {activeTab === "students" && "🎓 Registered Students Directory"}
-                {activeTab === "results" && "📊 Uploaded Exam Results"}
+                {activeTab === "results" && "📊 Manage Exam Results"}
               </span>
             </h2>
-            <p className="text-xs text-white/50">
-              Showing total uploaded items stored in AWS S3 and database
-            </p>
+            <p className="text-xs text-white/50">Edit details or delete items directly synced with AWS S3 & Mobile App</p>
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
-            {/* Search Input */}
             <input
               type="text"
               placeholder="Search items..."
@@ -201,7 +235,6 @@ export default function DashboardPage() {
               className="rounded-xl border border-white/10 bg-black/50 px-3.5 py-1.5 text-xs text-white placeholder-white/40 focus:border-accentCyan focus:outline-none"
             />
 
-            {/* Filter Navigation Tabs */}
             <div className="flex rounded-xl border border-white/10 bg-black/40 p-1">
               <button
                 onClick={() => setActiveTab("notes")}
@@ -209,7 +242,7 @@ export default function DashboardPage() {
                   activeTab === "notes" ? "bg-accentBlue text-white" : "text-white/60 hover:text-white"
                 }`}
               >
-                Academic Materials ({recent?.recentNotes?.length ?? 0})
+                Academic ({recent?.recentNotes?.length ?? 0})
               </button>
               <button
                 onClick={() => setActiveTab("jobs")}
@@ -246,12 +279,12 @@ export default function DashboardPage() {
               <thead className="border-b border-white/10 bg-white/[0.02] text-white/50 uppercase">
                 <tr>
                   <th className="px-4 py-3">Resource Title</th>
-                  <th className="px-4 py-3">Subject Name & Code</th>
-                  <th className="px-4 py-3">Branch & Semester</th>
+                  <th className="px-4 py-3">Subject</th>
+                  <th className="px-4 py-3">Branch & Sem</th>
                   <th className="px-4 py-3">Unit</th>
                   <th className="px-4 py-3">Category</th>
                   <th className="px-4 py-3">Uploaded Date</th>
-                  <th className="px-4 py-3 text-right">Preview Action</th>
+                  <th className="px-4 py-3 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5 text-white/80">
@@ -263,7 +296,7 @@ export default function DashboardPage() {
                         <span className="rounded bg-accentBlue/20 px-1.5 py-0.5 text-accentCyan font-mono text-[11px] mr-1.5 font-bold">
                           {item.subject?.code ?? "GEN"}
                         </span>
-                        {item.subject?.name ?? "General Subject"}
+                        {item.subject?.name ?? "General"}
                       </td>
                       <td className="px-4 py-3">{item.subject?.branch ?? "GEN"} — Sem {item.subject?.semester ?? 1}</td>
                       <td className="px-4 py-3 font-semibold text-white/90">Unit {item.unit ?? 1}</td>
@@ -271,22 +304,35 @@ export default function DashboardPage() {
                       <td className="px-4 py-3 text-white/50">
                         {new Date(item.uploadedAt).toLocaleDateString()}
                       </td>
-                      <td className="px-4 py-3 text-right">
+                      <td className="px-4 py-3 text-right space-x-2">
                         <a
                           href={item.fileUrl}
                           target="_blank"
                           rel="noreferrer"
-                          className="inline-flex items-center rounded-lg bg-accentBlue/20 px-3 py-1 text-xs font-semibold text-accentCyan hover:bg-accentBlue/30 border border-accentBlue/40"
+                          className="inline-flex items-center rounded-lg bg-accentBlue/20 px-2.5 py-1 text-xs font-semibold text-accentCyan hover:bg-accentBlue/30 border border-accentBlue/40"
                         >
-                          View PDF ↗
+                          View ↗
                         </a>
+                        <button
+                          onClick={() => setEditingItem({ id: item.id, type: "notes", title: item.title })}
+                          className="rounded-lg bg-amber-500/20 px-2.5 py-1 text-xs font-semibold text-amber-300 hover:bg-amber-500/30 border border-amber-500/30"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          disabled={deletingId === item.id}
+                          onClick={() => handleDelete("notes", item.id)}
+                          className="rounded-lg bg-red-500/20 px-2.5 py-1 text-xs font-semibold text-red-300 hover:bg-red-500/30 border border-red-500/30 disabled:opacity-50"
+                        >
+                          Delete
+                        </button>
                       </td>
                     </tr>
                   ))
                 ) : (
                   <tr>
                     <td colSpan={7} className="px-4 py-8 text-center text-white/40">
-                      No academic materials found. <a href="/admin/notes" className="text-accentCyan underline font-semibold">Click here to upload notes, videos, or lab manuals</a>.
+                      No academic materials found.
                     </td>
                   </tr>
                 )}
@@ -303,10 +349,10 @@ export default function DashboardPage() {
                 <tr>
                   <th className="px-4 py-3">Position Title</th>
                   <th className="px-4 py-3">Company / Org</th>
-                  <th className="px-4 py-3">Listing Category</th>
+                  <th className="px-4 py-3">Category</th>
                   <th className="px-4 py-3">Target Branch</th>
                   <th className="px-4 py-3">Posted Date</th>
-                  <th className="px-4 py-3 text-right">Action</th>
+                  <th className="px-4 py-3 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5 text-white/80">
@@ -320,28 +366,41 @@ export default function DashboardPage() {
                           {job.type}
                         </span>
                       </td>
-                      <td className="px-4 py-3">{job.branch ?? "ALL BRANCHES"}</td>
+                      <td className="px-4 py-3">{job.branch ?? "ALL"}</td>
                       <td className="px-4 py-3 text-white/50">
                         {new Date(job.postedAt).toLocaleDateString()}
                       </td>
-                      <td className="px-4 py-3 text-right">
+                      <td className="px-4 py-3 text-right space-x-2">
                         {job.applyUrl && (
                           <a
                             href={job.applyUrl}
                             target="_blank"
                             rel="noreferrer"
-                            className="inline-flex items-center rounded-lg bg-accentBlue/20 px-3 py-1 text-xs font-semibold text-accentCyan hover:bg-accentBlue/30 border border-accentBlue/40"
+                            className="inline-flex items-center rounded-lg bg-accentBlue/20 px-2.5 py-1 text-xs font-semibold text-accentCyan hover:bg-accentBlue/30 border border-accentBlue/40"
                           >
-                            Application Link ↗
+                            Link ↗
                           </a>
                         )}
+                        <button
+                          onClick={() => setEditingItem({ id: job.id, type: "jobs", title: job.title, subtitle: job.company })}
+                          className="rounded-lg bg-amber-500/20 px-2.5 py-1 text-xs font-semibold text-amber-300 hover:bg-amber-500/30 border border-amber-500/30"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          disabled={deletingId === job.id}
+                          onClick={() => handleDelete("jobs", job.id)}
+                          className="rounded-lg bg-red-500/20 px-2.5 py-1 text-xs font-semibold text-red-300 hover:bg-red-500/30 border border-red-500/30 disabled:opacity-50"
+                        >
+                          Delete
+                        </button>
                       </td>
                     </tr>
                   ))
                 ) : (
                   <tr>
                     <td colSpan={6} className="px-4 py-8 text-center text-white/40">
-                      No job listings posted. <a href="/admin/internships" className="text-accentCyan underline font-semibold">Click here to add internship or placement drive</a>.
+                      No job listings posted.
                     </td>
                   </tr>
                 )}
@@ -397,7 +456,7 @@ export default function DashboardPage() {
                   <th className="px-4 py-3">Student Hall Ticket</th>
                   <th className="px-4 py-3">Semester</th>
                   <th className="px-4 py-3">Uploaded Date</th>
-                  <th className="px-4 py-3 text-right">Action</th>
+                  <th className="px-4 py-3 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5 text-white/80">
@@ -409,22 +468,29 @@ export default function DashboardPage() {
                       <td className="px-4 py-3 text-white/50">
                         {new Date(res.uploadedAt).toLocaleDateString()}
                       </td>
-                      <td className="px-4 py-3 text-right">
+                      <td className="px-4 py-3 text-right space-x-2">
                         <a
                           href={res.fileUrl}
                           target="_blank"
                           rel="noreferrer"
-                          className="inline-flex items-center rounded-lg bg-accentBlue/20 px-3 py-1 text-xs font-semibold text-accentCyan hover:bg-accentBlue/30 border border-accentBlue/40"
+                          className="inline-flex items-center rounded-lg bg-accentBlue/20 px-2.5 py-1 text-xs font-semibold text-accentCyan hover:bg-accentBlue/30 border border-accentBlue/40"
                         >
-                          View Grade Sheet PDF ↗
+                          View PDF ↗
                         </a>
+                        <button
+                          disabled={deletingId === res.id}
+                          onClick={() => handleDelete("results", res.id)}
+                          className="rounded-lg bg-red-500/20 px-2.5 py-1 text-xs font-semibold text-red-300 hover:bg-red-500/30 border border-red-500/30 disabled:opacity-50"
+                        >
+                          Delete
+                        </button>
                       </td>
                     </tr>
                   ))
                 ) : (
                   <tr>
                     <td colSpan={4} className="px-4 py-8 text-center text-white/40">
-                      No exam results uploaded yet. <a href="/admin/results" className="text-accentCyan underline font-semibold">Click here to upload semester results</a>.
+                      No exam results uploaded yet.
                     </td>
                   </tr>
                 )}
@@ -433,6 +499,54 @@ export default function DashboardPage() {
           </div>
         )}
       </div>
+
+      {/* Edit Modal */}
+      {editingItem && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+          <div className="w-full max-w-md rounded-2xl border border-white/10 bg-[#0E1017] p-6 shadow-2xl">
+            <h3 className="text-lg font-bold text-white mb-4">Edit Item Details</h3>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs font-medium text-white/70 mb-1">Title</label>
+                <input
+                  type="text"
+                  value={editingItem.title}
+                  onChange={(e) => setEditingItem({ ...editingItem, title: e.target.value })}
+                  className="w-full rounded-xl border border-white/10 bg-black/50 px-3.5 py-2 text-sm text-white focus:border-accentCyan focus:outline-none"
+                />
+              </div>
+
+              {editingItem.type === "jobs" && (
+                <div>
+                  <label className="block text-xs font-medium text-white/70 mb-1">Company / Organization</label>
+                  <input
+                    type="text"
+                    value={editingItem.subtitle ?? ""}
+                    onChange={(e) => setEditingItem({ ...editingItem, subtitle: e.target.value })}
+                    className="w-full rounded-xl border border-white/10 bg-black/50 px-3.5 py-2 text-sm text-white focus:border-accentCyan focus:outline-none"
+                  />
+                </div>
+              )}
+            </div>
+
+            <div className="mt-6 flex justify-end space-x-3">
+              <button
+                onClick={() => setEditingItem(null)}
+                className="rounded-xl border border-white/10 px-4 py-2 text-xs font-semibold text-white/70 hover:bg-white/5"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSaveEdit}
+                className="rounded-xl bg-accentBlue px-4 py-2 text-xs font-semibold text-white hover:bg-accentBlue/80"
+              >
+                Save Changes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

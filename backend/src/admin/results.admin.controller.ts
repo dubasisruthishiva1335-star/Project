@@ -1,4 +1,4 @@
-import { Body, Controller, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Param, Post, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { Roles, RolesGuard } from '../auth/roles.guard';
@@ -24,6 +24,13 @@ export class ResultsAdminController {
         s3Key: dto.s3Key,
         fileUrl: dto.publicUrl || this.storage.publicUrlFor(dto.s3Key),
       },
+    });
+  }
+
+  @Delete(':id')
+  async deleteResult(@Param('id') id: string) {
+    return this.prisma.result.delete({
+      where: { id },
     });
   }
 }

@@ -1,4 +1,4 @@
-import { Body, Controller, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Param, Patch, Post, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { Roles, RolesGuard } from '../auth/roles.guard';
@@ -6,8 +6,6 @@ import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../common/storage.service';
 import { ConfirmJobListingDto } from './dto/confirm-job-listing.dto';
 
-// Covers Internships, Placements, and Govt Jobs from one admin form,
-// differentiated by `type` on the JobListing model.
 @ApiTags('admin-job-listings')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -30,6 +28,27 @@ export class JobListingsAdminController {
         s3Key: dto.s3Key,
         fileUrl: dto.s3Key ? dto.publicUrl || this.storage.publicUrlFor(dto.s3Key) : undefined,
       },
+    });
+  }
+
+  @Patch(':id')
+  async updateJob(@Param('id') id: string, @Body() body: any) {
+    return this.prisma.jobListing.update({
+      where: { id },
+      data: {
+        ...(body.title ? { title: body.title } : {}),
+        ...(body.company ? { company: body.company } : {}),
+        ...(body.applyUrl ? { applyUrl: body.applyUrl } : {}),
+        ...(body.branch ? { branch: body.branch } : {}),
+        ...(body.type ? { type: body.type } : {}),
+      },
+    });
+  }
+
+  @Delete(':id')
+  async deleteJob(@Param('id') id: string) {
+    return this.prisma.jobListing.delete({
+      where: { id },
     });
   }
 }

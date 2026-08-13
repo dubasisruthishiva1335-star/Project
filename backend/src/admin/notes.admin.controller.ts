@@ -1,4 +1,4 @@
-import { Body, Controller, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Param, Patch, Post, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { Roles, RolesGuard } from '../auth/roles.guard';
@@ -45,6 +45,25 @@ export class NotesAdminController {
         s3Key: dto.s3Key,
         fileUrl: dto.publicUrl || this.storage.publicUrlFor(dto.s3Key),
       },
+    });
+  }
+
+  @Patch(':id')
+  async updateContent(@Param('id') id: string, @Body() body: any) {
+    return this.prisma.academicContent.update({
+      where: { id },
+      data: {
+        ...(body.title ? { title: body.title } : {}),
+        ...(body.unit ? { unit: Number(body.unit) } : {}),
+        ...(body.contentType ? { contentType: body.contentType } : {}),
+      },
+    });
+  }
+
+  @Delete(':id')
+  async deleteContent(@Param('id') id: string) {
+    return this.prisma.academicContent.delete({
+      where: { id },
     });
   }
 }

@@ -14,7 +14,7 @@ class ResultsScreen extends StatefulWidget {
 class _ResultsScreenState extends State<ResultsScreen> {
   List<dynamic> _results = [];
   bool _loading = true;
-  String? _error;
+  bool _isGuest = false;
   bool _analyzingAi = false;
   Map<String, dynamic>? _aiAnalysis;
 
@@ -25,7 +25,7 @@ class _ResultsScreenState extends State<ResultsScreen> {
   }
 
   Future<void> _loadResults() async {
-    setState(() { _loading = true; _error = null; });
+    setState(() { _loading = true; _isGuest = false; });
     try {
       final res = await ApiClient.instance.dio.get('/results');
       setState(() {
@@ -33,7 +33,9 @@ class _ResultsScreenState extends State<ResultsScreen> {
         _loading = false;
       });
     } catch (e) {
+      // Fallback for demo / unauthenticated state
       setState(() {
+        _isGuest = true;
         _results = [
           {
             'id': 'res-sem-3',
@@ -42,6 +44,14 @@ class _ResultsScreenState extends State<ResultsScreen> {
             'title': 'B.Tech CSE Semester 3 Official Grade Sheet',
             'description': 'Main Semester Examinations 2026',
             'fileUrl': 'https://myvault-files-app.s3.eu-north-1.amazonaws.com/notes/1786544055523-478f14f9-ade1-411b-882d-5124b5b84967-RADAR_Ashok.pdf'
+          },
+          {
+            'id': 'res-sem-2',
+            'semester': 2,
+            'sgpa': 8.60,
+            'title': 'B.Tech CSE Semester 2 Official Grade Sheet',
+            'description': 'Main Semester Examinations 2025',
+            'fileUrl': 'https://myvault-files-app.s3.eu-north-1.amazonaws.com/notes/1786543997076-1cf0c517-9f51-4500-8721-f548799cd489-single_mode.pdf'
           }
         ];
         _loading = false;
@@ -121,7 +131,50 @@ class _ResultsScreenState extends State<ResultsScreen> {
             : ListView(
                 padding: const EdgeInsets.all(16),
                 children: [
-                  // AI Analyzer Trigger Card
+                  // Login Banner if in Guest mode
+                  if (_isGuest) ...[
+                    Container(
+                      padding: const EdgeInsets.all(14),
+                      margin: const EdgeInsets.only(bottom: 16),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(16),
+                        color: MyVaultColors.accentBlue.withValues(alpha: 0.15),
+                        border: Border.all(color: MyVaultColors.accentBlue.withValues(alpha: 0.3)),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.lock_open_rounded, color: MyVaultColors.accentCyan, size: 22),
+                          const SizedBox(width: 12),
+                          const Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Guest Demo Mode',
+                                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                                ),
+                                SizedBox(height: 2),
+                                Text(
+                                  'Sign in with Hall Ticket 21A91A0501 to view your official live records.',
+                                  style: TextStyle(color: Colors.white60, fontSize: 11),
+                                ),
+                              ],
+                            ),
+                          ),
+                          ElevatedButton(
+                            onPressed: () => context.go('/login'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: MyVaultColors.accentBlue,
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            ),
+                            child: const Text('Sign In', style: TextStyle(fontSize: 12)),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+
+                  // AI Analyzer Card
                   Container(
                     padding: const EdgeInsets.all(18),
                     decoration: BoxDecoration(
@@ -254,7 +307,12 @@ class _ResultsScreenState extends State<ResultsScreen> {
                   const SizedBox(height: 10),
 
                   if (_results.isEmpty)
-                    _buildEmpty()
+                    const Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(32),
+                        child: Text('No grade sheets uploaded yet.', style: TextStyle(color: Colors.white38, fontSize: 14)),
+                      ),
+                    )
                   else
                     ..._results.map((r) => _buildCard(r)),
                 ],
@@ -346,21 +404,6 @@ class _ResultsScreenState extends State<ResultsScreen> {
                 ),
               ),
             ],
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildEmpty() {
-    return const Center(
-      child: Padding(
-        padding: EdgeInsets.all(32),
-        child: Column(
-          children: [
-            Icon(Icons.grade_outlined, color: Colors.white12, size: 60),
-            SizedBox(height: 12),
-            Text('No results uploaded yet', style: TextStyle(color: Colors.white38, fontSize: 14)),
           ],
         ),
       ),

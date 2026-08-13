@@ -56,6 +56,7 @@ export class StorageService {
         Bucket: this.bucket,
         Key: key,
         ContentType: contentType,
+        ACL: 'public-read',
       });
       const getCmd = new GetObjectCommand({
         Bucket: this.bucket,

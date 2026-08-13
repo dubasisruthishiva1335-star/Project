@@ -22,11 +22,11 @@ export class AcademicController {
 
   private async signUrl(s3Key?: string | null, fileUrl?: string | null): Promise<string | undefined> {
     if (s3Key) {
-      return this.storage.publicUrlForAsync(s3Key);
+      return this.storage.publicUrlFor(s3Key);
     }
     if (fileUrl && fileUrl.includes('amazonaws.com/')) {
       const key = fileUrl.split('.amazonaws.com/')[1]?.split('?')[0];
-      if (key) return this.storage.publicUrlForAsync(key);
+      if (key) return this.storage.publicUrlFor(key);
     }
     return fileUrl || undefined;
   }

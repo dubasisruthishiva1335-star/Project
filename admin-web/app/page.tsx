@@ -43,6 +43,14 @@ interface RecentUploads {
     fileUrl: string;
     uploadedAt: string;
   }>;
+  allStudents: Array<{
+    id: string;
+    hallTicket: string;
+    fullName: string;
+    branch: string;
+    semester: number;
+    createdAt: string;
+  }>;
 }
 
 export default function DashboardPage() {
@@ -50,7 +58,8 @@ export default function DashboardPage() {
   const [data, setData] = useState<Overview | null>(null);
   const [recent, setRecent] = useState<RecentUploads | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"notes" | "jobs" | "results">("notes");
+  const [activeTab, setActiveTab] = useState<"notes" | "jobs" | "students" | "results">("notes");
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     const token = typeof window !== "undefined" ? localStorage.getItem("myvault_admin_token") : null;
@@ -77,11 +86,17 @@ export default function DashboardPage() {
       });
   }, [router]);
 
-  const cards = [
-    { label: "Students Registered", value: data?.students, icon: "🎓", color: "from-blue-500/20 to-cyan-500/20" },
-    { label: "Academic Resources Uploaded", value: data?.notes, icon: "📚", color: "from-cyan-500/20 to-teal-500/20" },
-    { label: "Job & Career Listings", value: data?.jobListings, icon: "💼", color: "from-purple-500/20 to-indigo-500/20" },
-    { label: "Exam Results Uploaded", value: data?.results, icon: "📊", color: "from-amber-500/20 to-yellow-500/20" },
+  const cards: Array<{
+    id: "students" | "notes" | "jobs" | "results";
+    label: string;
+    value: number | undefined;
+    icon: string;
+    color: string;
+  }> = [
+    { id: "notes", label: "Academic Materials Uploaded", value: recent?.recentNotes?.length ?? data?.notes, icon: "📚", color: "from-cyan-500/20 to-teal-500/20" },
+    { id: "jobs", label: "Job & Internship Listings", value: recent?.recentJobs?.length ?? data?.jobListings, icon: "💼", color: "from-purple-500/20 to-indigo-500/20" },
+    { id: "students", label: "Students Registered", value: recent?.allStudents?.length ?? data?.students, icon: "🎓", color: "from-blue-500/20 to-cyan-500/20" },
+    { id: "results", label: "Exam Results Uploaded", value: recent?.recentResults?.length ?? data?.results, icon: "📊", color: "from-amber-500/20 to-yellow-500/20" },
   ];
 
   const formatCategory = (cat: string) => {
@@ -97,6 +112,26 @@ export default function DashboardPage() {
     }
   };
 
+  const filteredNotes = (recent?.recentNotes ?? []).filter((n) =>
+    n.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (n.subject?.name ?? "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (n.subject?.code ?? "").toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const filteredJobs = (recent?.recentJobs ?? []).filter((j) =>
+    j.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    j.company.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const filteredStudents = (recent?.allStudents ?? []).filter((s) =>
+    s.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    s.hallTicket.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const filteredResults = (recent?.recentResults ?? []).filter((r) =>
+    r.hallTicket.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <div className="mx-auto max-w-7xl px-6 py-10">
       <div className="mb-8">
@@ -104,7 +139,7 @@ export default function DashboardPage() {
           Admin Control Center
         </h1>
         <p className="mt-1 text-sm text-white/50">
-          Live overview and management of all uploaded academic resources, career listings, and student results.
+          Live management and itemized preview of all uploaded academic resources, job listings, exam results, and registered students.
         </p>
       </div>
 
@@ -114,86 +149,124 @@ export default function DashboardPage() {
         </p>
       )}
 
-      {/* Analytics Grid */}
+      {/* Interactive Analytics Grid */}
       <div className="mb-10 grid grid-cols-2 gap-4 sm:grid-cols-4">
-        {cards.map((c) => (
-          <div
-            key={c.label}
-            className={`rounded-2xl border border-white/10 bg-gradient-to-br ${c.color} p-5 backdrop-blur-xl`}
-          >
-            <div className="flex items-center justify-between">
-              <span className="text-2xl">{c.icon}</span>
-              <p className="text-3xl font-black text-accentCyan">{c.value ?? "—"}</p>
-            </div>
-            <p className="mt-3 text-xs font-semibold text-white/70">{c.label}</p>
-          </div>
-        ))}
+        {cards.map((c) => {
+          const isSelected = activeTab === c.id;
+          return (
+            <button
+              key={c.id}
+              onClick={() => setActiveTab(c.id)}
+              className={`text-left transition-all duration-200 rounded-2xl border p-5 backdrop-blur-xl ${
+                isSelected
+                  ? "border-accentCyan bg-accentBlue/20 shadow-lg shadow-accentCyan/10 scale-[1.02]"
+                  : "border-white/10 bg-gradient-to-br " + c.color + " hover:border-white/20 hover:scale-[1.01]"
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-2xl">{c.icon}</span>
+                <p className="text-3xl font-black text-accentCyan">{c.value ?? "—"}</p>
+              </div>
+              <p className="mt-3 text-xs font-bold text-white/90">{c.label}</p>
+              <p className="mt-0.5 text-[11px] text-accentCyan font-medium">Click to view items ↓</p>
+            </button>
+          );
+        })}
       </div>
 
-      {/* Uploaded Resources Feed */}
+      {/* Itemized Feed Section */}
       <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-6 backdrop-blur-xl">
         <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h2 className="text-lg font-bold text-white">Recently Uploaded Files & Posts</h2>
-            <p className="text-xs text-white/50">Verify what has been uploaded directly to AWS S3 & database</p>
+            <h2 className="text-lg font-bold text-white flex items-center gap-2">
+              <span>
+                {activeTab === "notes" && "📚 Academic Materials List"}
+                {activeTab === "jobs" && "💼 Job & Internship Listings"}
+                {activeTab === "students" && "🎓 Registered Students Directory"}
+                {activeTab === "results" && "📊 Uploaded Exam Results"}
+              </span>
+            </h2>
+            <p className="text-xs text-white/50">
+              Showing total uploaded items stored in AWS S3 and database
+            </p>
           </div>
 
-          <div className="flex rounded-xl border border-white/10 bg-black/40 p-1">
-            <button
-              onClick={() => setActiveTab("notes")}
-              className={`rounded-lg px-4 py-1.5 text-xs font-semibold transition ${
-                activeTab === "notes" ? "bg-accentBlue text-white" : "text-white/60 hover:text-white"
-              }`}
-            >
-              Academic Files ({recent?.recentNotes?.length ?? 0})
-            </button>
-            <button
-              onClick={() => setActiveTab("jobs")}
-              className={`rounded-lg px-4 py-1.5 text-xs font-semibold transition ${
-                activeTab === "jobs" ? "bg-accentBlue text-white" : "text-white/60 hover:text-white"
-              }`}
-            >
-              Jobs & Internships ({recent?.recentJobs?.length ?? 0})
-            </button>
-            <button
-              onClick={() => setActiveTab("results")}
-              className={`rounded-lg px-4 py-1.5 text-xs font-semibold transition ${
-                activeTab === "results" ? "bg-accentBlue text-white" : "text-white/60 hover:text-white"
-              }`}
-            >
-              Exam Results ({recent?.recentResults?.length ?? 0})
-            </button>
+          <div className="flex flex-wrap items-center gap-3">
+            {/* Search Input */}
+            <input
+              type="text"
+              placeholder="Search items..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="rounded-xl border border-white/10 bg-black/50 px-3.5 py-1.5 text-xs text-white placeholder-white/40 focus:border-accentCyan focus:outline-none"
+            />
+
+            {/* Filter Navigation Tabs */}
+            <div className="flex rounded-xl border border-white/10 bg-black/40 p-1">
+              <button
+                onClick={() => setActiveTab("notes")}
+                className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
+                  activeTab === "notes" ? "bg-accentBlue text-white" : "text-white/60 hover:text-white"
+                }`}
+              >
+                Academic Materials ({recent?.recentNotes?.length ?? 0})
+              </button>
+              <button
+                onClick={() => setActiveTab("jobs")}
+                className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
+                  activeTab === "jobs" ? "bg-accentBlue text-white" : "text-white/60 hover:text-white"
+                }`}
+              >
+                Jobs ({recent?.recentJobs?.length ?? 0})
+              </button>
+              <button
+                onClick={() => setActiveTab("students")}
+                className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
+                  activeTab === "students" ? "bg-accentBlue text-white" : "text-white/60 hover:text-white"
+                }`}
+              >
+                Students ({recent?.allStudents?.length ?? 0})
+              </button>
+              <button
+                onClick={() => setActiveTab("results")}
+                className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
+                  activeTab === "results" ? "bg-accentBlue text-white" : "text-white/60 hover:text-white"
+                }`}
+              >
+                Results ({recent?.recentResults?.length ?? 0})
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* Tab 1: Academic Files */}
+        {/* Tab 1: Academic Materials List */}
         {activeTab === "notes" && (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead className="border-b border-white/10 bg-white/[0.02] text-white/50 uppercase">
                 <tr>
                   <th className="px-4 py-3">Resource Title</th>
-                  <th className="px-4 py-3">Subject</th>
-                  <th className="px-4 py-3">Branch & Sem</th>
+                  <th className="px-4 py-3">Subject Name & Code</th>
+                  <th className="px-4 py-3">Branch & Semester</th>
                   <th className="px-4 py-3">Unit</th>
                   <th className="px-4 py-3">Category</th>
                   <th className="px-4 py-3">Uploaded Date</th>
-                  <th className="px-4 py-3 text-right">Action</th>
+                  <th className="px-4 py-3 text-right">Preview Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5 text-white/80">
-                {recent?.recentNotes && recent.recentNotes.length > 0 ? (
-                  recent.recentNotes.map((item) => (
+                {filteredNotes.length > 0 ? (
+                  filteredNotes.map((item) => (
                     <tr key={item.id} className="hover:bg-white/[0.02]">
                       <td className="px-4 py-3 font-semibold text-white">{item.title}</td>
                       <td className="px-4 py-3">
-                        <span className="rounded bg-accentBlue/20 px-1.5 py-0.5 text-accentCyan font-mono text-[11px] mr-1.5">
+                        <span className="rounded bg-accentBlue/20 px-1.5 py-0.5 text-accentCyan font-mono text-[11px] mr-1.5 font-bold">
                           {item.subject?.code ?? "GEN"}
                         </span>
-                        {item.subject?.name ?? "General"}
+                        {item.subject?.name ?? "General Subject"}
                       </td>
                       <td className="px-4 py-3">{item.subject?.branch ?? "GEN"} — Sem {item.subject?.semester ?? 1}</td>
-                      <td className="px-4 py-3">Unit {item.unit ?? 1}</td>
+                      <td className="px-4 py-3 font-semibold text-white/90">Unit {item.unit ?? 1}</td>
                       <td className="px-4 py-3 font-medium text-accentCyan">{formatCategory(item.contentType)}</td>
                       <td className="px-4 py-3 text-white/50">
                         {new Date(item.uploadedAt).toLocaleDateString()}
@@ -203,7 +276,7 @@ export default function DashboardPage() {
                           href={item.fileUrl}
                           target="_blank"
                           rel="noreferrer"
-                          className="inline-flex items-center rounded-lg bg-accentBlue/20 px-3 py-1 text-xs font-semibold text-accentCyan hover:bg-accentBlue/30"
+                          className="inline-flex items-center rounded-lg bg-accentBlue/20 px-3 py-1 text-xs font-semibold text-accentCyan hover:bg-accentBlue/30 border border-accentBlue/40"
                         >
                           View PDF ↗
                         </a>
@@ -213,7 +286,7 @@ export default function DashboardPage() {
                 ) : (
                   <tr>
                     <td colSpan={7} className="px-4 py-8 text-center text-white/40">
-                      No academic files uploaded yet. Go to <a href="/admin/notes" className="text-accentCyan underline">Upload Academic Resources</a> to post files.
+                      No academic materials found. <a href="/admin/notes" className="text-accentCyan underline font-semibold">Click here to upload notes, videos, or lab manuals</a>.
                     </td>
                   </tr>
                 )}
@@ -230,15 +303,15 @@ export default function DashboardPage() {
                 <tr>
                   <th className="px-4 py-3">Position Title</th>
                   <th className="px-4 py-3">Company / Org</th>
-                  <th className="px-4 py-3">Category</th>
+                  <th className="px-4 py-3">Listing Category</th>
                   <th className="px-4 py-3">Target Branch</th>
                   <th className="px-4 py-3">Posted Date</th>
                   <th className="px-4 py-3 text-right">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5 text-white/80">
-                {recent?.recentJobs && recent.recentJobs.length > 0 ? (
-                  recent.recentJobs.map((job) => (
+                {filteredJobs.length > 0 ? (
+                  filteredJobs.map((job) => (
                     <tr key={job.id} className="hover:bg-white/[0.02]">
                       <td className="px-4 py-3 font-semibold text-white">{job.title}</td>
                       <td className="px-4 py-3 text-accentCyan font-medium">{job.company}</td>
@@ -247,7 +320,7 @@ export default function DashboardPage() {
                           {job.type}
                         </span>
                       </td>
-                      <td className="px-4 py-3">{job.branch ?? "ALL"}</td>
+                      <td className="px-4 py-3">{job.branch ?? "ALL BRANCHES"}</td>
                       <td className="px-4 py-3 text-white/50">
                         {new Date(job.postedAt).toLocaleDateString()}
                       </td>
@@ -257,9 +330,9 @@ export default function DashboardPage() {
                             href={job.applyUrl}
                             target="_blank"
                             rel="noreferrer"
-                            className="inline-flex items-center rounded-lg bg-accentBlue/20 px-3 py-1 text-xs font-semibold text-accentCyan hover:bg-accentBlue/30"
+                            className="inline-flex items-center rounded-lg bg-accentBlue/20 px-3 py-1 text-xs font-semibold text-accentCyan hover:bg-accentBlue/30 border border-accentBlue/40"
                           >
-                            Link ↗
+                            Application Link ↗
                           </a>
                         )}
                       </td>
@@ -268,7 +341,7 @@ export default function DashboardPage() {
                 ) : (
                   <tr>
                     <td colSpan={6} className="px-4 py-8 text-center text-white/40">
-                      No job listings posted yet. Go to <a href="/admin/internships" className="text-accentCyan underline">Upload Career Listings</a> to post listings.
+                      No job listings posted. <a href="/admin/internships" className="text-accentCyan underline font-semibold">Click here to add internship or placement drive</a>.
                     </td>
                   </tr>
                 )}
@@ -277,7 +350,45 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* Tab 3: Exam Results */}
+        {/* Tab 3: Registered Students */}
+        {activeTab === "students" && (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead className="border-b border-white/10 bg-white/[0.02] text-white/50 uppercase">
+                <tr>
+                  <th className="px-4 py-3">Student Name</th>
+                  <th className="px-4 py-3">Hall Ticket Number</th>
+                  <th className="px-4 py-3">Branch</th>
+                  <th className="px-4 py-3">Semester</th>
+                  <th className="px-4 py-3">Registered Date</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/5 text-white/80">
+                {filteredStudents.length > 0 ? (
+                  filteredStudents.map((s) => (
+                    <tr key={s.id} className="hover:bg-white/[0.02]">
+                      <td className="px-4 py-3 font-semibold text-white">{s.fullName}</td>
+                      <td className="px-4 py-3 text-accentCyan font-mono font-bold">{s.hallTicket}</td>
+                      <td className="px-4 py-3">{s.branch}</td>
+                      <td className="px-4 py-3">Semester {s.semester}</td>
+                      <td className="px-4 py-3 text-white/50">
+                        {new Date(s.createdAt).toLocaleDateString()}
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={5} className="px-4 py-8 text-center text-white/40">
+                      No registered students found.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {/* Tab 4: Exam Results */}
         {activeTab === "results" && (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
@@ -290,10 +401,10 @@ export default function DashboardPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5 text-white/80">
-                {recent?.recentResults && recent.recentResults.length > 0 ? (
-                  recent.recentResults.map((res) => (
+                {filteredResults.length > 0 ? (
+                  filteredResults.map((res) => (
                     <tr key={res.id} className="hover:bg-white/[0.02]">
-                      <td className="px-4 py-3 font-semibold text-accentCyan">{res.hallTicket}</td>
+                      <td className="px-4 py-3 font-semibold text-accentCyan font-mono font-bold">{res.hallTicket}</td>
                       <td className="px-4 py-3">Semester {res.semester}</td>
                       <td className="px-4 py-3 text-white/50">
                         {new Date(res.uploadedAt).toLocaleDateString()}
@@ -303,9 +414,9 @@ export default function DashboardPage() {
                           href={res.fileUrl}
                           target="_blank"
                           rel="noreferrer"
-                          className="inline-flex items-center rounded-lg bg-accentBlue/20 px-3 py-1 text-xs font-semibold text-accentCyan hover:bg-accentBlue/30"
+                          className="inline-flex items-center rounded-lg bg-accentBlue/20 px-3 py-1 text-xs font-semibold text-accentCyan hover:bg-accentBlue/30 border border-accentBlue/40"
                         >
-                          View PDF ↗
+                          View Grade Sheet PDF ↗
                         </a>
                       </td>
                     </tr>
@@ -313,7 +424,7 @@ export default function DashboardPage() {
                 ) : (
                   <tr>
                     <td colSpan={4} className="px-4 py-8 text-center text-white/40">
-                      No exam results uploaded yet. Go to <a href="/admin/results" className="text-accentCyan underline">Upload Exam Results</a> to upload grade sheets.
+                      No exam results uploaded yet. <a href="/admin/results" className="text-accentCyan underline font-semibold">Click here to upload semester results</a>.
                     </td>
                   </tr>
                 )}

@@ -25,21 +25,23 @@ export class AnalyticsAdminController {
 
   @Get('recent-uploads')
   async recentUploads() {
-    const [recentNotes, recentJobs, recentResults] = await Promise.all([
+    const [recentNotes, recentJobs, recentResults, allStudents] = await Promise.all([
       this.prisma.academicContent.findMany({
-        take: 10,
         orderBy: { uploadedAt: 'desc' },
         include: { subject: true },
       }),
       this.prisma.jobListing.findMany({
-        take: 10,
         orderBy: { postedAt: 'desc' },
       }),
       this.prisma.result.findMany({
-        take: 10,
         orderBy: { uploadedAt: 'desc' },
       }),
+      this.prisma.user.findMany({
+        where: { role: 'STUDENT' },
+        select: { id: true, hallTicket: true, fullName: true, branch: true, semester: true, createdAt: true },
+        orderBy: { createdAt: 'desc' },
+      }),
     ]);
-    return { recentNotes, recentJobs, recentResults };
+    return { recentNotes, recentJobs, recentResults, allStudents };
   }
 }

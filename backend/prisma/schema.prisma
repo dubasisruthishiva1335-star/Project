@@ -18,6 +18,9 @@ enum ContentType {
   QUESTION_BANK
   SYLLABUS
   LAB_MANUAL
+  VIDEO_LECTURE
+  CHEAT_SHEET
+  ASSIGNMENT
 }
 
 enum JobListingType {
@@ -60,11 +63,21 @@ model AcademicContent {
   subject     Subject     @relation(fields: [subjectId], references: [id])
   title       String
   contentType ContentType
+  unit        Int?        @default(1)
   s3Key       String
   fileUrl     String
   uploadedAt  DateTime    @default(now())
 
   @@index([subjectId, contentType])
+}
+
+model Announcement {
+  id        String   @id @default(uuid())
+  title     String
+  message   String
+  linkUrl   String?
+  priority  String   @default("normal")
+  createdAt DateTime @default(now())
 }
 
 model JobListing {

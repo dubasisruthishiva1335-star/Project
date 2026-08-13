@@ -112,4 +112,13 @@ export class AcademicController {
       take: 50,
     });
   }
+
+  // GET /announcements
+  @Get('announcements')
+  async listAnnouncements() {
+    return this.prisma.announcement.findMany({
+      orderBy: { createdAt: 'desc' },
+      take: 20,
+    });
+  }
 }

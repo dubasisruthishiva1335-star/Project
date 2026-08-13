@@ -37,7 +37,7 @@ async function main() {
     },
   });
 
-  const subject = await prisma.subject.upsert({
+  await prisma.subject.upsert({
     where: { id: '00000000-0000-0000-0000-000000000001' },
     update: {},
     create: {
@@ -63,6 +63,22 @@ async function main() {
         title: 'Junior Assistant — TSPSC',
         company: 'Telangana State PSC',
         applyUrl: 'https://example.com/apply/tspsc-junior-assistant',
+      },
+    ],
+    skipDuplicates: true,
+  });
+
+  await prisma.announcement.createMany({
+    data: [
+      {
+        title: 'Mid-Exam Timetable Published',
+        message: 'Mid-1 examinations schedule for all B.Tech II & III year students is now available in Academic Hub.',
+        priority: 'urgent',
+      },
+      {
+        title: 'Qualcomm Recruitment Drive',
+        message: 'Registration deadline for Qualcomm Hardware Engineering Campus Placement drive is open until Friday.',
+        priority: 'normal',
       },
     ],
     skipDuplicates: true,

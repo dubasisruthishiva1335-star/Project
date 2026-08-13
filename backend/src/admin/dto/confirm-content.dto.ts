@@ -19,7 +19,11 @@ export class ConfirmContentDto {
   @Transform(({ value }) => (value !== undefined ? Number(value) : undefined))
   year?: number;
 
-  @IsIn(['NOTES', 'QUESTION_BANK', 'SYLLABUS', 'LAB_MANUAL']) contentType: string;
+  @IsOptional()
+  @Transform(({ value }) => (value !== undefined ? Number(value) : undefined))
+  unit?: number;
+
+  @IsIn(['NOTES', 'QUESTION_BANK', 'SYLLABUS', 'LAB_MANUAL', 'VIDEO_LECTURE', 'CHEAT_SHEET', 'ASSIGNMENT']) contentType: string;
   @IsString() s3Key: string;
   @IsOptional() @IsString() publicUrl?: string;
   @IsOptional() @IsString() subjectId?: string;

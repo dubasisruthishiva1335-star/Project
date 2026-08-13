@@ -41,6 +41,7 @@ export class NotesAdminController {
         subjectId,
         title: dto.title,
         contentType: dto.contentType as any,
+        unit: dto.unit ?? 1,
         s3Key: dto.s3Key,
         fileUrl: dto.publicUrl || this.storage.publicUrlFor(dto.s3Key),
       },

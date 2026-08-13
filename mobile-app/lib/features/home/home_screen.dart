@@ -68,10 +68,11 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final tiles = [
       _HomeTile('Academic Hub', 'Notes, Syllabus, Papers', Icons.menu_book_rounded, const Color(0xFF3E7BFF), () => context.go('/academic-hub')),
+      _HomeTile('Documents Vault', 'Certificates & Resume', Icons.folder_special_rounded, const Color(0xFF00E676), () => context.go('/documents-vault')),
       _HomeTile('Internships', 'Stipends & Industrial', Icons.work_outline_rounded, const Color(0xFF00D9F5), () => context.go('/internships')),
       _HomeTile('Placements', 'Campus Hiring Drives', Icons.business_center_outlined, const Color(0xFF7C3AFF), () => context.go('/placements')),
       _HomeTile('Govt Jobs', 'TSPSC, ISRO, Railway', Icons.account_balance_outlined, const Color(0xFF00C48C), () => context.go('/govt-jobs')),
-      _HomeTile('Results', 'Semester SGPA & Grades', Icons.grade_outlined, const Color(0xFFFFB800), () => context.go('/results')),
+      _HomeTile('Results & AI', 'SGPA & AI Analyzer', Icons.grade_outlined, const Color(0xFFFFB800), () => context.go('/results')),
       _HomeTile('Aptitude', 'Quant, Logical & Verbal', Icons.psychology_outlined, const Color(0xFFFF4757), () => context.go('/aptitude')),
     ];
 

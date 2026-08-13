@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../core/api_client.dart';
 import '../../core/colors.dart';
+import 'pdf_viewer_screen.dart';
 
 const _branches = ['CSE', 'ECE', 'AI_ML', 'EEE', 'MECH', 'CIVIL', 'GENERAL'];
 
@@ -44,11 +45,38 @@ class _AcademicHubScreenState extends State<AcademicHubScreen> {
     }
   }
 
-  Future<void> _openPdf(String? fileUrl, {bool isDownload = false}) async {
-    if (fileUrl == null || fileUrl.isEmpty) return;
+  void _viewPdfInApp(String title, String? fileUrl) {
+    if (fileUrl == null || fileUrl.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('File URL is not available for this resource.')),
+      );
+      return;
+    }
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => PdfViewerScreen(title: title, pdfUrl: fileUrl),
+      ),
+    );
+  }
+
+  Future<void> _downloadPdf(String? fileUrl) async {
+    if (fileUrl == null || fileUrl.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Download URL is not available.')),
+      );
+      return;
+    }
     final uri = Uri.tryParse(fileUrl);
-    if (uri != null && await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (uri != null) {
+      try {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to download: $e')),
+          );
+        }
+      }
     }
   }
 
@@ -314,7 +342,7 @@ class _AcademicHubScreenState extends State<AcademicHubScreen> {
                                                   children: [
                                                     Expanded(
                                                       child: ElevatedButton.icon(
-                                                        onPressed: () => _openPdf(fileUrl),
+                                                        onPressed: () => _viewPdfInApp(title, fileUrl),
                                                         icon: const Icon(Icons.picture_as_pdf_rounded, size: 14),
                                                         label: const Text('View PDF'),
                                                         style: ElevatedButton.styleFrom(
@@ -330,7 +358,7 @@ class _AcademicHubScreenState extends State<AcademicHubScreen> {
                                                     const SizedBox(width: 8),
                                                     Expanded(
                                                       child: OutlinedButton.icon(
-                                                        onPressed: () => _openPdf(fileUrl, isDownload: true),
+                                                        onPressed: () => _downloadPdf(fileUrl),
                                                         icon: const Icon(Icons.download_rounded, size: 14),
                                                         label: const Text('Download'),
                                                         style: OutlinedButton.styleFrom(

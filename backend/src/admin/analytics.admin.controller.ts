@@ -22,4 +22,24 @@ export class AnalyticsAdminController {
     ]);
     return { students, notes, jobListings, results };
   }
+
+  @Get('recent-uploads')
+  async recentUploads() {
+    const [recentNotes, recentJobs, recentResults] = await Promise.all([
+      this.prisma.academicContent.findMany({
+        take: 10,
+        orderBy: { uploadedAt: 'desc' },
+        include: { subject: true },
+      }),
+      this.prisma.jobListing.findMany({
+        take: 10,
+        orderBy: { postedAt: 'desc' },
+      }),
+      this.prisma.result.findMany({
+        take: 10,
+        orderBy: { uploadedAt: 'desc' },
+      }),
+    ]);
+    return { recentNotes, recentJobs, recentResults };
+  }
 }

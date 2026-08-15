@@ -1,343 +1,764 @@
+import 'dart:io';
+import 'package:file_picker/file_picker.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:url_launcher/url_launcher.dart';
-import '../../core/colors.dart';
-import '../academic_hub/pdf_viewer_screen.dart';
+import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
+import 'package:open_filex/open_filex.dart';
+import '../../core/constants/app_colors.dart';
+import '../../core/router/app_router.dart';
+import '../../shared/widgets/app_scaffold.dart';
 
-class DocumentItem {
+// ─── Document Model ──────────────────────────────────────────────────────────
+
+class DocumentModel {
   final String id;
-  final String title;
-  final String category; // 'Certificates' | 'ID Cards' | 'Resumes' | 'Marksheets'
-  final String fileUrl;
-  final String addedDate;
+  final String name;
+  final String category;
+  final String filePath;
+  final String fileSize;
+  final DateTime addedAt;
+  final String? description;
 
-  DocumentItem({
+  DocumentModel({
     required this.id,
-    required this.title,
+    required this.name,
     required this.category,
-    required this.fileUrl,
-    required this.addedDate,
+    required this.filePath,
+    required this.fileSize,
+    required this.addedAt,
+    this.description,
   });
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'name': name,
+    'category': category,
+    'filePath': filePath,
+    'fileSize': fileSize,
+    'addedAt': addedAt.toIso8601String(),
+    'description': description,
+  };
+
+  factory DocumentModel.fromJson(Map<String, dynamic> j) => DocumentModel(
+    id: j['id'] as String,
+    name: j['name'] as String,
+    category: j['category'] as String,
+    filePath: j['filePath'] as String,
+    fileSize: j['fileSize'] as String,
+    addedAt: DateTime.parse(j['addedAt'] as String),
+    description: j['description'] as String?,
+  );
 }
 
-class DocumentsVaultScreen extends StatefulWidget {
+// ─── Documents Provider ──────────────────────────────────────────────────────
+
+final documentsProvider = StateNotifierProvider<DocumentsNotifier, List<DocumentModel>>((ref) {
+  return DocumentsNotifier();
+});
+
+class DocumentsNotifier extends StateNotifier<List<DocumentModel>> {
+  DocumentsNotifier() : super([]) {
+    _load();
+  }
+
+  Future<void> _load() async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString('documents_hub_data');
+    if (raw != null) {
+      final list = (jsonDecode(raw) as List).map((e) => DocumentModel.fromJson(e as Map<String, dynamic>)).toList();
+      state = list;
+    }
+  }
+
+  Future<void> _save() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('documents_hub_data', jsonEncode(state.map((d) => d.toJson()).toList()));
+  }
+
+  Future<void> addDocument(DocumentModel doc) async {
+    state = [...state, doc];
+    await _save();
+  }
+
+  Future<void> removeDocument(String id) async {
+    state = state.where((d) => d.id != id).toList();
+    await _save();
+  }
+}
+
+// ─── Categories ──────────────────────────────────────────────────────────────
+
+const _categories = [
+  _DocCategory('All', Icons.folder_open_rounded, AppColors.primary),
+  _DocCategory('Certificates', Icons.workspace_premium_rounded, AppColors.certificates),
+  _DocCategory('ID Cards', Icons.badge_rounded, AppColors.info),
+  _DocCategory('Academic Papers', Icons.article_rounded, AppColors.academicHub),
+  _DocCategory('Marksheets', Icons.grade_rounded, AppColors.results),
+  _DocCategory('Bonafide', Icons.verified_rounded, AppColors.success),
+  _DocCategory('Others', Icons.more_horiz_rounded, AppColors.textSecondary),
+];
+
+class _DocCategory {
+  final String name;
+  final IconData icon;
+  final Color color;
+  const _DocCategory(this.name, this.icon, this.color);
+}
+
+// ─── Documents Hub Modal Bottom Sheet ─────────────────────────────────────────
+
+void showAddDocumentSheet(BuildContext context, WidgetRef ref) {
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    builder: (ctx) => AddDocumentSheet(ref: ref),
+  );
+}
+
+class AddDocumentSheet extends StatefulWidget {
+  final WidgetRef ref;
+  const AddDocumentSheet({super.key, required this.ref});
+
+  @override
+  State<AddDocumentSheet> createState() => _AddDocumentSheetState();
+}
+
+class _AddDocumentSheetState extends State<AddDocumentSheet> {
+  String? _selectedSource;
+  String _selectedCategory = 'Certificates';
+  final _titleCtrl = TextEditingController();
+  File? _selectedFile;
+  String _fileSizeStr = '0 KB';
+
+  @override
+  void dispose() {
+    _titleCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _pickSource(String source) async {
+    setState(() => _selectedSource = source);
+    File? picked;
+    String sizeStr = '0 KB';
+
+    if (source == 'Camera') {
+      final picker = ImagePicker();
+      final xfile = await picker.pickImage(source: ImageSource.camera);
+      if (xfile != null) {
+        picked = File(xfile.path);
+        final len = await picked.length();
+        sizeStr = '${(len / 1024).toStringAsFixed(0)} KB';
+      }
+    } else if (source == 'Gallery') {
+      final picker = ImagePicker();
+      final xfile = await picker.pickImage(source: ImageSource.gallery);
+      if (xfile != null) {
+        picked = File(xfile.path);
+        final len = await picked.length();
+        sizeStr = '${(len / 1024).toStringAsFixed(0)} KB';
+      }
+    } else {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['pdf', 'doc', 'docx', 'txt', 'jpg', 'png'],
+      );
+      if (result != null && result.files.isNotEmpty) {
+        final f = result.files.first;
+        if (f.path != null) {
+          picked = File(f.path!);
+          final size = f.size;
+          sizeStr = size > 1024 * 1024
+              ? '${(size / (1024 * 1024)).toStringAsFixed(1)} MB'
+              : '${(size / 1024).toStringAsFixed(0)} KB';
+        }
+      }
+    }
+
+    if (picked != null) {
+      setState(() {
+        _selectedFile = picked;
+        _fileSizeStr = sizeStr;
+        if (_titleCtrl.text.isEmpty) {
+          _titleCtrl.text = picked!.path.split('/').last.split('\\').last;
+        }
+      });
+    }
+  }
+
+  Future<void> _saveDocument() async {
+    final title = _titleCtrl.text.trim();
+    if (title.isEmpty || _selectedFile == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please pick a file/scan and enter a document title.'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
+
+    final doc = DocumentModel(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      name: title,
+      category: _selectedCategory,
+      filePath: _selectedFile!.path,
+      fileSize: _fileSizeStr,
+      addedAt: DateTime.now(),
+    );
+
+    await widget.ref.read(documentsProvider.notifier).addDocument(doc);
+
+    if (mounted) {
+      Navigator.pop(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('"$title" saved to Documents Hub'),
+          backgroundColor: AppColors.success,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: const BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade600,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+
+            const Text(
+              'Add to Documents Hub',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textPrimary,
+                fontFamily: 'Poppins',
+              ),
+            ),
+            const SizedBox(height: 4),
+            const Text(
+              'Scan or pick a document and provide a title to save it.',
+              style: TextStyle(fontSize: 12, color: AppColors.textSecondary, fontFamily: 'Poppins'),
+            ),
+            const SizedBox(height: 16),
+
+            // Source picker row
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                _SourceOption(
+                  icon: Icons.camera_alt_rounded,
+                  label: 'Camera',
+                  selected: _selectedSource == 'Camera',
+                  onTap: () => _pickSource('Camera'),
+                ),
+                _SourceOption(
+                  icon: Icons.photo_library_rounded,
+                  label: 'Gallery',
+                  selected: _selectedSource == 'Gallery',
+                  onTap: () => _pickSource('Gallery'),
+                ),
+                _SourceOption(
+                  icon: Icons.picture_as_pdf_rounded,
+                  label: 'PDF',
+                  selected: _selectedSource == 'PDF',
+                  onTap: () => _pickSource('PDF'),
+                ),
+                _SourceOption(
+                  icon: Icons.insert_drive_file_rounded,
+                  label: 'Documents',
+                  selected: _selectedSource == 'Documents',
+                  onTap: () => _pickSource('Documents'),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+
+            // Title Input
+            TextField(
+              controller: _titleCtrl,
+              style: const TextStyle(color: Colors.white, fontSize: 14, fontFamily: 'Poppins'),
+              decoration: InputDecoration(
+                labelText: 'Document Title',
+                hintText: 'e.g. Physics Lab Manual - Unit 1',
+                labelStyle: const TextStyle(color: AppColors.textSecondary, fontFamily: 'Poppins'),
+                hintStyle: TextStyle(color: Colors.grey.shade600, fontFamily: 'Poppins'),
+                filled: true,
+                fillColor: AppColors.background,
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            // Category Selector
+            DropdownButtonFormField<String>(
+              value: _selectedCategory,
+              dropdownColor: AppColors.surface,
+              style: const TextStyle(color: Colors.white, fontFamily: 'Poppins', fontSize: 14),
+              decoration: InputDecoration(
+                labelText: 'Category',
+                labelStyle: const TextStyle(color: AppColors.textSecondary, fontFamily: 'Poppins'),
+                filled: true,
+                fillColor: AppColors.background,
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+              ),
+              items: _categories
+                  .where((c) => c.name != 'All')
+                  .map((c) => DropdownMenuItem(value: c.name, child: Text(c.name)))
+                  .toList(),
+              onChanged: (v) => setState(() => _selectedCategory = v!),
+            ),
+            const SizedBox(height: 20),
+
+            // Save Button
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                onPressed: _saveDocument,
+                icon: const Icon(Icons.cloud_upload_rounded, color: Colors.white),
+                label: const Text(
+                  'Save Document',
+                  style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold, fontFamily: 'Poppins'),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SourceOption extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _SourceOption({
+    required this.icon,
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final color = selected ? AppColors.primary : Colors.grey.shade400;
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        children: [
+          CircleAvatar(
+            radius: 26,
+            backgroundColor: selected ? AppColors.primary.withValues(alpha: 0.2) : AppColors.background,
+            child: Icon(icon, color: color, size: 24),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              color: color,
+              fontWeight: selected ? FontWeight.w700 : FontWeight.normal,
+              fontFamily: 'Poppins',
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─── Documents Hub Screen ────────────────────────────────────────────────────
+
+class DocumentsVaultScreen extends ConsumerStatefulWidget {
   const DocumentsVaultScreen({super.key});
 
   @override
-  State<DocumentsVaultScreen> createState() => _DocumentsVaultScreenState();
+  ConsumerState<DocumentsVaultScreen> createState() => _DocumentsVaultScreenState();
 }
 
-class _DocumentsVaultScreenState extends State<DocumentsVaultScreen> {
+class _DocumentsVaultScreenState extends ConsumerState<DocumentsVaultScreen> {
   String _selectedCategory = 'All';
-  final List<String> _categories = ['All', 'Certificates', 'ID Cards', 'Resumes', 'Marksheets'];
+  String _searchQuery = '';
+  final _searchCtrl = TextEditingController();
 
-  final List<DocumentItem> _documents = [
-    DocumentItem(
-      id: 'doc-1',
-      title: 'B.Tech Provisional Degree Certificate',
-      category: 'Certificates',
-      fileUrl: 'https://myvault-files-app.s3.eu-north-1.amazonaws.com/notes/1786544055523-478f14f9-ade1-411b-882d-5124b5b84967-RADAR_Ashok.pdf',
-      addedDate: '2026-08-10',
-    ),
-    DocumentItem(
-      id: 'doc-2',
-      title: 'College Student ID Card',
-      category: 'ID Cards',
-      fileUrl: 'https://myvault-files-app.s3.eu-north-1.amazonaws.com/notes/1786502805860-3fb25413-0cae-4cce-84e5-9b2d2fc2ea69-Application_form_HCLTFP2247596.pdf',
-      addedDate: '2026-08-12',
-    ),
-    DocumentItem(
-      id: 'doc-3',
-      title: 'Software Engineer Resume 2026',
-      category: 'Resumes',
-      fileUrl: 'https://myvault-files-app.s3.eu-north-1.amazonaws.com/notes/1786543997076-1cf0c517-9f51-4500-8721-f548799cd489-single_mode.pdf',
-      addedDate: '2026-08-13',
-    ),
-  ];
+  @override
+  void dispose() {
+    _searchCtrl.dispose();
+    super.dispose();
+  }
 
-  void _showAddDocumentDialog() {
-    final titleController = TextEditingController();
-    final urlController = TextEditingController();
-    String category = 'Certificates';
-
-    showDialog(
+  Future<void> _confirmDelete(DocumentModel doc) async {
+    final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF141722),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Add Document to Vault', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: titleController,
-              style: const TextStyle(color: Colors.white),
-              decoration: const InputDecoration(
-                labelText: 'Document Title',
-                labelStyle: TextStyle(color: Colors.white60),
-                enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: MyVaultColors.glassBorder)),
-              ),
-            ),
-            const SizedBox(height: 12),
-            DropdownButtonFormField<String>(
-              initialValue: category,
-              dropdownColor: const Color(0xFF141722),
-              style: const TextStyle(color: Colors.white),
-              decoration: const InputDecoration(labelText: 'Category', labelStyle: TextStyle(color: Colors.white60)),
-              items: ['Certificates', 'ID Cards', 'Resumes', 'Marksheets']
-                  .map((c) => DropdownMenuItem(value: c, child: Text(c)))
-                  .toList(),
-              onChanged: (v) => category = v ?? category,
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: urlController,
-              style: const TextStyle(color: Colors.white),
-              decoration: const InputDecoration(
-                labelText: 'Document URL / Link',
-                labelStyle: TextStyle(color: Colors.white60),
-                enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: MyVaultColors.glassBorder)),
-              ),
-            ),
-          ],
-        ),
+        title: const Text('Remove Document'),
+        content: Text('Remove "${doc.name}" from Documents Hub?'),
         actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
           TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Cancel', style: TextStyle(color: Colors.white54)),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Remove', style: TextStyle(color: AppColors.error)),
           ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: MyVaultColors.accentBlue),
-            onPressed: () {
-              if (titleController.text.trim().isEmpty) return;
-              final newDoc = DocumentItem(
-                id: 'doc-${DateTime.now().millisecondsSinceEpoch}',
-                title: titleController.text.trim(),
-                category: category,
-                fileUrl: urlController.text.trim().isNotEmpty
-                    ? urlController.text.trim()
-                    : 'https://myvault-files-app.s3.eu-north-1.amazonaws.com/notes/1786544055523-478f14f9-ade1-411b-882d-5124b5b84967-RADAR_Ashok.pdf',
-                addedDate: DateTime.now().toString().split(' ')[0],
-              );
-              setState(() => _documents.insert(0, newDoc));
-              Navigator.of(ctx).pop();
-            },
-            child: const Text('Save to Vault'),
+        ],
+      ),
+    );
+    if (ok == true) {
+      await ref.read(documentsProvider.notifier).removeDocument(doc.id);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final allDocs = ref.watch(documentsProvider);
+
+    final filtered = allDocs.where((d) {
+      final matchCat = _selectedCategory == 'All' || d.category == _selectedCategory;
+      final matchQ = _searchQuery.isEmpty || d.name.toLowerCase().contains(_searchQuery.toLowerCase());
+      return matchCat && matchQ;
+    }).toList()
+      ..sort((a, b) => b.addedAt.compareTo(a.addedAt));
+
+    final catCounts = <String, int>{'All': allDocs.length};
+    for (final c in _categories.where((c) => c.name != 'All')) {
+      catCounts[c.name] = allDocs.where((d) => d.category == c.name).length;
+    }
+
+    return AppScaffold(
+      showAppBar: false,
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => showAddDocumentSheet(context, ref),
+        backgroundColor: AppColors.primary,
+        icon: const Icon(Icons.add_rounded, color: Colors.white),
+        label: const Text('Add Document', style: TextStyle(color: Colors.white, fontFamily: 'Poppins', fontWeight: FontWeight.w600)),
+      ),
+      body: Column(
+        children: [
+          // ── Header ───────────────────────────────────────────────────────
+          Container(
+            padding: EdgeInsets.only(
+              top: MediaQuery.of(context).padding.top + 12,
+              left: 16,
+              right: 16,
+              bottom: 16,
+            ),
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [AppColors.certificates, Color(0xFFD4520C)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+            ),
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    IconButton(
+                      onPressed: () => context.go('/home'),
+                      icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
+                    ),
+                    const Expanded(
+                      child: Text(
+                        'Documents Hub',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w700,
+                          fontFamily: 'Poppins',
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => context.go(AppRoutes.uploadedFiles),
+                      icon: const Icon(Icons.cloud_queue_rounded, color: Colors.white),
+                      tooltip: 'Uploaded Files',
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        '${allDocs.length} files',
+                        style: const TextStyle(color: Colors.white, fontSize: 12, fontFamily: 'Poppins'),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                // Search
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: TextField(
+                    controller: _searchCtrl,
+                    onChanged: (v) => setState(() => _searchQuery = v),
+                    decoration: const InputDecoration(
+                      hintText: 'Search documents...',
+                      prefixIcon: Icon(Icons.search_rounded, color: AppColors.textSecondary),
+                      border: InputBorder.none,
+                      contentPadding: EdgeInsets.symmetric(vertical: 12),
+                      hintStyle: TextStyle(fontFamily: 'Poppins'),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // ── Category tabs ─────────────────────────────────────────────────
+          Container(
+            height: 48,
+            color: AppColors.surface,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              itemCount: _categories.length,
+              itemBuilder: (_, i) {
+                final cat = _categories[i];
+                final isSelected = _selectedCategory == cat.name;
+                final count = catCounts[cat.name] ?? 0;
+                return GestureDetector(
+                  onTap: () => setState(() => _selectedCategory = cat.name),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    margin: const EdgeInsets.only(right: 8),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: isSelected ? cat.color : Colors.transparent,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: isSelected ? cat.color : AppColors.border,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(cat.icon, size: 14, color: isSelected ? Colors.white : cat.color),
+                        const SizedBox(width: 4),
+                        Text(
+                          '${cat.name} ($count)',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: isSelected ? Colors.white : AppColors.textSecondary,
+                            fontFamily: 'Poppins',
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+
+          const Divider(height: 1),
+
+          // ── Documents list ────────────────────────────────────────────────
+          Expanded(
+            child: filtered.isEmpty
+                ? _emptyState()
+                : ListView.builder(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: filtered.length,
+                    itemBuilder: (_, i) {
+                      return _documentCard(filtered[i], i).animate(
+                        delay: Duration(milliseconds: i * 50),
+                      ).fadeIn(duration: 300.ms).slideY(begin: 0.1, end: 0);
+                    },
+                  ),
           ),
         ],
       ),
     );
   }
 
-  void _viewDocument(DocumentItem doc) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => PdfViewerScreen(title: doc.title, pdfUrl: doc.fileUrl),
-      ),
+  Widget _emptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(28),
+            decoration: BoxDecoration(
+              color: AppColors.certificates.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.folder_open_rounded, size: 60, color: AppColors.certificates),
+          ),
+          const SizedBox(height: 20),
+          const Text(
+            'No Documents Yet',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              fontFamily: 'Poppins',
+              color: AppColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Tap the + button to add\ncertificates, ID cards, or any documents',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: AppColors.textSecondary, fontFamily: 'Poppins', fontSize: 13),
+          ),
+        ],
+      ).animate().fadeIn(duration: 400.ms),
     );
   }
 
-  Future<void> _downloadDocument(DocumentItem doc) async {
-    final uri = Uri.tryParse(doc.fileUrl);
-    if (uri != null && await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    }
-  }
+  Widget _documentCard(DocumentModel doc, int index) {
+    final cat = _categories.firstWhere(
+      (c) => c.name == doc.category,
+      orElse: () => _categories.last,
+    );
+    final isImage = doc.filePath.toLowerCase().endsWith('.jpg') ||
+        doc.filePath.toLowerCase().endsWith('.jpeg') ||
+        doc.filePath.toLowerCase().endsWith('.png');
 
-  void _deleteDocument(String id) {
-    setState(() => _documents.removeWhere((d) => d.id == id));
-  }
-
-  IconData _getCategoryIcon(String cat) {
-    switch (cat) {
-      case 'Certificates':
-        return Icons.verified_user_rounded;
-      case 'ID Cards':
-        return Icons.badge_rounded;
-      case 'Resumes':
-        return Icons.description_rounded;
-      case 'Marksheets':
-        return Icons.grade_rounded;
-      default:
-        return Icons.folder_rounded;
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final filtered = _selectedCategory == 'All'
-        ? _documents
-        : _documents.where((d) => d.category == _selectedCategory).toList();
-
-    return PopScope(
-      canPop: false,
-      onPopInvokedWithResult: (didPop, result) {
-        if (!didPop) context.go('/home');
-      },
-      child: Scaffold(
-        backgroundColor: MyVaultColors.obsidian,
-        appBar: AppBar(
-          backgroundColor: MyVaultColors.obsidian,
-          elevation: 0,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white70),
-            onPressed: () => context.go('/home'),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
           ),
-          title: ShaderMask(
-            shaderCallback: (b) => MyVaultColors.accentGradient.createShader(b),
-            child: const Text(
-              'My Documents Vault',
-              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
-            ),
+        ],
+      ),
+      child: ListTile(
+        onTap: () async {
+          if (doc.filePath.isNotEmpty && File(doc.filePath).existsSync()) {
+            final result = await OpenFilex.open(doc.filePath);
+            if (result.type != ResultType.done && mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Could not open file: ${result.message}'),
+                  backgroundColor: AppColors.error,
+                ),
+              );
+            }
+          } else {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('File does not exist or has been moved.'),
+                  backgroundColor: AppColors.error,
+                ),
+              );
+            }
+          }
+        },
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        leading: Container(
+          width: 48,
+          height: 48,
+          decoration: BoxDecoration(
+            color: cat.color.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(12),
           ),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.add_circle_outline_rounded, color: MyVaultColors.accentCyan, size: 26),
-              onPressed: _showAddDocumentDialog,
-            ),
-          ],
+          child: isImage && doc.filePath.isNotEmpty && File(doc.filePath).existsSync()
+              ? ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Image.file(File(doc.filePath), fit: BoxFit.cover),
+                )
+              : Icon(_fileIcon(doc.name), color: cat.color, size: 24),
         ),
-        body: Column(
+        title: Text(
+          doc.name,
+          style: const TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            fontFamily: 'Poppins',
+            color: AppColors.textPrimary,
+          ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Category Filter Chips
-            SizedBox(
-              height: 48,
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                children: _categories.map((cat) {
-                  final selected = _selectedCategory == cat;
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: FilterChip(
-                      label: Text(cat),
-                      selected: selected,
-                      onSelected: (_) => setState(() => _selectedCategory = cat),
-                      selectedColor: MyVaultColors.accentBlue.withValues(alpha: 0.3),
-                      backgroundColor: MyVaultColors.glassFill,
-                      side: BorderSide(color: selected ? MyVaultColors.accentBlue : MyVaultColors.glassBorder),
-                      labelStyle: TextStyle(
-                        color: selected ? MyVaultColors.accentCyan : Colors.white60,
-                        fontWeight: selected ? FontWeight.bold : FontWeight.normal,
-                      ),
-                      checkmarkColor: MyVaultColors.accentCyan,
-                    ),
-                  );
-                }).toList(),
-              ),
+            const SizedBox(height: 2),
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: cat.color.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(doc.category, style: TextStyle(fontSize: 10, color: cat.color, fontWeight: FontWeight.w600, fontFamily: 'Poppins')),
+                ),
+                const SizedBox(width: 6),
+                Text(doc.fileSize, style: const TextStyle(fontSize: 10, color: AppColors.textSecondary, fontFamily: 'Poppins')),
+              ],
             ),
-
-            Expanded(
-              child: filtered.isEmpty
-                  ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(Icons.folder_open_rounded, color: Colors.white12, size: 64),
-                          const SizedBox(height: 16),
-                          Text('No $_selectedCategory in your vault yet',
-                              style: const TextStyle(color: Colors.white38, fontSize: 14)),
-                          const SizedBox(height: 12),
-                          ElevatedButton.icon(
-                            onPressed: _showAddDocumentDialog,
-                            icon: const Icon(Icons.add),
-                            label: const Text('Add Document'),
-                            style: ElevatedButton.styleFrom(backgroundColor: MyVaultColors.accentBlue),
-                          ),
-                        ],
-                      ),
-                    )
-                  : ListView.builder(
-                      padding: const EdgeInsets.all(16),
-                      itemCount: filtered.length,
-                      itemBuilder: (ctx, i) {
-                        final doc = filtered[i];
-                        final icon = _getCategoryIcon(doc.category);
-                        return Container(
-                          margin: const EdgeInsets.only(bottom: 12),
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(16),
-                            color: MyVaultColors.glassFill,
-                            border: Border.all(color: MyVaultColors.glassBorder),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.all(10),
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(12),
-                                      color: MyVaultColors.accentBlue.withValues(alpha: 0.15),
-                                    ),
-                                    child: Icon(icon, color: MyVaultColors.accentCyan, size: 22),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          doc.title,
-                                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
-                                        ),
-                                        const SizedBox(height: 2),
-                                        Text(
-                                          '${doc.category} • Added ${doc.addedDate}',
-                                          style: const TextStyle(color: Colors.white38, fontSize: 11),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  IconButton(
-                                    icon: const Icon(Icons.delete_outline_rounded, color: Colors.redAccent, size: 20),
-                                    onPressed: () => _deleteDocument(doc.id),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 12),
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: ElevatedButton.icon(
-                                      onPressed: () => _viewDocument(doc),
-                                      icon: const Icon(Icons.picture_as_pdf_rounded, size: 14),
-                                      label: const Text('View Document'),
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: MyVaultColors.accentBlue,
-                                        foregroundColor: Colors.white,
-                                        padding: const EdgeInsets.symmetric(vertical: 8),
-                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                    child: OutlinedButton.icon(
-                                      onPressed: () => _downloadDocument(doc),
-                                      icon: const Icon(Icons.download_rounded, size: 14),
-                                      label: const Text('Download'),
-                                      style: OutlinedButton.styleFrom(
-                                        foregroundColor: MyVaultColors.accentCyan,
-                                        side: BorderSide(color: MyVaultColors.accentCyan.withValues(alpha: 0.5)),
-                                        padding: const EdgeInsets.symmetric(vertical: 8),
-                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                    ),
+            const SizedBox(height: 2),
+            Text(
+              DateFormat('d MMM yyyy, hh:mm a').format(doc.addedAt),
+              style: const TextStyle(fontSize: 10, color: AppColors.textLight, fontFamily: 'Poppins'),
             ),
           ],
         ),
+        trailing: IconButton(
+          onPressed: () => _confirmDelete(doc),
+          icon: const Icon(Icons.delete_outline_rounded, color: AppColors.error, size: 20),
+        ),
+        isThreeLine: true,
       ),
     );
+  }
+
+  IconData _fileIcon(String name) {
+    final ext = name.split('.').last.toLowerCase();
+    switch (ext) {
+      case 'pdf': return Icons.picture_as_pdf_rounded;
+      case 'jpg': case 'jpeg': case 'png': return Icons.image_rounded;
+      case 'doc': case 'docx': return Icons.description_rounded;
+      case 'txt': return Icons.text_snippet_rounded;
+      default: return Icons.insert_drive_file_rounded;
+    }
   }
 }

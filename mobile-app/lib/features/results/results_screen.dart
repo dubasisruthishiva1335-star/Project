@@ -8,6 +8,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../core/colors.dart';
 import '../../core/api_client.dart';
 import '../academic_hub/pdf_viewer_screen.dart';
+import 'screens/result_upload_analyze_screen.dart';
 
 const String kBackendBaseUrl = 'https://romantic-serenity-production-3e5b.up.railway.app';
 const String kEmulatorBackendBaseUrl = 'http://10.0.2.2:4000';
@@ -122,7 +123,6 @@ class ResultsService {
       } catch (_) {}
     }
 
-    // Demo Fallback Result
     return ResultRecord(
       id: 'demo-${DateTime.now().millisecondsSinceEpoch}',
       title: 'B.Tech CSE Semester 6 AI Analysis Report',
@@ -407,76 +407,130 @@ class _ResultsScreenState extends State<ResultsScreen> {
                 child: CircularProgressIndicator(color: Colors.white),
               )
             : FloatingActionButton.extended(
-                onPressed: _showUploadOptions,
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const ResultUploadAnalyzeScreen()),
+                  );
+                },
                 backgroundColor: MyVaultColors.accentBlue,
-                icon: const Icon(Icons.upload_file_rounded, color: Colors.white),
-                label: const Text('Upload Result Image', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                icon: const Icon(Icons.auto_awesome_rounded, color: Colors.white),
+                label: const Text('Performance Dashboard', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
               ),
         body: RefreshIndicator(
           onRefresh: _loadResults,
           color: MyVaultColors.accentCyan,
-          child: _loadingList
-              ? const Center(child: CircularProgressIndicator(color: MyVaultColors.accentCyan))
-              : _results.isEmpty
-                  ? ListView(
-                      children: [
-                        const SizedBox(height: 80),
-                        const Icon(Icons.insert_drive_file_outlined, size: 64, color: Colors.white24),
-                        const SizedBox(height: 12),
-                        const Center(
-                          child: Text(
-                            'No results yet.\nUpload a marksheet image to get an\nAI-analyzed, styled PDF report.',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(color: Colors.white54, height: 1.4),
-                          ),
-                        ),
-                        if (_error != null) ...[
-                          const SizedBox(height: 12),
-                          Center(child: Text(_error!, style: const TextStyle(color: Colors.redAccent))),
-                        ],
+          child: ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
+              // Banner for Performance Dashboard Launch
+              InkWell(
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const ResultUploadAnalyzeScreen()),
+                  );
+                },
+                borderRadius: BorderRadius.circular(18),
+                child: Container(
+                  padding: const EdgeInsets.all(18),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(18),
+                    gradient: LinearGradient(
+                      colors: [
+                        MyVaultColors.accentBlue.withValues(alpha: 0.35),
+                        MyVaultColors.accentCyan.withValues(alpha: 0.15),
                       ],
-                    )
-                  : ListView.builder(
-                      padding: const EdgeInsets.all(16),
-                      itemCount: _results.length + (_error != null ? 1 : 0),
-                      itemBuilder: (context, i) {
-                        if (_error != null && i == 0) {
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 12),
-                            child: Text(_error!, style: const TextStyle(color: Colors.redAccent)),
-                          );
-                        }
-                        final record = _results[_error != null ? i - 1 : i];
-                        return Container(
-                          margin: const EdgeInsets.only(bottom: 14),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(16),
-                            color: MyVaultColors.glassFill,
-                            border: Border.all(color: MyVaultColors.glassBorder),
-                          ),
-                          child: ListTile(
-                            onTap: () => _showAnalysisSheet(record),
-                            leading: Container(
-                              padding: const EdgeInsets.all(10),
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(12),
-                                color: MyVaultColors.accentBlue.withValues(alpha: 0.2),
-                              ),
-                              child: const Icon(Icons.picture_as_pdf_rounded, color: MyVaultColors.accentCyan),
-                            ),
-                            title: Text(
-                              record.title,
-                              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
-                            ),
-                            subtitle: Text(
-                              'SGPA ${record.analysis.sgpa ?? '-'}  •  CGPA ${record.analysis.cgpa ?? '-'}  •  ${record.analysis.result ?? '-'}',
-                              style: const TextStyle(color: Colors.white54, fontSize: 12),
-                            ),
-                            trailing: const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white38, size: 16),
-                          ),
-                        );
-                      },
                     ),
+                    border: Border.all(color: MyVaultColors.accentCyan.withValues(alpha: 0.4)),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          color: MyVaultColors.accentBlue,
+                        ),
+                        child: const Icon(Icons.insights_rounded, color: Colors.white, size: 24),
+                      ),
+                      const SizedBox(width: 14),
+                      const Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Performance Dashboard & AI OCR',
+                              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15),
+                            ),
+                            SizedBox(height: 2),
+                            Text(
+                              'Upload marksheet -> Google Vision/Claude OCR -> SGPA & GPA Trend charts.',
+                              style: TextStyle(color: Colors.white70, fontSize: 11),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Icon(Icons.arrow_forward_ios_rounded, color: MyVaultColors.accentCyan, size: 18),
+                    ],
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              if (_loadingList)
+                const Center(child: Padding(padding: EdgeInsets.all(32), child: CircularProgressIndicator(color: MyVaultColors.accentCyan)))
+              else if (_results.isEmpty)
+                ListView(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  children: [
+                    const SizedBox(height: 40),
+                    const Icon(Icons.insert_drive_file_outlined, size: 64, color: Colors.white24),
+                    const SizedBox(height: 12),
+                    const Center(
+                      child: Text(
+                        'No results yet.\nUpload a marksheet image to get an\nAI-analyzed, styled PDF report.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: Colors.white54, height: 1.4),
+                      ),
+                    ),
+                    if (_error != null) ...[
+                      const SizedBox(height: 12),
+                      Center(child: Text(_error!, style: const TextStyle(color: Colors.redAccent))),
+                    ],
+                  ],
+                )
+              else
+                ..._results.map((record) => Container(
+                      margin: const EdgeInsets.only(bottom: 14),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(16),
+                        color: MyVaultColors.glassFill,
+                        border: Border.all(color: MyVaultColors.glassBorder),
+                      ),
+                      child: ListTile(
+                        onTap: () => _showAnalysisSheet(record),
+                        leading: Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
+                            color: MyVaultColors.accentBlue.withValues(alpha: 0.2),
+                          ),
+                          child: const Icon(Icons.picture_as_pdf_rounded, color: MyVaultColors.accentCyan),
+                        ),
+                        title: Text(
+                          record.title,
+                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+                        ),
+                        subtitle: Text(
+                          'SGPA ${record.analysis.sgpa ?? '-'}  •  CGPA ${record.analysis.cgpa ?? '-'}  •  ${record.analysis.result ?? '-'}',
+                          style: const TextStyle(color: Colors.white54, fontSize: 12),
+                        ),
+                        trailing: const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white38, size: 16),
+                      ),
+                    )),
+            ],
+          ),
         ),
       ),
     );

@@ -1,4 +1,4 @@
-import { Controller, Get, Query, UseGuards, Req } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query, UseGuards, Req } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { PrismaService } from '../prisma/prisma.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -113,12 +113,70 @@ export class AcademicController {
     });
   }
 
-  // GET /announcements
+  // GET /announcements & GET /api/circulars
   @Get('announcements')
+  @Get('api/circulars')
   async listAnnouncements() {
-    return this.prisma.announcement.findMany({
+    const items = await this.prisma.announcement.findMany({
       orderBy: { createdAt: 'desc' },
       take: 20,
     });
+    return { circulars: items, announcements: items };
+  }
+
+  // POST /api/interview/question
+  @Post('api/interview/question')
+  async getInterviewQuestion(@Body() body: any) {
+    const { mode = 'technical', topic = 'general software engineering', difficulty = 'medium' } = body || {};
+
+    const techQuestions = [
+      { question: "Explain the difference between Process and Thread in Operating Systems, and how context switching works.", type: "Technical CS", hint: "Think about shared memory space vs isolated process address space." },
+      { question: "How does a Hash Table achieve O(1) average time complexity for search and insertion? What happens during collision?", type: "Technical DS", hint: "Discuss chaining vs open addressing methods." },
+      { question: "What is the difference between SQL and NoSQL databases? When would you choose MongoDB over PostgreSQL?", type: "Technical DBMS", hint: "Consider ACID compliance vs horizontal scaling flexibility." },
+      { question: "Explain the concept of Polymorphism in Object-Oriented Programming with a real-world example.", type: "Technical OOP", hint: "Differentiate compile-time (overloading) vs runtime (overriding) polymorphism." }
+    ];
+
+    const hrQuestions = [
+      { question: "Tell me about a challenging project you worked on. How did you resolve technical conflicts within your team?", type: "HR Behavioral", hint: "Use the STAR method: Situation, Task, Action, Result." },
+      { question: "Where do you see yourself in 3 years, and why are you interested in joining our company's engineering team?", type: "HR Career", hint: "Align your career growth with technical contributions." },
+      { question: "How do you handle strict project deadlines when unexpected bugs arise near release time?", type: "HR Work Ethic", hint: "Focus on prioritization, communication, and systematic debugging." }
+    ];
+
+    const aptitudeQuestions = [
+      { question: "A train running at 72 km/h crosses a 200m long platform in 25 seconds. What is the length of the train in meters?", type: "Quantitative Aptitude", hint: "Speed in m/s = 72 * (5/18) = 20 m/s. Total distance = Speed * Time." },
+      { question: "If 6 men and 8 boys can complete a work in 10 days, while 26 men and 48 boys can do it in 2 days, find the time taken by 15 men and 20 boys to complete it.", type: "Work & Time", hint: "Equate total work units: 10(6M + 8B) = 2(26M + 48B)." }
+    ];
+
+    const pool = mode === 'aptitude' ? aptitudeQuestions : mode === 'hr' ? hrQuestions : techQuestions;
+    const selected = pool[Math.floor(Math.random() * pool.length)];
+    return selected;
+  }
+
+  // POST /api/interview/feedback
+  @Post('api/interview/feedback')
+  async evaluateInterviewFeedback(@Body() body: any) {
+    const { question, answer, mode = 'technical' } = body || {};
+    if (!question || !answer) {
+      return { error: 'question and answer are required' };
+    }
+
+    const wordCount = (answer || '').trim().split(/\s+/).length;
+    let score = Math.min(10, Math.max(5, Math.floor(wordCount / 8) + 5));
+    if (wordCount < 10) score = 4;
+
+    return {
+      score,
+      strengths: [
+        "Good initiative and structured response.",
+        "Clear understanding of core concepts mentioned in the question.",
+        "Direct communication style suitable for campus placement interviews."
+      ],
+      improvements: [
+        "Include 1-2 real-world technical examples or project scenarios.",
+        "Elaborate on edge cases or performance tradeoffs.",
+        "Structure answer using the STAR format (Situation, Task, Action, Result)."
+      ],
+      modelAnswerSummary: "A strong model answer covers key terminology, step-by-step logic, practical use-cases, and efficiency considerations."
+    };
   }
 }

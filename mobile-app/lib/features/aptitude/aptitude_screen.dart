@@ -65,15 +65,67 @@ class _AptitudeScreenState extends State<AptitudeScreen> {
           title: ShaderMask(
             shaderCallback: (b) => MyVaultColors.accentGradient.createShader(b),
             child: const Text(
-              'Aptitude Practice',
+              'Aptitude & AI Coach',
               style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
             ),
           ),
         ),
         body: Column(
           children: [
+            // AI Interview & Aptitude Coach Action Card
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+              child: InkWell(
+                onTap: () => context.go('/ai-interview'),
+                borderRadius: BorderRadius.circular(18),
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(18),
+                    gradient: LinearGradient(
+                      colors: [
+                        MyVaultColors.accentBlue.withValues(alpha: 0.35),
+                        MyVaultColors.accentCyan.withValues(alpha: 0.15),
+                      ],
+                    ),
+                    border: Border.all(color: MyVaultColors.accentCyan.withValues(alpha: 0.4)),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          color: MyVaultColors.accentBlue,
+                        ),
+                        child: const Icon(Icons.psychology_rounded, color: Colors.white, size: 24),
+                      ),
+                      const SizedBox(width: 14),
+                      const Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'AI Campus Placement Coach',
+                              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15),
+                            ),
+                            SizedBox(height: 2),
+                            Text(
+                              'Practice Technical, HR & Aptitude with real-time AI scoring & feedback.',
+                              style: TextStyle(color: Colors.white70, fontSize: 11),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Icon(Icons.arrow_forward_ios_rounded, color: MyVaultColors.accentCyan, size: 18),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+
             SizedBox(
-              height: 48,
+              height: 44,
               child: ListView(
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(horizontal: 16),

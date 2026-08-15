@@ -2,8 +2,22 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/router.dart';
 import 'core/colors.dart';
+import 'services/push_notification_service.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  // Safely initialize push notifications
+  try {
+    await PushNotificationService.instance.initialize(
+      onCircularTapped: (message) {
+        appRouter.go('/academic-hub');
+      },
+    );
+  } catch (e) {
+    debugPrint('Push notifications setup skipped: $e');
+  }
+
   runApp(const ProviderScope(child: MyVaultApp()));
 }
 

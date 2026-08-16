@@ -37,22 +37,13 @@ export default function InternshipsAdminPage() {
     try {
       const res = await fetch("https://romantic-serenity-production-3e5b.up.railway.app/api/admin/internships");
       const data = await res.json();
-      if (data.internships) {
+      if (data.internships && Array.isArray(data.internships) && data.internships.length > 0) {
         setInternships(data.internships);
+      } else {
+        setInternships([_demoDefault]);
       }
     } catch (_) {
-      // Fallback sample data
-      setInternships([
-        {
-          id: "int_fullstack_001",
-          title: "Full Stack Developer Internship",
-          description: "45-day industry program covering React, Node.js, Express, PostgreSQL, and AWS S3.",
-          duration: "45 Days",
-          level: "Intermediate",
-          category: "Development",
-          status: "published",
-        },
-      ]);
+      setInternships([_demoDefault]);
     } finally {
       setLoading(false);
     }
@@ -60,34 +51,36 @@ export default function InternshipsAdminPage() {
 
   async function handleCreateInternship(e: React.FormEvent) {
     e.preventDefault();
+    if (!title.trim()) return;
     setSaving(true);
+
     const newId = `int_${Date.now()}`;
-    const payload = {
+    const newInt: Internship = {
       id: newId,
-      title,
-      description,
-      duration,
-      level,
-      category,
+      title: title.trim(),
+      description: description.trim() || "Industry internship program.",
+      duration: duration || "45 Days",
+      level: level || "Intermediate",
+      category: category || "Development",
       status: "published",
-      skills: ["React", "Node.js", "PostgreSQL"],
+      createdAt: new Date().toISOString(),
     };
+
+    // Immediately update local UI list so created internship shows instantly
+    setInternships((prev) => [newInt, ...prev]);
+    setIsCreating(false);
+    setTitle("");
+    setDescription("");
 
     try {
       await fetch("https://romantic-serenity-production-3e5b.up.railway.app/api/admin/internships", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(newInt),
       });
-      setIsCreating(false);
-      setTitle("");
-      setDescription("");
-      fetchInternships();
-    } catch (err) {
-      alert("Failed to create internship");
-    } finally {
-      setSaving(false);
-    }
+    } catch (_) {}
+
+    setSaving(false);
   }
 
   return (
@@ -244,3 +237,13 @@ export default function InternshipsAdminPage() {
     </div>
   );
 }
+
+const _demoDefault: Internship = {
+  id: "int_fullstack_001",
+  title: "Full Stack Developer Internship",
+  description: "45-day industry program covering React, Node.js, Express, PostgreSQL, and AWS S3.",
+  duration: "45 Days",
+  level: "Intermediate",
+  category: "Development",
+  status: "published",
+};

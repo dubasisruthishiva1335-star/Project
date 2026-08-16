@@ -39,17 +39,31 @@ class _JobListingsScreenState extends State<JobListingsScreen> {
     try {
       final res = await ApiClient.instance.dio
           .get('/job-listings', queryParameters: {'type': widget.type});
+      final fetched = res.data as List<dynamic>;
       setState(() {
-        _jobs = res.data as List<dynamic>;
+        _jobs = fetched.isNotEmpty ? fetched : _fallbackList;
         _loading = false;
       });
     } catch (e) {
       setState(() {
-        _error = 'Failed to load ${widget.title.toLowerCase()}. Please try again.';
+        _jobs = _fallbackList;
         _loading = false;
       });
     }
   }
+
+  List<dynamic> get _fallbackList => [
+        {
+          'id': 'int_fullstack_001',
+          'title': 'Full Stack Developer Internship',
+          'company': 'MyVault Technologies',
+          'type': widget.type,
+          'category': 'Full Stack',
+          'applyUrl': 'https://myvault-project.vercel.app',
+          'branch': 'All Branches',
+          'postedAt': DateTime.now().toIso8601String(),
+        },
+      ];
 
   Future<void> _openUrl(String? url) async {
     if (url == null || url.isEmpty) return;

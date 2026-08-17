@@ -9,7 +9,6 @@ import '../features/aptitude/aptitude_screen.dart';
 import '../features/documents_vault/documents_vault_screen.dart';
 import '../features/uploaded_files/uploaded_files_screen.dart';
 import '../features/ai_interview/ai_interview_screen.dart';
-import '../features/internships/screens/internship_catalog_screen.dart';
 import 'package:flutter/material.dart';
 
 /// App router — opens directly to /home with all feature routes wired up.
@@ -23,7 +22,6 @@ final GoRouter appRouter = GoRouter(
     GoRoute(path: '/documents-vault', builder: (context, state) => const DocumentsVaultScreen()),
     GoRoute(path: '/uploaded-files',  builder: (context, state) => const UploadedFilesScreen()),
     GoRoute(path: '/ai-interview',    builder: (context, state) => const AiInterviewScreen()),
-    GoRoute(path: '/internships-lms', builder: (context, state) => const InternshipCatalogScreen()),
     GoRoute(
       path: '/internships',
       builder: (context, state) => const JobListingsScreen(

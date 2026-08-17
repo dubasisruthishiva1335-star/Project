@@ -55,12 +55,30 @@ class _JobListingsScreenState extends State<JobListingsScreen> {
   List<dynamic> get _fallbackList => [
         {
           'id': 'int_fullstack_001',
-          'title': 'Full Stack Developer Internship',
-          'company': 'MyVault Technologies',
+          'title': 'Full Stack Developer Intern',
+          'company': 'Google / TechCorp',
           'type': widget.type,
           'category': 'Full Stack',
           'applyUrl': 'https://myvault-project.vercel.app',
+          'branch': 'CSE & IT',
+          'stipend': '₹25,000 / month',
+          'location': 'Hyderabad / Remote',
+          'deadline': '2026-09-30',
+          'description': 'Hands-on industrial development experience with React, Node.js, and Cloud services.',
+          'postedAt': DateTime.now().toIso8601String(),
+        },
+        {
+          'id': 'plc_tcs_002',
+          'title': 'Software Engineer — Graduate Trainee',
+          'company': 'TCS / Infosys',
+          'type': widget.type,
+          'category': 'Software Engineering',
+          'applyUrl': 'https://myvault-project.vercel.app',
           'branch': 'All Branches',
+          'stipend': '7.5 LPA',
+          'location': 'Bangalore',
+          'deadline': '2026-10-15',
+          'description': 'Full-time campus drive for B.Tech students. Selection via Aptitude + Technical interviews.',
           'postedAt': DateTime.now().toIso8601String(),
         },
       ];
@@ -140,27 +158,27 @@ class _JobListingsScreenState extends State<JobListingsScreen> {
   }
 
   Widget _buildCard(Map<String, dynamic> job) {
-    final deadline = job['deadline'] != null
-        ? DateTime.tryParse(job['deadline'])
-        : null;
+    final deadlineStr = job['deadline'] as String?;
+    final deadline = deadlineStr != null ? DateTime.tryParse(deadlineStr) : null;
     final isExpired = deadline != null && deadline.isBefore(DateTime.now());
 
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(18),
         color: MyVaultColors.glassFill,
         border: Border.all(
           color: isExpired
-              ? Colors.red.withValues(alpha: 0.2)
+              ? Colors.red.withValues(alpha: 0.3)
               : _accentColor.withValues(alpha: 0.25),
         ),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(18),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Top Row: Icon + Title + Company + Expired Badge
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -168,7 +186,7 @@ class _JobListingsScreenState extends State<JobListingsScreen> {
                   width: 44,
                   height: 44,
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(12),
                     gradient: LinearGradient(
                       colors: [_accentColor.withValues(alpha: 0.3), _accentColor.withValues(alpha: 0.1)],
                     ),
@@ -181,10 +199,10 @@ class _JobListingsScreenState extends State<JobListingsScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        job['title'] ?? 'Untitled',
+                        job['title'] ?? 'Untitled Opportunity',
                         style: const TextStyle(
                           color: Colors.white,
-                          fontSize: 15,
+                          fontSize: 16,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -195,7 +213,7 @@ class _JobListingsScreenState extends State<JobListingsScreen> {
                           style: TextStyle(
                             color: _accentColor,
                             fontSize: 13,
-                            fontWeight: FontWeight.w500,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ],
@@ -207,127 +225,91 @@ class _JobListingsScreenState extends State<JobListingsScreen> {
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(6),
-                      color: Colors.red.withValues(alpha: 0.15),
+                      color: Colors.red.withValues(alpha: 0.2),
                     ),
                     child: const Text(
                       'Expired',
-                      style: TextStyle(color: Colors.redAccent, fontSize: 11),
+                      style: TextStyle(color: Colors.redAccent, fontSize: 11, fontWeight: FontWeight.bold),
                     ),
                   ),
               ],
             ),
 
-            if (job['description'] != null) ...[
+            if (job['description'] != null && String.fromCharCodes(job['description'].runes).isNotEmpty) ...[
               const SizedBox(height: 12),
               Text(
                 job['description'],
-                style: const TextStyle(color: Colors.white60, fontSize: 13, height: 1.5),
+                style: const TextStyle(color: Colors.white70, fontSize: 13, height: 1.4),
                 maxLines: 3,
                 overflow: TextOverflow.ellipsis,
               ),
             ],
 
-            const SizedBox(height: 12),
+            const SizedBox(height: 14),
 
+            // Metadata Chips (Stipend, Location, Branch, Deadline)
             Wrap(
               spacing: 8,
               runSpacing: 6,
               children: [
+                if (job['stipend'] != null)
+                  _chip(Icons.payments_outlined, job['stipend'], MyVaultColors.accentCyan),
                 if (job['location'] != null)
-                  _chip(Icons.location_on_outlined, job['location']),
-                if (job['salary'] != null)
-                  _chip(Icons.currency_rupee_rounded, job['salary']),
+                  _chip(Icons.location_on_outlined, job['location'], Colors.white70),
                 if (job['branch'] != null && job['branch'] != 'ALL')
-                  _chip(Icons.school_outlined, job['branch']),
-                if (deadline != null)
+                  _chip(Icons.school_outlined, job['branch'], Colors.white70),
+                if (deadlineStr != null && deadlineStr.isNotEmpty)
                   _chip(
-                    Icons.calendar_today_outlined,
-                    'Due: ${deadline.day}/${deadline.month}/${deadline.year}',
-                    color: isExpired ? Colors.redAccent : Colors.white54,
+                    Icons.event_outlined,
+                    'Due: ${deadlineStr.split('T').first}',
+                    isExpired ? Colors.redAccent : Colors.amber,
                   ),
               ],
             ),
 
-            if (job['applyUrl'] != null || job['fileUrl'] != null) ...[
-              const SizedBox(height: 14),
-              Row(
-                children: [
-                  if (job['applyUrl'] != null)
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: () => _openUrl(job['applyUrl']),
-                        icon: const Icon(Icons.open_in_new_rounded, size: 15),
-                        label: const Text('Apply Now'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: _accentColor,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 10),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                      ),
+            const SizedBox(height: 16),
+
+            // Action Row: Apply Button / PDF View Link
+            Row(
+              children: [
+                const Spacer(),
+                if (job['applyUrl'] != null || job['fileUrl'] != null)
+                  ElevatedButton.icon(
+                    onPressed: () => _openUrl(job['applyUrl'] ?? job['fileUrl']),
+                    icon: const Icon(Icons.open_in_new_rounded, color: Colors.white, size: 14),
+                    label: const Text('Apply Now', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: _accentColor,
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                     ),
-                  if (job['applyUrl'] != null && job['fileUrl'] != null)
-                    const SizedBox(width: 8),
-                  if (job['fileUrl'] != null)
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: () => _openUrl(job['fileUrl']),
-                        icon: const Icon(Icons.download_rounded, size: 15),
-                        label: const Text('Download PDF'),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: _accentColor,
-                          side: BorderSide(color: _accentColor.withValues(alpha: 0.5)),
-                          padding: const EdgeInsets.symmetric(vertical: 10),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ],
+                  ),
+              ],
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _chip(IconData icon, String text, {Color? color}) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, color: color ?? Colors.white38, size: 13),
-        const SizedBox(width: 4),
-        Text(
-          text,
-          style: TextStyle(color: color ?? Colors.white54, fontSize: 12),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildError() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.wifi_off_rounded, color: Colors.white24, size: 60),
-            const SizedBox(height: 16),
-            Text(_error!, textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.white54, fontSize: 14)),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _loadJobs,
-              style: ElevatedButton.styleFrom(backgroundColor: MyVaultColors.accentBlue),
-              child: const Text('Retry'),
-            ),
-          ],
-        ),
+  Widget _chip(IconData icon, String label, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withValues(alpha: 0.25)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 13, color: color),
+          const SizedBox(width: 5),
+          Text(
+            label,
+            style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.w500),
+          ),
+        ],
       ),
     );
   }
@@ -337,16 +319,35 @@ class _JobListingsScreenState extends State<JobListingsScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(widget.icon, color: Colors.white12, size: 70),
+          Icon(widget.icon, size: 64, color: Colors.white24),
           const SizedBox(height: 16),
           Text(
             'No ${widget.title} posted yet',
-            style: const TextStyle(color: Colors.white38, fontSize: 15),
+            style: const TextStyle(color: Colors.white70, fontSize: 16, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 6),
           const Text(
             'Check back later or ask your admin',
-            style: TextStyle(color: Colors.white24, fontSize: 13),
+            style: TextStyle(color: Colors.white38, fontSize: 12),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildError() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.error_outline_rounded, size: 48, color: Colors.redAccent),
+          const SizedBox(height: 12),
+          Text(_error!, style: const TextStyle(color: Colors.white70, fontSize: 14)),
+          const SizedBox(height: 12),
+          ElevatedButton(
+            onPressed: _loadJobs,
+            style: ElevatedButton.styleFrom(backgroundColor: MyVaultColors.accentBlue),
+            child: const Text('Retry', style: TextStyle(color: Colors.white)),
           ),
         ],
       ),

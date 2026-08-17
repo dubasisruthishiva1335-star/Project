@@ -37,6 +37,8 @@ let globalJobListings = [
     branch: "CSE & IT",
     stipend: "₹25,000 / month",
     location: "Hyderabad / Remote",
+    deadline: "2026-09-30",
+    description: "Hands-on industrial development experience with React, Node.js, and Cloud services.",
     postedAt: new Date().toISOString(),
   },
   {
@@ -47,8 +49,10 @@ let globalJobListings = [
     category: "Software Engineering",
     applyUrl: "https://tcs.com/careers",
     branch: "All Branches",
-    salary: "7.5 LPA",
+    stipend: "7.5 LPA",
     location: "Bangalore",
+    deadline: "2026-10-15",
+    description: "Full-time campus drive for B.Tech students. Selection via Aptitude + Technical interviews.",
     postedAt: new Date().toISOString(),
   },
 ];
@@ -81,7 +85,8 @@ async function initDb() {
       CREATE TABLE IF NOT EXISTS job_listings (
         id TEXT PRIMARY KEY, title TEXT NOT NULL, company TEXT NOT NULL,
         type TEXT NOT NULL DEFAULT 'INTERNSHIP', branch TEXT, apply_url TEXT,
-        file_url TEXT, posted_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        file_url TEXT, stipend TEXT, location TEXT, deadline TEXT, description TEXT,
+        posted_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       );
     `);
     console.log("Database initialized cleanly.");
@@ -176,7 +181,11 @@ app.get(["/job-listings", "/api/job-listings", "/admin/job-listings"], async (re
   let items = [...globalJobListings];
 
   try {
-    const { rows } = await pool.query(`SELECT id, title, company, type, branch, apply_url AS "applyUrl", file_url AS "fileUrl", posted_at AS "postedAt" FROM job_listings ORDER BY posted_at DESC`);
+    const { rows } = await pool.query(
+      `SELECT id, title, company, type, branch, apply_url AS "applyUrl", file_url AS "fileUrl",
+              stipend, location, deadline, description, posted_at AS "postedAt"
+       FROM job_listings ORDER BY posted_at DESC`
+    );
     if (rows.length > 0) items = rows;
   } catch (_) {}
 
@@ -188,15 +197,19 @@ app.get(["/job-listings", "/api/job-listings", "/admin/job-listings"], async (re
 });
 
 app.post(["/admin/job-listings/confirm", "/api/admin/job-listings/confirm"], async (req, res) => {
-  const { title, company, type = "INTERNSHIP", applyUrl, branch, fileUrl } = req.body;
+  const { title, company, type = "INTERNSHIP", applyUrl, branch, fileUrl, stipend, location, deadline, description, publicUrl } = req.body;
   const newJob = {
     id: `job_${Date.now()}`,
     title: title || "Full Stack Developer Intern",
     company: company || "MyVault Partner",
     type: type || "INTERNSHIP",
-    applyUrl: applyUrl || "https://myvault-project.vercel.app",
+    applyUrl: applyUrl || publicUrl || "https://myvault-project.vercel.app",
     branch: branch || "All Branches",
-    fileUrl: fileUrl || null,
+    fileUrl: fileUrl || publicUrl || null,
+    stipend: stipend || "₹20,000 / month",
+    location: location || "Hyderabad / Remote",
+    deadline: deadline || null,
+    description: description || null,
     postedAt: new Date().toISOString(),
   };
 
@@ -204,9 +217,9 @@ app.post(["/admin/job-listings/confirm", "/api/admin/job-listings/confirm"], asy
 
   try {
     await pool.query(
-      `INSERT INTO job_listings (id, title, company, type, branch, apply_url, file_url, posted_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())`,
-      [newJob.id, newJob.title, newJob.company, newJob.type, newJob.branch, newJob.applyUrl, newJob.fileUrl]
+      `INSERT INTO job_listings (id, title, company, type, branch, apply_url, file_url, stipend, location, deadline, description, posted_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW())`,
+      [newJob.id, newJob.title, newJob.company, newJob.type, newJob.branch, newJob.applyUrl, newJob.fileUrl, newJob.stipend, newJob.location, newJob.deadline, newJob.description]
     );
   } catch (_) {}
 

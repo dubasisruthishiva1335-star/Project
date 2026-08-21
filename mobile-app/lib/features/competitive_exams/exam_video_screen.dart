@@ -8,20 +8,29 @@ class ExamVideoScreen extends StatefulWidget {
   final String examName;
   final String category;
   final List<dynamic> initialVideos;
+  final List<dynamic>? initialPdfNotes;
+  final String? syllabusSummary;
+  final String? selectionProcess;
 
   const ExamVideoScreen({
     super.key,
     required this.examName,
     required this.category,
     required this.initialVideos,
+    this.initialPdfNotes,
+    this.syllabusSummary,
+    this.selectionProcess,
   });
 
   @override
   State<ExamVideoScreen> createState() => _ExamVideoScreenState();
 }
 
-class _ExamVideoScreenState extends State<ExamVideoScreen> {
+class _ExamVideoScreenState extends State<ExamVideoScreen>
+    with SingleTickerProviderStateMixin {
+  late TabController _prepTabController;
   List<dynamic> _videos = [];
+  List<dynamic> _pdfNotes = [];
   final Set<String> _watchedVideoIds = {};
   bool _loading = true;
   bool _generatingCert = false;
@@ -30,24 +39,33 @@ class _ExamVideoScreenState extends State<ExamVideoScreen> {
   @override
   void initState() {
     super.initState();
+    _prepTabController = TabController(length: 4, vsync: this);
     _videos = widget.initialVideos;
-    _fetchExamVideos();
+    _pdfNotes = widget.initialPdfNotes ?? [];
+    _fetchExamDetails();
   }
 
-  Future<void> _fetchExamVideos() async {
+  @override
+  void dispose() {
+    _prepTabController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _fetchExamDetails() async {
     try {
-      final res = await ApiClient.instance.dio.get('/api/exams/${Uri.encodeComponent(widget.examName)}/videos');
+      final res = await ApiClient.instance.dio.get('/api/exams/${Uri.encodeComponent(widget.examName)}');
       final data = res.data as Map<String, dynamic>;
-      final fetched = data['videos'] as List<dynamic>?;
-      if (fetched != null && fetched.isNotEmpty) {
-        setState(() {
-          _videos = fetched;
-          _loading = false;
-        });
-        return;
-      }
-    } catch (_) {}
-    setState(() => _loading = false);
+      final fetchedVideos = data['videos'] as List<dynamic>?;
+      final fetchedPdfs = data['pdfNotes'] as List<dynamic>?;
+
+      setState(() {
+        if (fetchedVideos != null && fetchedVideos.isNotEmpty) _videos = fetchedVideos;
+        if (fetchedPdfs != null && fetchedPdfs.isNotEmpty) _pdfNotes = fetchedPdfs;
+        _loading = false;
+      });
+    } catch (_) {
+      setState(() => _loading = false);
+    }
   }
 
   double get _progressPercentage {
@@ -63,7 +81,6 @@ class _ExamVideoScreenState extends State<ExamVideoScreen> {
     final videoId = v['id'] as String? ?? 'v_$index';
     _watchedVideoIds.add(videoId);
 
-    // Save progress to API
     try {
       await ApiClient.instance.dio.post('/api/exams/progress', data: {
         'userId': 'user123',
@@ -143,216 +160,310 @@ class _ExamVideoScreenState extends State<ExamVideoScreen> {
         ),
         title: Text(
           widget.examName,
-          style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 17),
+          style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 16),
+        ),
+        bottom: TabBar(
+          controller: _prepTabController,
+          indicatorColor: MyVaultColors.accentCyan,
+          labelColor: MyVaultColors.accentCyan,
+          unselectedLabelColor: Colors.white54,
+          labelStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+          tabs: const [
+            Tab(icon: Icon(Icons.play_circle_fill_rounded, size: 18), text: 'Lectures'),
+            Tab(icon: Icon(Icons.picture_as_pdf_rounded, size: 18), text: 'S3 Notes'),
+            Tab(icon: Icon(Icons.menu_book_rounded, size: 18), text: 'Syllabus'),
+            Tab(icon: Icon(Icons.workspace_premium_rounded, size: 18), text: 'Certificate'),
+          ],
         ),
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator(color: MyVaultColors.accentCyan))
-          : Column(
+          : TabBarView(
+              controller: _prepTabController,
               children: [
-                // Video Stream Player Screen Banner
-                Container(
-                  width: double.infinity,
-                  height: 210,
-                  decoration: const BoxDecoration(
-                    color: Colors.black,
-                  ),
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      Container(
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              MyVaultColors.accentBlue.withValues(alpha: 0.3),
-                              MyVaultColors.obsidian,
-                            ],
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                          ),
-                        ),
-                      ),
-                      Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                // TAB 1: S3 Video Lectures Player & Playlist
+                Column(
+                  children: [
+                    // Stream Player Card
+                    Container(
+                      width: double.infinity,
+                      height: 200,
+                      color: Colors.black,
+                      child: Stack(
+                        alignment: Alignment.center,
                         children: [
-                          GestureDetector(
-                            onTap: () => _playVideo(_activeVideoIndex),
-                            child: Container(
-                              width: 64,
-                              height: 64,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                gradient: MyVaultColors.accentGradient,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: MyVaultColors.accentCyan.withValues(alpha: 0.4),
-                                    blurRadius: 20,
-                                    spreadRadius: 2,
-                                  ),
+                          Container(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  MyVaultColors.accentBlue.withValues(alpha: 0.35),
+                                  MyVaultColors.obsidian,
                                 ],
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
                               ),
-                              child: const Icon(Icons.play_arrow_rounded, color: Colors.white, size: 40),
                             ),
                           ),
-                          const SizedBox(height: 12),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 20),
-                            child: Text(
-                              activeVideo?['title'] ?? 'Select a Video Lecture',
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 15,
-                                fontWeight: FontWeight.bold,
-                              ),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'AWS S3 Stream • ${activeVideo?['duration'] ?? '15:00'}',
-                            style: const TextStyle(color: MyVaultColors.accentCyan, fontSize: 12),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-
-                // Progress Tracker Header
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  color: MyVaultColors.glassFill,
-                  child: Column(
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text(
-                            'Course Completion Progress',
-                            style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600),
-                          ),
-                          Text(
-                            '${(_progressPercentage * 100).toInt()}% Complete',
-                            style: const TextStyle(color: MyVaultColors.accentCyan, fontSize: 13, fontWeight: FontWeight.bold),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(6),
-                        child: LinearProgressIndicator(
-                          value: _progressPercentage,
-                          minHeight: 8,
-                          backgroundColor: Colors.white10,
-                          valueColor: const AlwaysStoppedAnimation<Color>(MyVaultColors.accentCyan),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                // Video Playlist Title
-                const Padding(
-                  padding: EdgeInsets.fromLTRB(16, 14, 16, 8),
-                  child: Row(
-                    children: [
-                      Icon(Icons.video_library_rounded, color: MyVaultColors.accentCyan, size: 18),
-                      SizedBox(width: 8),
-                      Text(
-                        'AWS S3 Video Lectures & Materials',
-                        style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
-                      ),
-                    ],
-                  ),
-                ),
-
-                // Playlist
-                Expanded(
-                  child: ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 14),
-                    itemCount: _videos.length,
-                    itemBuilder: (ctx, i) {
-                      final v = _videos[i];
-                      final vId = v['id'] as String? ?? 'v_$i';
-                      final isWatched = _watchedVideoIds.contains(vId);
-                      final isSelected = i == _activeVideoIndex;
-
-                      return Container(
-                        margin: const EdgeInsets.only(bottom: 8),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(12),
-                          color: isSelected ? MyVaultColors.accentBlue.withValues(alpha: 0.15) : MyVaultColors.glassFill,
-                          border: Border.all(
-                            color: isSelected ? MyVaultColors.accentCyan : MyVaultColors.glassBorder,
-                          ),
-                        ),
-                        child: ListTile(
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-                          leading: CircleAvatar(
-                            backgroundColor: isWatched ? Colors.green.withValues(alpha: 0.2) : MyVaultColors.accentBlue.withValues(alpha: 0.2),
-                            child: Icon(
-                              isWatched ? Icons.check_circle_rounded : Icons.play_arrow_rounded,
-                              color: isWatched ? Colors.greenAccent : MyVaultColors.accentCyan,
-                              size: 20,
-                            ),
-                          ),
-                          title: Text(
-                            v['title'] ?? 'Lecture ${i + 1}',
-                            style: TextStyle(
-                              color: isSelected ? MyVaultColors.accentCyan : Colors.white,
-                              fontSize: 13.5,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          subtitle: Text(
-                            'Duration: ${v['duration'] ?? '15:00'} • ${v['subject'] ?? 'General'}',
-                            style: const TextStyle(color: Colors.white54, fontSize: 11),
-                          ),
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
+                          Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              if (v['pdfUrl'] != null)
-                                IconButton(
-                                  icon: const Icon(Icons.picture_as_pdf_outlined, color: Colors.amber, size: 20),
-                                  onPressed: () => _openPdf(v['pdfUrl']),
+                              GestureDetector(
+                                onTap: () => _playVideo(_activeVideoIndex),
+                                child: Container(
+                                  width: 60,
+                                  height: 60,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    gradient: MyVaultColors.accentGradient,
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: MyVaultColors.accentCyan.withValues(alpha: 0.4),
+                                        blurRadius: 20,
+                                        spreadRadius: 2,
+                                      ),
+                                    ],
+                                  ),
+                                  child: const Icon(Icons.play_arrow_rounded, color: Colors.white, size: 36),
                                 ),
-                              IconButton(
+                              ),
+                              const SizedBox(height: 10),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 20),
+                                child: Text(
+                                  activeVideo?['title'] ?? 'Select a Video Lecture',
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'AWS S3 Stream • ${activeVideo?['duration'] ?? '20:00'}',
+                                style: const TextStyle(color: MyVaultColors.accentCyan, fontSize: 11),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // Progress Bar
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                      color: MyVaultColors.glassFill,
+                      child: Column(
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text('Lecture Completion', style: TextStyle(color: Colors.white70, fontSize: 12)),
+                              Text('${(_progressPercentage * 100).toInt()}% Done', style: const TextStyle(color: MyVaultColors.accentCyan, fontSize: 12, fontWeight: FontWeight.bold)),
+                            ],
+                          ),
+                          const SizedBox(height: 6),
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(4),
+                            child: LinearProgressIndicator(
+                              value: _progressPercentage,
+                              minHeight: 6,
+                              backgroundColor: Colors.white10,
+                              valueColor: const AlwaysStoppedAnimation<Color>(MyVaultColors.accentCyan),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // Playlist
+                    Expanded(
+                      child: ListView.builder(
+                        padding: const EdgeInsets.all(12),
+                        itemCount: _videos.length,
+                        itemBuilder: (ctx, i) {
+                          final v = _videos[i];
+                          final vId = v['id'] as String? ?? 'v_$i';
+                          final isWatched = _watchedVideoIds.contains(vId);
+                          final isSelected = i == _activeVideoIndex;
+
+                          return Container(
+                            margin: const EdgeInsets.only(bottom: 8),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(12),
+                              color: isSelected ? MyVaultColors.accentBlue.withValues(alpha: 0.18) : MyVaultColors.glassFill,
+                              border: Border.all(
+                                color: isSelected ? MyVaultColors.accentCyan : MyVaultColors.glassBorder,
+                              ),
+                            ),
+                            child: ListTile(
+                              leading: CircleAvatar(
+                                radius: 18,
+                                backgroundColor: isWatched ? Colors.green.withValues(alpha: 0.2) : MyVaultColors.accentBlue.withValues(alpha: 0.2),
+                                child: Icon(
+                                  isWatched ? Icons.check_circle_rounded : Icons.play_arrow_rounded,
+                                  color: isWatched ? Colors.greenAccent : MyVaultColors.accentCyan,
+                                  size: 18,
+                                ),
+                              ),
+                              title: Text(
+                                v['title'] ?? 'Lecture ${i + 1}',
+                                style: TextStyle(
+                                  color: isSelected ? MyVaultColors.accentCyan : Colors.white,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              subtitle: Text(
+                                'Duration: ${v['duration'] ?? '20:00'} • ${v['subject'] ?? 'General'}',
+                                style: const TextStyle(color: Colors.white54, fontSize: 11),
+                              ),
+                              trailing: IconButton(
                                 icon: const Icon(Icons.play_circle_fill_rounded, color: MyVaultColors.accentCyan, size: 22),
                                 onPressed: () => _playVideo(i),
                               ),
-                            ],
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+
+                // TAB 2: PDF Notes & Previous Year Questions (PYQs)
+                ListView.builder(
+                  padding: const EdgeInsets.all(14),
+                  itemCount: _pdfNotes.length,
+                  itemBuilder: (ctx, i) {
+                    final pdf = _pdfNotes[i];
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 10),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(14),
+                        color: MyVaultColors.glassFill,
+                        border: Border.all(color: MyVaultColors.glassBorder),
+                      ),
+                      child: ListTile(
+                        leading: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(10),
+                            color: Colors.amber.withValues(alpha: 0.15),
+                          ),
+                          child: const Icon(Icons.picture_as_pdf_rounded, color: Colors.amber, size: 22),
+                        ),
+                        title: Text(
+                          pdf['title'] ?? 'Study Material PDF',
+                          style: const TextStyle(color: Colors.white, fontSize: 13.5, fontWeight: FontWeight.bold),
+                        ),
+                        subtitle: Text(
+                          'Subject: ${pdf['subject'] ?? 'General'} • Stored on AWS S3',
+                          style: const TextStyle(color: Colors.white54, fontSize: 11),
+                        ),
+                        trailing: ElevatedButton.icon(
+                          onPressed: () => _openPdf(pdf['fileUrl']),
+                          icon: const Icon(Icons.open_in_new_rounded, color: Colors.white, size: 12),
+                          label: const Text('Open PDF', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: MyVaultColors.accentBlue,
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                           ),
                         ),
-                      );
-                    },
+                      ),
+                    );
+                  },
+                ),
+
+                // TAB 3: Syllabus & Exam Pattern Roadmap
+                SingleChildScrollView(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        '📜 Official Exam Pattern & Selection Process',
+                        style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 8),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          color: MyVaultColors.glassFill,
+                          border: Border.all(color: MyVaultColors.glassBorder),
+                        ),
+                        child: Text(
+                          widget.selectionProcess ?? 'Written Examination ➔ Document Verification ➔ Selection',
+                          style: const TextStyle(color: MyVaultColors.accentCyan, fontSize: 13, height: 1.4),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      const Text(
+                        '📚 Syllabus Overview & Weightage',
+                        style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 8),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          color: MyVaultColors.glassFill,
+                          border: Border.all(color: MyVaultColors.glassBorder),
+                        ),
+                        child: Text(
+                          widget.syllabusSummary ?? 'General Studies, Aptitude, Core Technical Subjects & Current Affairs.',
+                          style: const TextStyle(color: Colors.white70, fontSize: 13, height: 1.5),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
 
-                // Bottom Certificate Action Bar
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: const BoxDecoration(
-                    color: MyVaultColors.obsidian,
-                    border: Border(top: BorderSide(color: MyVaultColors.glassBorder)),
-                  ),
-                  child: SizedBox(
-                    width: double.infinity,
-                    height: 48,
-                    child: ElevatedButton.icon(
-                      onPressed: _generatingCert ? null : _generateCertificate,
-                      icon: _generatingCert
-                          ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                          : const Icon(Icons.workspace_premium_rounded, color: Colors.white, size: 20),
-                      label: Text(
-                        _generatingCert ? 'Generating S3 Certificate...' : 'Get Verified S3 Certificate',
-                        style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      ),
+                // TAB 4: Verified Certificate Desk
+                Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.workspace_premium_rounded, size: 80, color: Colors.amber),
+                        const SizedBox(height: 16),
+                        const Text(
+                          'S3 Verified Certification Desk',
+                          style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Complete all S3 video lectures and study materials for ${widget.examName} to unlock your official verified certificate.',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(color: Colors.white54, fontSize: 12.5),
+                        ),
+                        const SizedBox(height: 24),
+                        SizedBox(
+                          width: double.infinity,
+                          height: 48,
+                          child: ElevatedButton.icon(
+                            onPressed: _generatingCert ? null : _generateCertificate,
+                            icon: _generatingCert
+                                ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                                : const Icon(Icons.verified_rounded, color: Colors.white),
+                            label: Text(
+                              _generatingCert ? 'Generating Certificate...' : 'Generate S3 Verified Certificate',
+                              style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.green,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),

@@ -6,7 +6,7 @@
  *   2. Academic Resources & Notes
  *   3. Circulars & Push Notifications
  *   4. Results & AI Performance Analyzer
- *   5. Competitive Exams & AWS S3 Video Hub + Auto Certificate
+ *   5. Structured Competitive Exams Preparation Hub (Videos, PDFs, PYQs, Syllabus, S3 Certificates)
  * -----------------------------------------------------------
  */
 
@@ -57,90 +57,140 @@ let globalJobListings = [
     description: "Full-time campus drive for B.Tech students. Selection via Aptitude + Technical interviews.",
     postedAt: new Date().toISOString(),
   },
+  {
+    id: "job_govt_01",
+    title: "Assistant Executive Engineer (AEE)",
+    company: "TSPSC / Telangana State PSC",
+    type: "GOVT_JOB",
+    category: "State Engineering Services",
+    applyUrl: "https://tspsc.gov.in",
+    branch: "Civil & Mechanical",
+    stipend: "Pay Scale: ₹45,000 - ₹1,20,000",
+    location: "Telangana",
+    deadline: "2026-11-01",
+    description: "Official recruitment for Telangana State Public Service Commission AEE positions.",
+    postedAt: new Date().toISOString(),
+  },
 ];
 
 // ---------------------------------------------------------------
-// In-Memory Storage Cache for Competitive Exams & S3 Videos
+// Structured Competitive Exams Preparation Data Base
 // ---------------------------------------------------------------
 let globalExams = [
   {
     id: "exam_upsc",
-    name: "UPSC Civil Services",
+    name: "UPSC Civil Services (IAS / IPS / IFS)",
     cat: "Government",
     icon: "🏛️",
-    description: "IAS, IPS, IFS & Allied Services examination comprehensive roadmap & lecture series.",
-    eligibility: "Graduate (Any Discipline)",
+    description: "Union Public Service Commission Civil Services Examination full preparation roadmap, S3 video series, PYQs & PDF study notes.",
+    eligibility: "Graduate in any discipline",
     ageLimit: "21 - 32 Years",
+    selectionProcess: "Prelims (GS + CSAT) ➔ Mains (9 Written Papers) ➔ Personality Interview",
+    syllabusSummary: "History, Geography, Polity & Governance, Economy, Environment, Ethics, International Relations & Current Affairs.",
     videos: [
       {
         id: "v_upsc_01",
-        title: "UPSC Syllabus & Exam Pattern Full Guide",
-        duration: "15:20",
+        title: "UPSC Prelims & Mains Complete Strategy & Exam Pattern",
+        subject: "Exam Strategy",
+        duration: "18:30",
         s3Url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
         pdfUrl: "https://myvault-files-app.s3.eu-north-1.amazonaws.com/app-arm64-v8a-release.apk",
-        subject: "General Studies",
       },
       {
         id: "v_upsc_02",
-        title: "Indian Polity & Constitution Masterclass",
-        duration: "22:10",
+        title: "Indian Polity & Constitution Fundamental Rights & Articles",
+        subject: "Indian Polity",
+        duration: "25:40",
         s3Url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
         pdfUrl: "https://myvault-files-app.s3.eu-north-1.amazonaws.com/app-arm64-v8a-release.apk",
-        subject: "Polity",
       },
       {
         id: "v_upsc_03",
-        title: "Previous Year Questions Analysis & Topper Strategy",
-        duration: "18:45",
+        title: "Indian Economy & Budget Analysis for Civil Services",
+        subject: "Economy",
+        duration: "22:15",
         s3Url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
         pdfUrl: "https://myvault-files-app.s3.eu-north-1.amazonaws.com/app-arm64-v8a-release.apk",
-        subject: "Strategy",
+      },
+    ],
+    pdfNotes: [
+      {
+        id: "pdf_upsc_01",
+        title: "UPSC Indian Polity Laxmikanth Summary Notes",
+        subject: "Polity",
+        fileUrl: "https://myvault-files-app.s3.eu-north-1.amazonaws.com/app-arm64-v8a-release.apk",
+      },
+      {
+        id: "pdf_upsc_02",
+        title: "UPSC Prelims Last 10 Years Solved PYQ Paper",
+        subject: "Previous Papers",
+        fileUrl: "https://myvault-files-app.s3.eu-north-1.amazonaws.com/app-arm64-v8a-release.apk",
       },
     ],
   },
   {
     id: "exam_ssc",
-    name: "SSC CGL",
+    name: "SSC CGL (Staff Selection Commission)",
     cat: "Government",
     icon: "🏛️",
-    description: "Staff Selection Commission Combined Graduate Level examination prep series.",
-    eligibility: "Bachelor's Degree",
+    description: "Combined Graduate Level Examination for Group B & C central government posts.",
+    eligibility: "Bachelor's Degree in any stream",
     ageLimit: "18 - 30 Years",
+    selectionProcess: "Tier-1 Computer Based Exam ➔ Tier-2 CBT & Data Entry Speed Test",
+    syllabusSummary: "Quantitative Aptitude, General Intelligence & Reasoning, English Language, General Awareness & Computer Knowledge.",
     videos: [
       {
         id: "v_ssc_01",
-        title: "Quantitative Aptitude & Fast Calculation Tricks",
-        duration: "25:00",
+        title: "Quantitative Aptitude Shortcut Methods & Vedic Math",
+        subject: "Quant",
+        duration: "28:10",
         s3Url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
         pdfUrl: "https://myvault-files-app.s3.eu-north-1.amazonaws.com/app-arm64-v8a-release.apk",
-        subject: "Quant",
       },
       {
         id: "v_ssc_02",
-        title: "Reasoning & Logical Shortcuts",
-        duration: "19:30",
+        title: "Logical Reasoning & Non-Verbal Tricks for Tier 1",
+        subject: "Reasoning",
+        duration: "20:00",
         s3Url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
         pdfUrl: "https://myvault-files-app.s3.eu-north-1.amazonaws.com/app-arm64-v8a-release.apk",
-        subject: "Reasoning",
+      },
+    ],
+    pdfNotes: [
+      {
+        id: "pdf_ssc_01",
+        title: "SSC CGL Math Formulas & Speed Test Sheet",
+        subject: "Quant",
+        fileUrl: "https://myvault-files-app.s3.eu-north-1.amazonaws.com/app-arm64-v8a-release.apk",
       },
     ],
   },
   {
     id: "exam_banking",
-    name: "SBI PO / IBPS PO",
+    name: "SBI PO / IBPS PO & Clerk",
     cat: "Banking",
     icon: "🏦",
-    description: "Probationary Officer & Clerk recruitment exams for public sector banks.",
+    description: "Probationary Officer & Specialist Officer examinations for nationalized banks.",
     eligibility: "Graduate in any discipline",
     ageLimit: "20 - 30 Years",
+    selectionProcess: "Prelims CBT ➔ Mains CBT ➔ Psychometric Test & Group Exercise / Interview",
+    syllabusSummary: "Data Analysis & Interpretation, Reasoning Ability, English, General & Banking Awareness.",
     videos: [
       {
         id: "v_bank_01",
-        title: "Banking Awareness & Financial General Knowledge",
-        duration: "20:15",
+        title: "Banking Awareness & RBI Monetary Policy Masterclass",
+        subject: "Banking GK",
+        duration: "24:30",
         s3Url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
         pdfUrl: "https://myvault-files-app.s3.eu-north-1.amazonaws.com/app-arm64-v8a-release.apk",
-        subject: "Banking Awareness",
+      },
+    ],
+    pdfNotes: [
+      {
+        id: "pdf_bank_01",
+        title: "Banking Terms & Financial Awareness PDF Capsule",
+        subject: "Banking GK",
+        fileUrl: "https://myvault-files-app.s3.eu-north-1.amazonaws.com/app-arm64-v8a-release.apk",
       },
     ],
   },
@@ -149,112 +199,172 @@ let globalExams = [
     name: "RRB NTPC & Railway JE",
     cat: "Railways",
     icon: "🚆",
-    description: "Indian Railways Non-Technical Popular Categories & Junior Engineer preparation.",
-    eligibility: "12th / Graduate / Diploma",
+    description: "Indian Railways recruitment for Non-Technical Popular Categories & Junior Engineer posts.",
+    eligibility: "10+2 / Graduate / Diploma / B.Tech",
     ageLimit: "18 - 33 Years",
+    selectionProcess: "1st Stage CBT ➔ 2nd Stage CBT ➔ Typing Skill Test / Document Verification",
+    syllabusSummary: "General Science (Physics, Chemistry, Life Sciences), Mathematics, Reasoning & General Awareness.",
     videos: [
       {
         id: "v_rrb_01",
-        title: "General Science & Railway Physics Overview",
-        duration: "16:40",
+        title: "General Science Physics & Chemistry Railway Special",
+        subject: "Science",
+        duration: "19:45",
         s3Url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
         pdfUrl: "https://myvault-files-app.s3.eu-north-1.amazonaws.com/app-arm64-v8a-release.apk",
+      },
+    ],
+    pdfNotes: [
+      {
+        id: "pdf_rrb_01",
+        title: "RRB Science Previous 500 Question Bank PDF",
         subject: "Science",
+        fileUrl: "https://myvault-files-app.s3.eu-north-1.amazonaws.com/app-arm64-v8a-release.apk",
       },
     ],
   },
   {
     id: "exam_jee",
-    name: "JEE Main / Advanced",
+    name: "JEE Main / Advanced (Engineering)",
     cat: "Higher Education",
     icon: "🎓",
-    description: "National engineering entrance for IITs, NITs, and premier institutions.",
-    eligibility: "Class 12 Passed / Appearing (PCM)",
+    description: "Premier national engineering entrance examination for IITs, NITs, IIITs, and CFTIs.",
+    eligibility: "Class 12 Passed or Appearing with Physics, Chemistry & Math",
     ageLimit: "No Age Limit",
+    selectionProcess: "JEE Main Session 1 & 2 CBT ➔ Top 2.5 Lakh Qualify for JEE Advanced",
+    syllabusSummary: "Physics (Mechanics, Electrodynamics), Chemistry (Organic, Inorganic, Physical), Mathematics (Calculus, Algebra).",
     videos: [
       {
         id: "v_jee_01",
-        title: "Physics Mechanics & Calculus Problem Solving",
-        duration: "28:10",
+        title: "Physics Mechanics & Calculus Problem Solving Techniques",
+        subject: "Physics",
+        duration: "32:00",
         s3Url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
         pdfUrl: "https://myvault-files-app.s3.eu-north-1.amazonaws.com/app-arm64-v8a-release.apk",
-        subject: "Physics",
+      },
+    ],
+    pdfNotes: [
+      {
+        id: "pdf_jee_01",
+        title: "JEE Main Chemistry Formula Cheat Sheet PDF",
+        subject: "Chemistry",
+        fileUrl: "https://myvault-files-app.s3.eu-north-1.amazonaws.com/app-arm64-v8a-release.apk",
       },
     ],
   },
   {
     id: "exam_neet",
-    name: "NEET-UG Medical Entrance",
+    name: "NEET-UG (Medical Entrance)",
     cat: "Higher Education",
     icon: "🩺",
-    description: "National Eligibility cum Entrance Test for MBBS, BDS, and AYUSH courses.",
-    eligibility: "Class 12 Passed / Appearing (PCB)",
-    ageLimit: "17+ Years",
+    description: "National entrance examination for MBBS, BDS, BAMS, BHMS, and medical admissions.",
+    eligibility: "Class 12 Passed or Appearing with Physics, Chemistry & Biology",
+    ageLimit: "Minimum 17 Years",
+    selectionProcess: "Pen and Paper OMR Exam (200 Questions / 720 Marks)",
+    syllabusSummary: "NCERT Biology (Botany & Zoology), Organic & Physical Chemistry, Physics.",
     videos: [
       {
         id: "v_neet_01",
-        title: "NCERT Biology High-Yield Concepts & Diagrams",
-        duration: "31:00",
+        title: "NCERT Biology High-Yield Concepts & Diagram Based Questions",
+        subject: "Biology",
+        duration: "35:10",
         s3Url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
         pdfUrl: "https://myvault-files-app.s3.eu-north-1.amazonaws.com/app-arm64-v8a-release.apk",
+      },
+    ],
+    pdfNotes: [
+      {
+        id: "pdf_neet_01",
+        title: "NEET Biology One-Liner Revision PDF",
         subject: "Biology",
+        fileUrl: "https://myvault-files-app.s3.eu-north-1.amazonaws.com/app-arm64-v8a-release.apk",
       },
     ],
   },
   {
     id: "exam_gate",
-    name: "GATE Engineering & PSUs",
+    name: "GATE (Engineering & PSUs)",
     cat: "Higher Education",
     icon: "⚡",
-    description: "Graduate Aptitude Test in Engineering for M.Tech admissions & PSU hiring (IOCL, NTPC, ISRO).",
-    eligibility: "B.Tech / B.E. / M.Sc",
+    description: "Graduate Aptitude Test in Engineering for M.Tech admissions & Direct PSU Recruitment (IOCL, ONGC, NTPC).",
+    eligibility: "B.Tech / B.E. / M.Sc / MCA",
     ageLimit: "No Age Limit",
+    selectionProcess: "Computer Based Test (65 Questions / 100 Marks)",
+    syllabusSummary: "Engineering Mathematics, General Aptitude, Core Engineering Subjects.",
     videos: [
       {
         id: "v_gate_01",
-        title: "Data Structures & Operating System Memory Layout",
-        duration: "24:15",
+        title: "Data Structures, Algorithms & OS Memory Management",
+        subject: "Computer Science",
+        duration: "26:45",
         s3Url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
         pdfUrl: "https://myvault-files-app.s3.eu-north-1.amazonaws.com/app-arm64-v8a-release.apk",
-        subject: "Computer Science",
+      },
+    ],
+    pdfNotes: [
+      {
+        id: "pdf_gate_01",
+        title: "GATE Computer Science Handwritten Notes PDF",
+        subject: "CS",
+        fileUrl: "https://myvault-files-app.s3.eu-north-1.amazonaws.com/app-arm64-v8a-release.apk",
       },
     ],
   },
   {
     id: "exam_cat",
-    name: "CAT / XAT Management",
+    name: "CAT / XAT (Management)",
     cat: "Management",
     icon: "💼",
-    description: "Common Admission Test for IIMs & top B-schools in India.",
-    eligibility: "Bachelor's Degree (50% Marks)",
+    description: "Common Admission Test for MBA & PGDM programs at IIMs & top B-schools.",
+    eligibility: "Bachelor's Degree with minimum 50% marks",
     ageLimit: "No Age Limit",
+    selectionProcess: "CAT Computer Based Exam ➔ WAT (Written Ability Test) ➔ GD & Personal Interview",
+    syllabusSummary: "Verbal Ability & Reading Comprehension (VARC), Data Interpretation & Logical Reasoning (DILR), Quantitative Ability (QA).",
     videos: [
       {
         id: "v_cat_01",
-        title: "VARC Reading Comprehension & Data Interpretation Strategy",
-        duration: "22:50",
+        title: "VARC Passage Analysis & DILR Puzzle Solving Techniques",
+        subject: "VARC & DILR",
+        duration: "23:15",
         s3Url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
         pdfUrl: "https://myvault-files-app.s3.eu-north-1.amazonaws.com/app-arm64-v8a-release.apk",
-        subject: "VARC & DILR",
+      },
+    ],
+    pdfNotes: [
+      {
+        id: "pdf_cat_01",
+        title: "CAT Quant Formula Book & DILR Tricks PDF",
+        subject: "QA",
+        fileUrl: "https://myvault-files-app.s3.eu-north-1.amazonaws.com/app-arm64-v8a-release.apk",
       },
     ],
   },
   {
     id: "exam_ca",
-    name: "CA Foundation & Intermediate",
+    name: "CA (Chartered Accountant)",
     cat: "Professional",
     icon: "📊",
-    description: "Institute of Chartered Accountants of India professional qualification series.",
-    eligibility: "12th Passed for Foundation / Graduate",
+    description: "ICAI Professional Qualification for Foundation, Intermediate & Final stages.",
+    eligibility: "Class 12 Passed for Foundation / Graduate for Direct Entry",
     ageLimit: "No Age Limit",
+    selectionProcess: "CA Foundation ➔ CA Intermediate (8 Papers) ➔ 2 Years Articleship ➔ CA Final",
+    syllabusSummary: "Accounting, Corporate Laws, Costing, Taxation, Auditing, Strategic Financial Management.",
     videos: [
       {
         id: "v_ca_01",
         title: "Accounting Standards & Corporate Law Fundamentals",
-        duration: "27:30",
+        subject: "Accounting",
+        duration: "29:00",
         s3Url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
         pdfUrl: "https://myvault-files-app.s3.eu-north-1.amazonaws.com/app-arm64-v8a-release.apk",
-        subject: "Accounting",
+      },
+    ],
+    pdfNotes: [
+      {
+        id: "pdf_ca_01",
+        title: "CA Inter Income Tax Summary Notes PDF",
+        subject: "Taxation",
+        fileUrl: "https://myvault-files-app.s3.eu-north-1.amazonaws.com/app-arm64-v8a-release.apk",
       },
     ],
   },
@@ -448,29 +558,27 @@ app.delete(["/admin/job-listings/:id", "/api/admin/job-listings/:id"], async (re
 });
 
 // =================================================================
-// COMPETITIVE EXAMS & S3 VIDEO HUB
+// STRUCTURED COMPETITIVE EXAMS PREPARATION API
 // =================================================================
 app.get(["/api/exams", "/admin/exams"], (req, res) => {
   res.json(globalExams);
 });
 
-app.get("/api/exams/:examName/videos", (req, res) => {
-  const { examName } = req.params;
+app.get("/api/exams/:examId", (req, res) => {
+  const { examId } = req.params;
   const exam = globalExams.find(
-    (e) => e.name.toLowerCase() === examName.toLowerCase() || e.id.toLowerCase() === examName.toLowerCase()
+    (e) => e.id.toLowerCase() === examId.toLowerCase() || e.name.toLowerCase().includes(examId.toLowerCase())
   );
   if (exam) {
-    return res.json({ examName: exam.name, videos: exam.videos || [] });
+    return res.json(exam);
   }
-  // Fallback match
-  const matched = globalExams[0];
-  res.json({ examName: examName, videos: matched.videos || [] });
+  res.json(globalExams[0]);
 });
 
 app.post(["/admin/exams/confirm", "/api/admin/exams/confirm"], async (req, res) => {
-  const { examName, title, subject, duration, publicUrl, s3Key } = req.body;
+  const { examName, title, subject, duration, contentType = "VIDEO", publicUrl, s3Key } = req.body;
 
-  let exam = globalExams.find((e) => e.name.toLowerCase() === (examName || "").toLowerCase());
+  let exam = globalExams.find((e) => e.name.toLowerCase().includes((examName || "").toLowerCase()));
   if (!exam) {
     exam = {
       id: `exam_${Date.now()}`,
@@ -480,23 +588,39 @@ app.post(["/admin/exams/confirm", "/api/admin/exams/confirm"], async (req, res) 
       description: "Competitive examination study materials & video series.",
       eligibility: "Graduate",
       ageLimit: "21-32 Years",
+      selectionProcess: "Written Exam & Interview",
+      syllabusSummary: "General Studies, Aptitude & Core Subjects",
       videos: [],
+      pdfNotes: [],
     };
     globalExams.push(exam);
   }
 
-  const videoUrl = publicUrl || (s3Key ? s3PublicUrl(s3Key) : "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4");
-  const newVideo = {
-    id: `v_${Date.now()}`,
-    title: title || "Exam Preparation Lecture",
-    duration: duration || "20:00",
-    s3Url: videoUrl,
-    pdfUrl: videoUrl,
-    subject: subject || "General Studies",
-  };
+  const fileUrl = publicUrl || (s3Key ? s3PublicUrl(s3Key) : "https://myvault-files-app.s3.eu-north-1.amazonaws.com/app-arm64-v8a-release.apk");
 
-  exam.videos.unshift(newVideo);
-  res.status(201).json({ success: true, video: newVideo });
+  if (contentType === "PDF" || (fileUrl && fileUrl.endsWith(".pdf"))) {
+    const newPdf = {
+      id: `pdf_${Date.now()}`,
+      title: title || "Study Material PDF",
+      subject: subject || "General Studies",
+      fileUrl: fileUrl,
+    };
+    if (!exam.pdfNotes) exam.pdfNotes = [];
+    exam.pdfNotes.unshift(newPdf);
+    return res.status(201).json({ success: true, item: newPdf });
+  } else {
+    const newVideo = {
+      id: `v_${Date.now()}`,
+      title: title || "Exam Preparation Lecture",
+      subject: subject || "General Studies",
+      duration: duration || "20:00",
+      s3Url: fileUrl,
+      pdfUrl: fileUrl,
+    };
+    if (!exam.videos) exam.videos = [];
+    exam.videos.unshift(newVideo);
+    return res.status(201).json({ success: true, item: newVideo });
+  }
 });
 
 app.post("/api/exams/progress", (req, res) => {
@@ -509,7 +633,7 @@ app.post("/api/exams/progress", (req, res) => {
     globalUserProgress[key].watchedVideos.push(videoId);
   }
 
-  const exam = globalExams.find((e) => e.name.toLowerCase() === (examName || "").toLowerCase()) || globalExams[0];
+  const exam = globalExams.find((e) => e.name.toLowerCase().includes((examName || "").toLowerCase())) || globalExams[0];
   const total = exam.videos ? exam.videos.length : 1;
   globalUserProgress[key].progress = Math.min(100, Math.round((globalUserProgress[key].watchedVideos.length / total) * 100));
 

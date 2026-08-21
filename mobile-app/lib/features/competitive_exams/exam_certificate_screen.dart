@@ -51,7 +51,7 @@ class ExamCertificateScreen extends StatelessWidget {
                 'CONGRATULATIONS!',
                 style: TextStyle(
                   fontSize: 22,
-                  fontWeight: FontWeight.black,
+                  fontWeight: FontWeight.w900,
                   color: Colors.white,
                   letterSpacing: 1.2,
                 ),

@@ -240,7 +240,7 @@ class _InternshipDetailScreenState extends State<InternshipDetailScreen> {
               // Progress Bar
               if (isEnrolled) ...[
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.between,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     const Text('Course Progress', style: TextStyle(color: Colors.white70, fontSize: 12)),
                     Text('$progress%', style: const TextStyle(color: MyVaultColors.accentCyan, fontWeight: FontWeight.bold, fontSize: 12)),
@@ -340,7 +340,7 @@ class _InternshipDetailScreenState extends State<InternshipDetailScreen> {
                   return ListTile(
                     leading: Icon(
                       isDone ? Icons.check_circle_rounded : Icons.play_circle_fill_rounded,
-                      color: isDone ? Colors.emeraldAccent : MyVaultColors.accentCyan,
+                      color: isDone ? const Color(0xFF00E676) : MyVaultColors.accentCyan,
                     ),
                     title: Text(l['title'] ?? '', style: TextStyle(color: isDone ? Colors.white54 : Colors.white, fontSize: 13)),
                     subtitle: Text('${l['contentType']} • ${l['duration']}', style: const TextStyle(color: Colors.white38, fontSize: 11)),

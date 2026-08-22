@@ -25,7 +25,14 @@ final GoRouter appRouter = GoRouter(
     GoRoute(path: '/uploaded-files',    builder: (context, state) => const UploadedFilesScreen()),
     GoRoute(path: '/ai-interview',      builder: (context, state) => const AiInterviewScreen()),
     GoRoute(path: '/competitive-exams', builder: (context, state) => const CompetitiveExamsScreen()),
-    GoRoute(path: '/internships-hub',   builder: (context, state) => const InternshipHubScreen()),
+    GoRoute(
+      path: '/internships-hub',
+      builder: (context, state) => const JobListingsScreen(
+        type: 'INTERNSHIP',
+        title: 'Internship Opportunities',
+        icon: Icons.work_outline_rounded,
+      ),
+    ),
     GoRoute(
       path: '/internships',
       builder: (context, state) => const JobListingsScreen(

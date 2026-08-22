@@ -45,6 +45,25 @@ class _CompetitiveExamsScreenState extends State<CompetitiveExamsScreen>
     super.dispose();
   }
 
+  bool _isExamMatch(String targetId, String examId, String examName) {
+    final t = targetId.toLowerCase();
+    final id = examId.toLowerCase();
+    final n = examName.toLowerCase();
+
+    if (t == id || id.contains(t) || t.contains(id)) return true;
+    if (t.contains('upsc') && (n.contains('upsc') || id.contains('upsc'))) return true;
+    if (t.contains('ssc') && (n.contains('ssc') || id.contains('ssc'))) return true;
+    if ((t.contains('ibps') || t.contains('banking') || t.contains('bank')) &&
+        (n.contains('banking') || n.contains('sbi') || n.contains('ibps') || id.contains('banking'))) return true;
+    if ((t.contains('rrb') || t.contains('railway')) &&
+        (n.contains('rrb') || n.contains('railway') || id.contains('rrb'))) return true;
+    if (t.contains('gate') && (n.contains('gate') || id.contains('gate'))) return true;
+    if (t.contains('jee') && (n.contains('jee') || id.contains('jee'))) return true;
+    if (t.contains('neet') && (n.contains('neet') || id.contains('neet'))) return true;
+    if (t.contains('cat') && (n.contains('cat') || id.contains('cat'))) return true;
+    return false;
+  }
+
   Future<void> _loadExams() async {
     setState(() => _loading = true);
     List<dynamic> baseList = [];
@@ -79,14 +98,40 @@ class _CompetitiveExamsScreenState extends State<CompetitiveExamsScreen>
           final examName = (exam['name'] as String? ?? '').toLowerCase();
           final matchingItems = prepList.where((p) {
             final targetId = (p['examId'] as String? ?? '').toLowerCase();
-            return targetId == examId || examName.contains(targetId) || targetId.contains(examName);
+            return _isExamMatch(targetId, examId, examName);
           }).toList();
 
           if (matchingItems.isNotEmpty) {
             final vList = matchingItems.where((i) => i['contentType'] == 'VIDEO').toList();
             final pList = matchingItems.where((i) => i['contentType'] != 'VIDEO').toList();
-            exam['videos'] = [...(exam['videos'] as List? ?? []), ...vList];
-            exam['pdfNotes'] = [...(exam['pdfNotes'] as List? ?? []), ...pList];
+            
+            // Deduplicate and merge
+            final existingVideoIds = (exam['videos'] as List? ?? []).map((e) => e['id']).toSet();
+            final existingPdfIds = (exam['pdfNotes'] as List? ?? []).map((e) => e['id']).toSet();
+
+            for (var v in vList) {
+              if (!existingVideoIds.contains(v['id'])) {
+                (exam['videos'] as List).add({
+                  'id': v['id'],
+                  'title': v['title'],
+                  'subject': v['subject'] ?? 'General',
+                  'duration': v['duration'] ?? '20:00',
+                  's3Url': v['fileUrl'],
+                  'pdfUrl': v['fileUrl'],
+                });
+              }
+            }
+
+            for (var p in pList) {
+              if (!existingPdfIds.contains(p['id'])) {
+                (exam['pdfNotes'] as List).add({
+                  'id': p['id'],
+                  'title': p['title'],
+                  'subject': p['subject'] ?? 'General',
+                  'fileUrl': p['fileUrl'],
+                });
+              }
+            }
           }
         }
       }

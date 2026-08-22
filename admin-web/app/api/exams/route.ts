@@ -34,7 +34,7 @@ interface ExamItem {
 export async function GET() {
   const baseExams: ExamItem[] = [
     {
-      id: "exam_upsc",
+      id: "upsc-cse-2026",
       name: "UPSC Civil Services (IAS / IPS / IFS)",
       cat: "Government",
       icon: "🏛️",
@@ -47,7 +47,7 @@ export async function GET() {
       pdfNotes: [],
     },
     {
-      id: "exam_ssc",
+      id: "ssc-cgl-2026",
       name: "SSC CGL (Staff Selection Commission)",
       cat: "Government",
       icon: "🏛️",
@@ -60,7 +60,7 @@ export async function GET() {
       pdfNotes: [],
     },
     {
-      id: "exam_banking",
+      id: "ibps-po-2026",
       name: "SBI PO / IBPS PO & Clerk",
       cat: "Banking",
       icon: "🏦",
@@ -73,7 +73,7 @@ export async function GET() {
       pdfNotes: [],
     },
     {
-      id: "exam_rrb",
+      id: "rrb-ntpc-2026",
       name: "RRB NTPC & Railway JE",
       cat: "Railways",
       icon: "🚆",
@@ -86,33 +86,7 @@ export async function GET() {
       pdfNotes: [],
     },
     {
-      id: "exam_jee",
-      name: "JEE Main / Advanced (Engineering)",
-      cat: "Higher Education",
-      icon: "🎓",
-      description: "Premier national engineering entrance examination for IITs, NITs, IIITs, and CFTIs.",
-      eligibility: "Class 12 Passed (PCM)",
-      ageLimit: "No Age Limit",
-      selectionProcess: "JEE Main CBT ➔ Advanced CBT",
-      syllabusSummary: "Physics (Mechanics), Chemistry, Math (Calculus)",
-      videos: [],
-      pdfNotes: [],
-    },
-    {
-      id: "exam_neet",
-      name: "NEET-UG (Medical Entrance)",
-      cat: "Higher Education",
-      icon: "🩺",
-      description: "National entrance examination for MBBS, BDS, BAMS, BHMS, and medical admissions.",
-      eligibility: "Class 12 Passed (PCB)",
-      ageLimit: "Minimum 17 Years",
-      selectionProcess: "OMR Pen & Paper Exam (720 Marks)",
-      syllabusSummary: "NCERT Biology, Chemistry & Physics",
-      videos: [],
-      pdfNotes: [],
-    },
-    {
-      id: "exam_gate",
+      id: "gate-cse-2027",
       name: "GATE (Engineering & PSUs)",
       cat: "Higher Education",
       icon: "⚡",
@@ -124,59 +98,50 @@ export async function GET() {
       videos: [],
       pdfNotes: [],
     },
-    {
-      id: "exam_cat",
-      name: "CAT / XAT (Management)",
-      cat: "Management",
-      icon: "💼",
-      description: "Common Admission Test for MBA & PGDM programs at IIMs & top B-schools.",
-      eligibility: "Bachelor's Degree",
-      ageLimit: "No Age Limit",
-      selectionProcess: "CAT Exam ➔ WAT / GD ➔ Interview",
-      syllabusSummary: "VARC, DILR & Quantitative Ability",
-      videos: [],
-      pdfNotes: [],
-    },
-    {
-      id: "exam_ca",
-      name: "CA (Chartered Accountant)",
-      cat: "Professional",
-      icon: "📊",
-      description: "ICAI Professional Qualification for Foundation, Intermediate & Final stages.",
-      eligibility: "12th Passed / Graduate",
-      ageLimit: "No Age Limit",
-      selectionProcess: "Foundation ➔ Inter ➔ Articleship ➔ Final",
-      syllabusSummary: "Accounting, Law, Costing, Taxation, Auditing",
-      videos: [],
-      pdfNotes: [],
-    },
   ];
 
   // Map uploaded resources into the matching exam object
   for (const res of uploadedExamResources) {
-    let exam = baseExams.find(
-      (e) => e.name.toLowerCase().includes(res.examName.toLowerCase()) || res.examName.toLowerCase().includes(e.name.toLowerCase())
-    );
+    const resExam = res.examName.toLowerCase();
+
+    let exam = baseExams.find((e) => {
+      const name = e.name.toLowerCase();
+      const id = e.id.toLowerCase();
+      return (
+        name.includes(resExam) ||
+        resExam.includes(name) ||
+        (resExam.includes("upsc") && name.includes("upsc")) ||
+        (resExam.includes("ssc") && name.includes("ssc")) ||
+        (resExam.includes("ibps") && name.includes("ibps")) ||
+        (resExam.includes("rrb") && name.includes("rrb")) ||
+        (resExam.includes("gate") && name.includes("gate"))
+      );
+    });
+
     if (!exam) {
       exam = baseExams[0];
     }
 
     if (res.contentType === "PDF" || res.fileUrl.endsWith(".pdf")) {
-      exam.pdfNotes.unshift({
-        id: res.id,
-        title: res.title,
-        subject: res.subject,
-        fileUrl: res.fileUrl,
-      });
+      if (!exam.pdfNotes.some((p) => p.id === res.id)) {
+        exam.pdfNotes.unshift({
+          id: res.id,
+          title: res.title,
+          subject: res.subject,
+          fileUrl: res.fileUrl,
+        });
+      }
     } else {
-      exam.videos.unshift({
-        id: res.id,
-        title: res.title,
-        subject: res.subject,
-        duration: res.duration || "20:00",
-        s3Url: res.fileUrl,
-        pdfUrl: res.fileUrl,
-      });
+      if (!exam.videos.some((v) => v.id === res.id)) {
+        exam.videos.unshift({
+          id: res.id,
+          title: res.title,
+          subject: res.subject,
+          duration: res.duration || "20:00",
+          s3Url: res.fileUrl,
+          pdfUrl: res.fileUrl,
+        });
+      }
     }
   }
 

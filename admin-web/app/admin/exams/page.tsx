@@ -18,13 +18,29 @@ export default function ExamsAdminPage() {
   const [resources, setResources] = useState<ExamResource[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedExam, setSelectedExam] = useState<string>("All");
+  const [resourceFormat, setResourceFormat] = useState<"VIDEO" | "PDF" | "SYLLABUS">("VIDEO");
+
+  // Dynamic accepted file types and S3 target folder based on selected Resource Format
+  const acceptedFileTypes =
+    resourceFormat === "VIDEO"
+      ? "video/mp4, video/webm, video/x-matroska, video/*"
+      : resourceFormat === "PDF"
+      ? "application/pdf"
+      : "application/pdf, .doc, .docx";
+
+  const targetFolder =
+    resourceFormat === "VIDEO"
+      ? "exams/videos"
+      : resourceFormat === "PDF"
+      ? "exams/pdfs"
+      : "exams/syllabus";
 
   const examConfig: UploadFormConfig = {
-    domain: "exams",
+    domain: targetFolder,
     confirmPath: "/admin/exams/confirm",
-    acceptedFileTypes: ".pdf,.mp4,.mkv,.webm,.doc,.docx,.zip,video/*,application/pdf",
+    acceptedFileTypes: acceptedFileTypes,
     requireFile: true,
-    successMessage: "Competitive Exam file uploaded successfully to AWS S3 & synced with Mobile App instantly.",
+    successMessage: `Competitive Exam ${resourceFormat} uploaded successfully to AWS S3 (${targetFolder}/) & synced with Mobile App.`,
     fields: [
       {
         name: "examName",
@@ -49,9 +65,9 @@ export default function ExamsAdminPage() {
         type: "select",
         required: true,
         options: [
-          { value: "VIDEO", label: "🎬 S3 Video Lecture Stream (.mp4 / .mkv / .webm)" },
-          { value: "PDF", label: "📄 PDF Study Material / Solved PYQ Handout (.pdf)" },
-          { value: "SYLLABUS", label: "📜 Syllabus & Selection Roadmap (.pdf / .doc)" },
+          { value: "VIDEO", label: "🎬 S3 Video Lecture Stream (Accepts: video/mp4, video/webm)" },
+          { value: "PDF", label: "📄 PDF Study Material / Solved PYQ Handout (Accepts: application/pdf)" },
+          { value: "SYLLABUS", label: "📜 Syllabus & Selection Roadmap (Accepts: application/pdf, .doc)" },
         ],
       },
       { name: "title", label: "Lecture / Document Title *", type: "text", required: true, placeholder: "e.g. Indian Polity Laxmikanth Masterclass & Solved PYQs" },
@@ -118,16 +134,50 @@ export default function ExamsAdminPage() {
           Competitive Exam Content Uploading Portal
         </h1>
         <p className="mt-1 text-sm text-white/50">
-          Upload video lectures (.mp4, .webm), PDF notes (.pdf), solved question papers (PYQs), and syllabus guides directly to AWS S3 storage for Mobile App aspirants.
+          Upload video lectures (.mp4, .webm), PDF notes (.pdf), solved question papers (PYQs), and syllabus guides directly to AWS S3 storage under target exam folders.
         </p>
       </div>
 
-      {/* Upload Form Component with File Dropzone */}
+      {/* Resource Format Switcher */}
+      <div className="mb-6 flex items-center gap-3 rounded-2xl border border-white/10 bg-black/40 p-2">
+        <span className="text-xs font-bold text-white/70 px-3">Select Format Mode:</span>
+        <button
+          onClick={() => setResourceFormat("VIDEO")}
+          className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition ${
+            resourceFormat === "VIDEO" ? "bg-accentBlue text-white shadow-lg" : "text-white/60 hover:text-white"
+          }`}
+        >
+          🎬 Video Lecture Stream (video/mp4)
+        </button>
+        <button
+          onClick={() => setResourceFormat("PDF")}
+          className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition ${
+            resourceFormat === "PDF" ? "bg-accentBlue text-white shadow-lg" : "text-white/60 hover:text-white"
+          }`}
+        >
+          📄 PDF Notes & PYQ (application/pdf)
+        </button>
+        <button
+          onClick={() => setResourceFormat("SYLLABUS")}
+          className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition ${
+            resourceFormat === "SYLLABUS" ? "bg-accentBlue text-white shadow-lg" : "text-white/60 hover:text-white"
+          }`}
+        >
+          📜 Syllabus & Roadmap (.pdf / .doc)
+        </button>
+      </div>
+
+      {/* Upload Form Component with Dynamic File Dropzone */}
       <div className="mb-12 rounded-2xl border border-white/10 bg-white/[0.02] p-6 backdrop-blur-xl">
-        <h2 className="mb-4 text-base font-bold text-white flex items-center gap-2">
-          <span>📤 Upload Competitive Exam File & Media to AWS S3</span>
-        </h2>
-        <UploadForm config={examConfig} />
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-base font-bold text-white flex items-center gap-2">
+            <span>📤 Upload Competitive Exam {resourceFormat === "VIDEO" ? "Video (.mp4)" : "PDF (.pdf)"} to S3 ({targetFolder}/)</span>
+          </h2>
+          <span className="rounded-full bg-cyan-400/10 px-3 py-1 text-xs font-semibold text-cyan-300 border border-cyan-400/20">
+            Accepted: {acceptedFileTypes}
+          </span>
+        </div>
+        <UploadForm key={resourceFormat} config={examConfig} />
       </div>
 
       {/* Live Uploaded Resources Management Section */}

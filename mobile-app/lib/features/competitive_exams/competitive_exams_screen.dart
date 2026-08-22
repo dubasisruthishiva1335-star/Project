@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:dio/dio.dart';
 import '../../core/colors.dart';
 import '../../core/api_client.dart';
 import 'exam_video_screen.dart';
@@ -44,19 +45,38 @@ class _CompetitiveExamsScreenState extends State<CompetitiveExamsScreen>
 
   Future<void> _loadExams() async {
     setState(() => _loading = true);
+    
+    // 1. Try Primary Railway API endpoint
     try {
       final res = await ApiClient.instance.dio.get('/api/exams');
       final fetched = res.data as List<dynamic>;
-      setState(() {
-        _exams = fetched.isNotEmpty ? fetched : _fallbackExams;
-        _loading = false;
-      });
-    } catch (_) {
-      setState(() {
-        _exams = _fallbackExams;
-        _loading = false;
-      });
-    }
+      if (fetched.isNotEmpty) {
+        setState(() {
+          _exams = fetched;
+          _loading = false;
+        });
+        return;
+      }
+    } catch (_) {}
+
+    // 2. Dual Fallback: Fetch directly from Vercel Web API endpoint
+    try {
+      final vercelRes = await Dio().get('https://myvault-project.vercel.app/api/exams');
+      final vercelFetched = vercelRes.data as List<dynamic>;
+      if (vercelFetched.isNotEmpty) {
+        setState(() {
+          _exams = vercelFetched;
+          _loading = false;
+        });
+        return;
+      }
+    } catch (_) {}
+
+    // 3. Static Fallback
+    setState(() {
+      _exams = _fallbackExams;
+      _loading = false;
+    });
   }
 
   List<dynamic> get _fallbackExams => [
@@ -354,7 +374,6 @@ class _CompetitiveExamsScreenState extends State<CompetitiveExamsScreen>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Top Row: Icon + Name + Category Pill
             Row(
               children: [
                 Text(icon, style: const TextStyle(fontSize: 30)),
@@ -388,7 +407,6 @@ class _CompetitiveExamsScreenState extends State<CompetitiveExamsScreen>
             ),
             const SizedBox(height: 10),
 
-            // Description Overview
             Text(
               desc,
               style: const TextStyle(color: Colors.white70, fontSize: 12.5, height: 1.4),
@@ -397,7 +415,6 @@ class _CompetitiveExamsScreenState extends State<CompetitiveExamsScreen>
             ),
             const SizedBox(height: 12),
 
-            // Selection Process Pill Box
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               decoration: BoxDecoration(
@@ -423,7 +440,6 @@ class _CompetitiveExamsScreenState extends State<CompetitiveExamsScreen>
 
             const SizedBox(height: 10),
 
-            // Syllabus Pill Box
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               decoration: BoxDecoration(
@@ -449,7 +465,6 @@ class _CompetitiveExamsScreenState extends State<CompetitiveExamsScreen>
 
             const SizedBox(height: 12),
 
-            // Metadata Chips (Eligibility, Age Limit, S3 Videos & PDFs)
             Wrap(
               spacing: 8,
               runSpacing: 6,
@@ -463,7 +478,6 @@ class _CompetitiveExamsScreenState extends State<CompetitiveExamsScreen>
 
             const SizedBox(height: 14),
 
-            // Action Button: Prepare Now ➔
             SizedBox(
               width: double.infinity,
               height: 42,

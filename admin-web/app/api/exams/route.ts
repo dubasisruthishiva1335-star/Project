@@ -1,8 +1,38 @@
 import { NextResponse } from "next/server";
 import { uploadedExamResources } from "@/lib/exam-store";
 
+interface ExamVideo {
+  id: string;
+  title: string;
+  subject?: string;
+  duration?: string;
+  s3Url?: string;
+  pdfUrl?: string;
+}
+
+interface ExamPdfNote {
+  id: string;
+  title: string;
+  subject: string;
+  fileUrl: string;
+}
+
+interface ExamItem {
+  id: string;
+  name: string;
+  cat: string;
+  icon: string;
+  description: string;
+  eligibility: string;
+  ageLimit: string;
+  selectionProcess: string;
+  syllabusSummary: string;
+  videos: ExamVideo[];
+  pdfNotes: ExamPdfNote[];
+}
+
 export async function GET() {
-  const baseExams = [
+  const baseExams: ExamItem[] = [
     {
       id: "exam_upsc",
       name: "UPSC Civil Services (IAS / IPS / IFS)",

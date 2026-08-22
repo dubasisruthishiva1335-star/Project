@@ -45,7 +45,7 @@ class _CompetitiveExamsScreenState extends State<CompetitiveExamsScreen>
 
   Future<void> _loadExams() async {
     setState(() => _loading = true);
-    
+
     // 1. Try Primary Railway API endpoint
     try {
       final res = await ApiClient.instance.dio.get('/api/exams');
@@ -77,6 +77,191 @@ class _CompetitiveExamsScreenState extends State<CompetitiveExamsScreen>
       _exams = _fallbackExams;
       _loading = false;
     });
+  }
+
+  void _showInAppUploadModal() {
+    final titleCtrl = TextEditingController();
+    final subjectCtrl = TextEditingController();
+    final urlCtrl = TextEditingController();
+    String selectedExam = 'UPSC Civil Services (IAS / IPS / IFS)';
+    String contentType = 'VIDEO';
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: MyVaultColors.obsidian,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return Padding(
+              padding: EdgeInsets.only(
+                left: 20,
+                right: 20,
+                top: 20,
+                bottom: MediaQuery.of(ctx).viewInsets.bottom + 20,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        '📤 Upload Exam Resource to S3',
+                        style: TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.bold),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close, color: Colors.white54),
+                        onPressed: () => Navigator.pop(ctx),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+
+                  // Exam Picker
+                  const Text('Select Target Exam', style: TextStyle(color: Colors.white70, fontSize: 12)),
+                  const SizedBox(height: 4),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    decoration: BoxDecoration(
+                      color: MyVaultColors.glassFill,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: MyVaultColors.glassBorder),
+                    ),
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<String>(
+                        value: selectedExam,
+                        isExpanded: true,
+                        dropdownColor: MyVaultColors.obsidian,
+                        style: const TextStyle(color: Colors.white, fontSize: 13),
+                        items: const [
+                          DropdownMenuItem(value: 'UPSC Civil Services (IAS / IPS / IFS)', child: Text('🏛️ UPSC Civil Services')),
+                          DropdownMenuItem(value: 'SSC CGL (Staff Selection Commission)', child: Text('🏛️ SSC CGL')),
+                          DropdownMenuItem(value: 'SBI PO / IBPS PO & Clerk', child: Text('🏦 SBI / IBPS Banking PO')),
+                          DropdownMenuItem(value: 'RRB NTPC & Railway JE', child: Text('🚆 RRB Railways')),
+                          DropdownMenuItem(value: 'JEE Main / Advanced (Engineering)', child: Text('🎓 JEE Main / Advanced')),
+                          DropdownMenuItem(value: 'NEET-UG (Medical Entrance)', child: Text('🩺 NEET-UG Medical')),
+                          DropdownMenuItem(value: 'GATE (Engineering & PSUs)', child: Text('⚡ GATE Engineering')),
+                          DropdownMenuItem(value: 'CAT / XAT (Management)', child: Text('💼 CAT Management')),
+                          DropdownMenuItem(value: 'CA (Chartered Accountant)', child: Text('📊 CA Professional')),
+                        ],
+                        onChanged: (v) {
+                          if (v != null) setModalState(() => selectedExam = v);
+                        },
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  // Resource Type
+                  Row(
+                    children: [
+                      ChoiceChip(
+                        label: const Text('🎬 Video Stream'),
+                        selected: contentType == 'VIDEO',
+                        selectedColor: MyVaultColors.accentBlue,
+                        onSelected: (s) => setModalState(() => contentType = 'VIDEO'),
+                      ),
+                      const SizedBox(width: 10),
+                      ChoiceChip(
+                        label: const Text('📄 PDF Note / PYQ'),
+                        selected: contentType == 'PDF',
+                        selectedColor: Colors.amber,
+                        onSelected: (s) => setModalState(() => contentType = 'PDF'),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  TextField(
+                    controller: titleCtrl,
+                    style: const TextStyle(color: Colors.white, fontSize: 13),
+                    decoration: InputDecoration(
+                      labelText: 'Resource Title',
+                      labelStyle: const TextStyle(color: Colors.white54),
+                      filled: true,
+                      fillColor: MyVaultColors.glassFill,
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
+                  ),
+
+                  const SizedBox(height: 10),
+
+                  TextField(
+                    controller: subjectCtrl,
+                    style: const TextStyle(color: Colors.white, fontSize: 13),
+                    decoration: InputDecoration(
+                      labelText: 'Subject / Topic (e.g. Polity, Quant)',
+                      labelStyle: const TextStyle(color: Colors.white54),
+                      filled: true,
+                      fillColor: MyVaultColors.glassFill,
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
+                  ),
+
+                  const SizedBox(height: 10),
+
+                  TextField(
+                    controller: urlCtrl,
+                    style: const TextStyle(color: Colors.white, fontSize: 13),
+                    decoration: InputDecoration(
+                      labelText: 'S3 File URL / External Link',
+                      labelStyle: const TextStyle(color: Colors.white54),
+                      filled: true,
+                      fillColor: MyVaultColors.glassFill,
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  SizedBox(
+                    width: double.infinity,
+                    height: 46,
+                    child: ElevatedButton.icon(
+                      onPressed: () async {
+                        if (titleCtrl.text.trim().isEmpty) return;
+                        final payload = {
+                          'examName': selectedExam,
+                          'contentType': contentType,
+                          'title': titleCtrl.text.trim(),
+                          'subject': subjectCtrl.text.trim().isEmpty ? 'General' : subjectCtrl.text.trim(),
+                          'publicUrl': urlCtrl.text.trim().isEmpty ? 'https://myvault-files-app.s3.eu-north-1.amazonaws.com/app-arm64-v8a-release.apk' : urlCtrl.text.trim(),
+                        };
+
+                        try {
+                          await Dio().post('https://myvault-project.vercel.app/api/admin/exams/confirm', data: payload);
+                        } catch (_) {}
+
+                        if (ctx.mounted) {
+                          Navigator.pop(ctx);
+                          _loadExams();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Exam Resource published successfully!')),
+                          );
+                        }
+                      },
+                      icon: const Icon(Icons.cloud_upload_rounded, color: Colors.white),
+                      label: const Text('Publish Resource to AWS S3 & App', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: MyVaultColors.accentBlue,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
   }
 
   List<dynamic> get _fallbackExams => [
@@ -135,108 +320,6 @@ class _CompetitiveExamsScreenState extends State<CompetitiveExamsScreen>
             {'title': 'Banking Terms & Financial Awareness PDF Capsule', 'subject': 'Banking GK'},
           ],
         },
-        {
-          'id': 'exam_rrb',
-          'name': 'RRB NTPC & Railway JE',
-          'cat': 'Railways',
-          'icon': '🚆',
-          'description': 'Indian Railways recruitment for Non-Technical Popular Categories & Junior Engineer posts.',
-          'eligibility': '10+2 / Graduate / Diploma / B.Tech',
-          'ageLimit': '18 - 33 Years',
-          'selectionProcess': '1st Stage CBT ➔ 2nd Stage CBT ➔ Typing Test',
-          'syllabusSummary': 'General Science (Physics, Chemistry, Life Sciences), Math & Reasoning',
-          'videos': [
-            {'title': 'General Science Physics & Chemistry Railway Special', 'duration': '19:45', 'subject': 'Science'},
-          ],
-          'pdfNotes': [
-            {'title': 'RRB Science Previous 500 Question Bank PDF', 'subject': 'Science'},
-          ],
-        },
-        {
-          'id': 'exam_jee',
-          'name': 'JEE Main / Advanced (Engineering)',
-          'cat': 'Higher Education',
-          'icon': '🎓',
-          'description': 'Premier national engineering entrance examination for IITs, NITs, IIITs, and CFTIs.',
-          'eligibility': 'Class 12 Passed (PCM)',
-          'ageLimit': 'No Age Limit',
-          'selectionProcess': 'JEE Main CBT ➔ Advanced CBT for top 2.5 Lakhs',
-          'syllabusSummary': 'Physics (Mechanics), Chemistry (Organic/Physical), Math (Calculus)',
-          'videos': [
-            {'title': 'Physics Mechanics & Calculus Problem Solving Techniques', 'duration': '32:00', 'subject': 'Physics'},
-          ],
-          'pdfNotes': [
-            {'title': 'JEE Main Chemistry Formula Cheat Sheet PDF', 'subject': 'Chemistry'},
-          ],
-        },
-        {
-          'id': 'exam_neet',
-          'name': 'NEET-UG (Medical Entrance)',
-          'cat': 'Higher Education',
-          'icon': '🩺',
-          'description': 'National entrance examination for MBBS, BDS, BAMS, BHMS, and medical admissions.',
-          'eligibility': 'Class 12 Passed (PCB)',
-          'ageLimit': 'Minimum 17 Years',
-          'selectionProcess': 'Pen & Paper OMR Exam (720 Marks)',
-          'syllabusSummary': 'NCERT Biology (Botany & Zoology), Organic Chemistry & Physics',
-          'videos': [
-            {'title': 'NCERT Biology High-Yield Concepts & Diagram Questions', 'duration': '35:10', 'subject': 'Biology'},
-          ],
-          'pdfNotes': [
-            {'title': 'NEET Biology One-Liner Revision PDF', 'subject': 'Biology'},
-          ],
-        },
-        {
-          'id': 'exam_gate',
-          'name': 'GATE (Engineering & PSUs)',
-          'cat': 'Higher Education',
-          'icon': '⚡',
-          'description': 'Graduate Aptitude Test in Engineering for M.Tech admissions & Direct PSU Recruitment.',
-          'eligibility': 'B.Tech / B.E. / M.Sc / MCA',
-          'ageLimit': 'No Age Limit',
-          'selectionProcess': 'Computer Based Test (100 Marks)',
-          'syllabusSummary': 'Engineering Mathematics, General Aptitude, Core Engineering Subjects',
-          'videos': [
-            {'title': 'Data Structures, Algorithms & OS Memory Management', 'duration': '26:45', 'subject': 'Computer Science'},
-          ],
-          'pdfNotes': [
-            {'title': 'GATE Computer Science Handwritten Notes PDF', 'subject': 'CS'},
-          ],
-        },
-        {
-          'id': 'exam_cat',
-          'name': 'CAT / XAT (Management)',
-          'cat': 'Management',
-          'icon': '💼',
-          'description': 'Common Admission Test for MBA & PGDM programs at IIMs & top B-schools.',
-          'eligibility': 'Bachelor\'s Degree with 50% marks',
-          'ageLimit': 'No Age Limit',
-          'selectionProcess': 'CAT Exam ➔ WAT / GD ➔ Personal Interview',
-          'syllabusSummary': 'Verbal Ability (VARC), Data Interpretation (DILR), Quant (QA)',
-          'videos': [
-            {'title': 'VARC Passage Analysis & DILR Puzzle Solving Techniques', 'duration': '23:15', 'subject': 'VARC & DILR'},
-          ],
-          'pdfNotes': [
-            {'title': 'CAT Quant Formula Book & DILR Tricks PDF', 'subject': 'QA'},
-          ],
-        },
-        {
-          'id': 'exam_ca',
-          'name': 'CA (Chartered Accountant)',
-          'cat': 'Professional',
-          'icon': '📊',
-          'description': 'ICAI Professional Qualification for Foundation, Intermediate & Final stages.',
-          'eligibility': 'Class 12 Passed / Graduate',
-          'ageLimit': 'No Age Limit',
-          'selectionProcess': 'CA Foundation ➔ CA Inter ➔ 2 Yrs Articleship ➔ CA Final',
-          'syllabusSummary': 'Accounting, Corporate Laws, Costing, Taxation, Auditing & SFM',
-          'videos': [
-            {'title': 'Accounting Standards & Corporate Law Fundamentals', 'duration': '29:00', 'subject': 'Accounting'},
-          ],
-          'pdfNotes': [
-            {'title': 'CA Inter Income Tax Summary Notes PDF', 'subject': 'Taxation'},
-          ],
-        },
       ];
 
   List<dynamic> get _filteredExams {
@@ -288,6 +371,13 @@ class _CompetitiveExamsScreenState extends State<CompetitiveExamsScreen>
               ),
             ],
           ),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.cloud_upload_outlined, color: MyVaultColors.accentCyan, size: 24),
+              tooltip: 'Upload Exam Resource',
+              onPressed: _showInAppUploadModal,
+            ),
+          ],
           bottom: TabBar(
             controller: _tabController,
             isScrollable: true,
@@ -300,26 +390,45 @@ class _CompetitiveExamsScreenState extends State<CompetitiveExamsScreen>
         ),
         body: Column(
           children: [
-            // Search Bar
+            // Search Bar & Upload Banner
             Padding(
               padding: const EdgeInsets.all(14),
-              child: Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(14),
-                  color: MyVaultColors.glassFill,
-                  border: Border.all(color: MyVaultColors.glassBorder),
-                ),
-                child: TextField(
-                  style: const TextStyle(color: Colors.white, fontSize: 14),
-                  onChanged: (v) => setState(() => _searchQuery = v),
-                  decoration: const InputDecoration(
-                    hintText: 'Search UPSC, SSC, Banking, JEE, NEET, GATE, CAT, CA...',
-                    hintStyle: TextStyle(color: Colors.white38, fontSize: 13),
-                    prefixIcon: Icon(Icons.search_rounded, color: MyVaultColors.accentCyan, size: 20),
-                    border: InputBorder.none,
-                    contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(14),
+                        color: MyVaultColors.glassFill,
+                        border: Border.all(color: MyVaultColors.glassBorder),
+                      ),
+                      child: TextField(
+                        style: const TextStyle(color: Colors.white, fontSize: 14),
+                        onChanged: (v) => setState(() => _searchQuery = v),
+                        decoration: const InputDecoration(
+                          hintText: 'Search UPSC, SSC, Banking, JEE, NEET...',
+                          hintStyle: TextStyle(color: Colors.white38, fontSize: 13),
+                          prefixIcon: Icon(Icons.search_rounded, color: MyVaultColors.accentCyan, size: 20),
+                          border: InputBorder.none,
+                          contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                        ),
+                      ),
+                    ),
                   ),
-                ),
+                  const SizedBox(width: 8),
+                  InkWell(
+                    onTap: _showInAppUploadModal,
+                    borderRadius: BorderRadius.circular(14),
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        gradient: MyVaultColors.accentGradient,
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: const Icon(Icons.add_rounded, color: Colors.white, size: 22),
+                    ),
+                  ),
+                ],
               ),
             ),
 

@@ -47,35 +47,57 @@ class _CompetitiveExamsScreenState extends State<CompetitiveExamsScreen>
 
   Future<void> _loadExams() async {
     setState(() => _loading = true);
+    List<dynamic> baseList = [];
 
     try {
       final res = await ApiClient.instance.dio.get('/api/exams');
-      final fetched = res.data as List<dynamic>;
-      if (fetched.isNotEmpty) {
-        setState(() {
-          _exams = fetched;
-          _loading = false;
-        });
-        return;
+      if (res.data is List && (res.data as List).isNotEmpty) {
+        baseList = res.data as List<dynamic>;
       }
     } catch (_) {}
 
+    if (baseList.isEmpty) {
+      try {
+        final vercelRes = await Dio().get('https://myvault-project.vercel.app/api/exams');
+        if (vercelRes.data is List && (vercelRes.data as List).isNotEmpty) {
+          baseList = vercelRes.data as List<dynamic>;
+        }
+      } catch (_) {}
+    }
+
+    if (baseList.isEmpty) {
+      baseList = _fallbackExams;
+    }
+
+    // Merge uploaded S3 materials from Web Admin into exam list in real-time
     try {
-      final vercelRes = await Dio().get('https://myvault-project.vercel.app/api/exams');
-      final vercelFetched = vercelRes.data as List<dynamic>;
-      if (vercelFetched.isNotEmpty) {
-        setState(() {
-          _exams = vercelFetched;
-          _loading = false;
-        });
-        return;
+      final prepRes = await Dio().get('https://myvault-project.vercel.app/api/admin/preparation');
+      if (prepRes.data != null && prepRes.data['data'] is List) {
+        final List prepList = prepRes.data['data'];
+        for (var exam in baseList) {
+          final examId = (exam['id'] as String? ?? '').toLowerCase();
+          final examName = (exam['name'] as String? ?? '').toLowerCase();
+          final matchingItems = prepList.where((p) {
+            final targetId = (p['examId'] as String? ?? '').toLowerCase();
+            return targetId == examId || examName.contains(targetId) || targetId.contains(examName);
+          }).toList();
+
+          if (matchingItems.isNotEmpty) {
+            final vList = matchingItems.where((i) => i['contentType'] == 'VIDEO').toList();
+            final pList = matchingItems.where((i) => i['contentType'] != 'VIDEO').toList();
+            exam['videos'] = [...(exam['videos'] as List? ?? []), ...vList];
+            exam['pdfNotes'] = [...(exam['pdfNotes'] as List? ?? []), ...pList];
+          }
+        }
       }
     } catch (_) {}
 
-    setState(() {
-      _exams = _fallbackExams;
-      _loading = false;
-    });
+    if (mounted) {
+      setState(() {
+        _exams = baseList;
+        _loading = false;
+      });
+    }
   }
 
   List<dynamic> get _fallbackExams => [

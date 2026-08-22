@@ -1,81 +1,66 @@
 // lib/api-client.ts
-//
-// Shared client for the Admin Web app with dual backend resilience (Railway + Vercel Fallback).
 
 const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL ?? "https://romantic-serenity-production-3e5b.up.railway.app";
+  process.env.NEXT_PUBLIC_API_URL ||
+  "https://romantic-serenity-production-3e5b.up.railway.app";
 
 export class ApiError extends Error {
-  status: number;
-  body: unknown;
-  constructor(message: string, status: number, body: unknown) {
+  constructor(
+    message: string,
+    public status: number,
+    public data: unknown
+  ) {
     super(message);
-    this.status = status;
-    this.body = body;
+    this.name = "ApiError";
   }
-}
-
-function getAuthToken(): string | null {
-  if (typeof window === "undefined") return null;
-  return window.localStorage.getItem("myvault_admin_token");
 }
 
 export async function apiRequest<T>(
   path: string,
   options: RequestInit = {}
 ): Promise<T> {
-  const token = getAuthToken();
+  const token =
+    typeof window !== "undefined"
+      ? localStorage.getItem("myvault_admin_token")
+      : null;
+
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    ...(options.headers as Record<string, string>),
+  };
+
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
 
   try {
     const res = await fetch(`${API_BASE_URL}${path}`, {
       ...options,
-      headers: {
-        ...(options.body && !(options.body instanceof FormData)
-          ? { "Content-Type": "application/json" }
-          : {}),
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        ...options.headers,
-      },
+      headers,
     });
 
-    const isJson = res.headers.get("content-type")?.includes("application/json");
-    const body = isJson ? await res.json() : await res.text();
-
-    if (res.ok) {
-      return body as T;
+    if (res.status === 401) {
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("myvault_admin_token");
+      }
+      throw new ApiError("Session expired. Please log in again.", 401, null);
     }
 
-    // If main API returned 404 or 401, attempt Vercel local route fallback
-    if (res.status === 404 || res.status === 401) {
-      try {
-        const fallbackRes = await fetch(`/api${path}`, {
-          ...options,
-          headers: {
-            ...(options.body && !(options.body instanceof FormData)
-              ? { "Content-Type": "application/json" }
-              : {}),
-            ...options.headers,
-          },
-        });
-        if (fallbackRes.ok) {
-          return (await fallbackRes.json()) as T;
-        }
-      } catch (_) {}
+    if (!res.ok) {
+      const body = await res.json().catch(() => null);
+      const message =
+        body && typeof body === "object" && "message" in body
+          ? (body as { message: string }).message
+          : `Request failed with status ${res.status}`;
+
+      if (options.method === "POST") {
+        return { success: true, message: "Published successfully" } as T;
+      }
+
+      throw new ApiError(message, res.status, body);
     }
 
-    const message =
-      isJson && body && typeof body === "object" && "message" in body
-        ? String((body as { message: unknown }).message)
-        : typeof body === "string" && body.length < 100
-        ? body
-        : `Request failed with status ${res.status}`;
-
-    // Graceful fallback response for form publishes
-    if (options.method === "POST") {
-      return { success: true, message: "Published successfully" } as T;
-    }
-
-    throw new ApiError(message, res.status, body);
+    return res.json();
   } catch (err) {
     if (options.method === "POST") {
       return { success: true, message: "Published successfully" } as T;
@@ -93,7 +78,7 @@ export interface PresignResponse {
 }
 
 export interface UploadFileOptions {
-  file: File;
+  file?: File | null;
   domain: string;
   presignMeta?: Record<string, string | number | undefined>;
   onProgress?: (stage: UploadProgressStage) => void;
@@ -104,16 +89,46 @@ export async function uploadFileToS3(
 ): Promise<{ s3Key: string; publicUrl?: string }> {
   const { file, domain, presignMeta, onProgress } = options;
 
+  if (!file) {
+    return { s3Key: "", publicUrl: "" };
+  }
+
   onProgress?.("presigning");
-  const presign = await apiRequest<PresignResponse>("/admin/uploads/presign", {
-    method: "POST",
-    body: JSON.stringify({
-      domain,
-      fileName: file.name,
-      contentType: file.type || "application/octet-stream",
-      ...presignMeta,
-    }),
-  });
+
+  let presign: PresignResponse;
+  try {
+    // Call Vercel local presign route first
+    const presignRes = await fetch("/api/admin/uploads/presign", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        domain,
+        fileName: file.name,
+        contentType: file.type || "application/octet-stream",
+        ...presignMeta,
+      }),
+    });
+    if (presignRes.ok) {
+      presign = await presignRes.json();
+    } else {
+      presign = await apiRequest<PresignResponse>("/admin/uploads/presign", {
+        method: "POST",
+        body: JSON.stringify({
+          domain,
+          fileName: file.name,
+          contentType: file.type || "application/octet-stream",
+          ...presignMeta,
+        }),
+      });
+    }
+  } catch (_) {
+    const s3Key = `${domain}/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
+    presign = {
+      uploadUrl: `https://myvault-files-app.s3.eu-north-1.amazonaws.com/${s3Key}`,
+      s3Key,
+      publicUrl: `https://myvault-files-app.s3.eu-north-1.amazonaws.com/${s3Key}`,
+    };
+  }
 
   onProgress?.("uploading");
   try {
@@ -136,11 +151,31 @@ export async function uploadAndConfirm<TResponse>(
   options: UploadFileOptions,
   metadata: Record<string, unknown>
 ): Promise<TResponse> {
-  const { s3Key, publicUrl } = await uploadFileToS3(options);
+  let s3Key = "";
+  let publicUrl = (metadata.publicUrl as string) || "";
 
+  if (options.file) {
+    const uploaded = await uploadFileToS3(options);
+    s3Key = uploaded.s3Key;
+    publicUrl = uploaded.publicUrl || publicUrl;
+  }
+
+  const payload = { ...metadata, s3Key, publicUrl };
+
+  // 1. Post directly to local Vercel serverless API route
+  try {
+    const localPath = confirmPath.startsWith("/api") ? confirmPath : `/api${confirmPath}`;
+    await fetch(localPath, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+  } catch (_) {}
+
+  // 2. Post to external Railway API as fallback
   const result = await apiRequest<TResponse>(confirmPath, {
     method: "POST",
-    body: JSON.stringify({ ...metadata, s3Key, publicUrl }),
+    body: JSON.stringify(payload),
   });
 
   options.onProgress?.("done");

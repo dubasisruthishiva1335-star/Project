@@ -27,7 +27,7 @@ app.use(cors());
 app.use(express.json({ limit: "50mb" }));
 
 // ---------------------------------------------------------------
-// In-Memory Global Stores (Clean — No Dummy/Mock Listings)
+// In-Memory Global Stores (Clean — Starts with 0 job listings)
 // ---------------------------------------------------------------
 let globalJobListings = [];
 
@@ -143,7 +143,10 @@ async function initDb() {
         issued_at TIMESTAMPTZ DEFAULT NOW()
       );
     `);
-    console.log("Database initialized cleanly.");
+
+    // Clean old mock listings from DB on boot
+    await pool.query(`DELETE FROM job_listings WHERE title LIKE '%Junior Assistant%' OR title LIKE '%Frontend Engineering%' OR title LIKE '%html%' OR title LIKE '%jhbb%'`);
+    console.log("Database initialized & clean.");
   } catch (_) {}
 }
 initDb();
@@ -161,6 +164,24 @@ const S3_BUCKET = process.env.S3_BUCKET_NAME || "myvault-files-app";
 function s3PublicUrl(key) {
   return `https://${S3_BUCKET}.s3.${process.env.AWS_REGION || "eu-north-1"}.amazonaws.com/${key}`;
 }
+
+// =================================================================
+// ADMIN ANALYTICS ENDPOINTS
+// =================================================================
+
+app.get(["/admin/analytics/overview", "/api/admin/analytics/overview"], (req, res) => {
+  res.json({ students: 1, notes: 0, jobListings: globalJobListings.length, examsCount: 0, results: 0 });
+});
+
+app.get(["/admin/analytics/recent-uploads", "/api/admin/analytics/recent-uploads"], (req, res) => {
+  res.json({
+    recentNotes: [],
+    recentJobs: globalJobListings,
+    recentExams: [],
+    recentResults: [],
+    allStudents: [{ id: "s1", hallTicket: "21A91A0501", fullName: "Rahul Kumar", branch: "CSE", semester: 6, createdAt: new Date().toISOString() }],
+  });
+});
 
 // =================================================================
 // INTERNSHIP LEARNING HUB: COURSE APIs

@@ -215,31 +215,6 @@ class _ResultsScreenState extends State<ResultsScreen> {
     }
   }
 
-  Future<void> _pickAndAnalyze(ImageSource source) async {
-    final picked = await _picker.pickImage(source: source, imageQuality: 90);
-    if (picked == null) return;
-
-    setState(() {
-      _uploading = true;
-      _error = null;
-    });
-
-    try {
-      final bytes = await File(picked.path).readAsBytes();
-      final record = await _service.uploadAndAnalyze(
-        fileBytes: bytes,
-        filename: picked.name,
-        studentId: widget.studentId,
-      );
-      setState(() => _results.insert(0, record));
-      if (mounted) _showAnalysisSheet(record);
-    } catch (e) {
-      setState(() => _error = 'AI analysis failed. Make sure the image is a clear result/marksheet.');
-    } finally {
-      setState(() => _uploading = false);
-    }
-  }
-
   Future<void> _openPdf(String title, String url) async {
     if (url.isEmpty) return;
     if (url.endsWith('.pdf')) {

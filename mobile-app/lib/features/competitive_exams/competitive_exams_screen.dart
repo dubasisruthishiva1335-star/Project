@@ -97,7 +97,7 @@ class _CompetitiveExamsScreenState extends State<CompetitiveExamsScreen>
 
       for (var pdf in pdfNotes) {
         extractedResources.add({
-          'id': pdf['id'] ?? `pdf_${Date.now()}`,
+          'id': pdf['id'] ?? 'pdf_${DateTime.now().millisecondsSinceEpoch}',
           'examId': examId,
           'examName': examName,
           'subject': pdf['subject'] ?? 'Quantitative Aptitude',
@@ -110,7 +110,7 @@ class _CompetitiveExamsScreenState extends State<CompetitiveExamsScreen>
 
       for (var video in videos) {
         extractedResources.add({
-          'id': video['id'] ?? `vid_${Date.now()}`,
+          'id': video['id'] ?? 'vid_${DateTime.now().millisecondsSinceEpoch}',
           'examId': examId,
           'examName': examName,
           'subject': video['subject'] ?? 'Quantitative Aptitude',

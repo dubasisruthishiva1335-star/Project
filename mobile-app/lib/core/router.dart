@@ -4,6 +4,7 @@ import '../features/auth/register_screen.dart';
 import '../features/home/home_screen.dart';
 import '../features/academic_hub/academic_hub_screen.dart';
 import '../features/jobs/job_listings_screen.dart';
+import '../features/jobs/internship_detail_screen.dart';
 import '../features/results/results_screen.dart';
 import '../features/aptitude/aptitude_screen.dart';
 import '../features/documents_vault/documents_vault_screen.dart';
@@ -31,6 +32,12 @@ final GoRouter appRouter = GoRouter(
         type: 'INTERNSHIP',
         title: 'Internship Opportunities',
         icon: Icons.work_outline_rounded,
+      ),
+    ),
+    GoRoute(
+      path: '/internships/:id',
+      builder: (context, state) => InternshipDetailScreen(
+        internshipId: state.pathParameters['id']!,
       ),
     ),
     GoRoute(

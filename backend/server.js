@@ -25,6 +25,14 @@ const app = express();
 app.use(cors());
 app.use(express.json({ limit: "50mb" }));
 
+// Mount Two-Mode Internships & Jobs LMS Routes
+try {
+  app.use('/internships', require('./routes/internships'));
+  app.use('/admin/internships', require('./routes/admin/internships'));
+} catch (e) {
+  console.warn('Routes mount notice:', e.message);
+}
+
 // ---------------------------------------------------------------
 // In-Memory Global Store for Published Opportunities
 // ---------------------------------------------------------------

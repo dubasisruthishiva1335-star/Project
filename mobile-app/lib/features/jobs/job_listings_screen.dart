@@ -189,7 +189,20 @@ class _JobListingsScreenState extends State<JobListingsScreen> {
                     ],
                   ),
                 ),
-                if (isExpired)
+                if (job['isLmsEnabled'] == true || job['is_lms_enabled'] == true)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(6),
+                      color: MyVaultColors.accentCyan.withValues(alpha: 0.2),
+                      border: Border.all(color: MyVaultColors.accentCyan.withValues(alpha: 0.4)),
+                    ),
+                    child: const Text(
+                      '🎓 COURSE + CERTIFICATE',
+                      style: TextStyle(color: MyVaultColors.accentCyan, fontSize: 10, fontWeight: FontWeight.bold),
+                    ),
+                  )
+                else if (isExpired)
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                     decoration: BoxDecoration(

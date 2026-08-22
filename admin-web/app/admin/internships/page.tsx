@@ -4,7 +4,7 @@ const internshipConfig: UploadFormConfig = {
   domain: "internships",
   confirmPath: "/admin/job-listings/confirm",
   acceptedFileTypes: "application/pdf,video/mp4",
-  requireFile: true,
+  requireFile: false,
   successMessage: "Internship / Job Opportunity published successfully — visible to students in Mobile App instantly.",
   fields: [
     { name: "title", label: "Position Title *", type: "text", required: true, placeholder: "Full Stack Developer Intern" },
@@ -18,6 +18,16 @@ const internshipConfig: UploadFormConfig = {
         { value: "INTERNSHIP", label: "💼 Internship" },
         { value: "PLACEMENT", label: "🏢 Full-time Placement Drive" },
         { value: "GOVT_JOB", label: "🏛️ Govt Job Opportunity" },
+      ],
+    },
+    {
+      name: "isLmsEnabled",
+      label: "Execution Mode (Plain vs LMS Course)",
+      type: "select",
+      required: false,
+      options: [
+        { value: "false", label: "🔗 Plain Listing (Apply via Portal Link + PDF Circular)" },
+        { value: "true", label: "🎓 Full LMS Industrial Course (Modules + Video Lessons + Certificate)" },
       ],
     },
     {
@@ -38,7 +48,7 @@ const internshipConfig: UploadFormConfig = {
     { name: "location", label: "Work Location", type: "text", required: false, placeholder: "e.g. Hyderabad / Remote / Hybrid" },
     { name: "deadline", label: "Application Deadline Date", type: "date", required: false },
     { name: "description", label: "Brief Description & Requirements", type: "text", required: false, placeholder: "Key eligibility, skills required, selection process..." },
-    { name: "applyUrl", label: "Application Link / Portal URL *", type: "text", required: false, placeholder: "https://careers.google.com/jobs" },
+    { name: "applyUrl", label: "Application Link / Portal URL", type: "text", required: false, placeholder: "https://careers.google.com/jobs" },
   ],
 };
 
@@ -47,7 +57,7 @@ export default function InternshipsAdminPage() {
     <div className="mx-auto max-w-2xl px-4 py-10">
       <h1 className="mb-1 text-xl font-semibold text-white">Post New Internship / Job Opportunity</h1>
       <p className="mb-6 text-sm text-white/50">
-        Fill out opportunity details, stipend, location, deadline, attach a PDF circular or MP4 video, and provide the portal URL. Published items sync to the Mobile App in real-time.
+        Fill out opportunity details, execution mode (Plain Link vs Full LMS Industrial Course), stipend, location, deadline, and optional PDF/MP4 attachment. Published items sync to the Mobile App in real-time.
       </p>
       <UploadForm config={internshipConfig} />
     </div>

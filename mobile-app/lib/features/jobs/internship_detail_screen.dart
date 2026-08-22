@@ -338,6 +338,10 @@ class _InternshipDetailScreenState extends State<InternshipDetailScreen> {
                 children: lessons.map((l) {
                   final isDone = l['isCompleted'] == true;
                   return ListTile(
+                    onTap: () => context.push(
+                      '/internships/${widget.internshipId}/lessons/${l['id']}',
+                      extra: l,
+                    ),
                     leading: Icon(
                       isDone ? Icons.check_circle_rounded : Icons.play_circle_fill_rounded,
                       color: isDone ? const Color(0xFF00E676) : MyVaultColors.accentCyan,

@@ -7,6 +7,22 @@ const pool = new Pool({
   ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : false,
 });
 
+// POST /admin/internships/upload-url — Presigned S3 upload URL for per-lesson videos & PDFs
+router.post('/upload-url', async (req, res) => {
+  const { filename = 'file.mp4', contentType = 'video/mp4' } = req.body;
+  const s3Bucket = process.env.S3_BUCKET_NAME || 'myvault-files-app';
+  const region = process.env.AWS_REGION || 'eu-north-1';
+  const sanitized = filename.replace(/[^a-zA-Z0-9._-]/g, '_');
+  const s3Key = `internships/lessons/${Date.now()}_${sanitized}`;
+  const publicUrl = `https://${s3Bucket}.s3.${region}.amazonaws.com/${s3Key}`;
+
+  res.json({
+    uploadUrl: publicUrl,
+    s3Key,
+    publicUrl,
+  });
+});
+
 // POST /admin/internships/confirm — Create/Edit listing (supports is_lms_enabled)
 router.post('/confirm', async (req, res) => {
   const {

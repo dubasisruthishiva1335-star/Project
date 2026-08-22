@@ -427,6 +427,8 @@ export default function DashboardPage() {
                   <th className="px-4 py-3">Company / Org</th>
                   <th className="px-4 py-3">Category</th>
                   <th className="px-4 py-3">Target Branch</th>
+                  <th className="px-4 py-3">Attachment File</th>
+                  <th className="px-4 py-3">Portal Link URL</th>
                   <th className="px-4 py-3">Posted Date</th>
                   <th className="px-4 py-3 text-right">Actions</th>
                 </tr>
@@ -443,6 +445,34 @@ export default function DashboardPage() {
                         </span>
                       </td>
                       <td className="px-4 py-3">{job.branch ?? "ALL"}</td>
+                      <td className="px-4 py-3">
+                        {job.fileUrl ? (
+                          <a
+                            href={job.fileUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center rounded-md bg-emerald-500/20 px-2 py-0.5 text-xs font-semibold text-emerald-300 hover:bg-emerald-500/30 border border-emerald-500/30"
+                          >
+                            📄 Attachment ↗
+                          </a>
+                        ) : (
+                          <span className="text-white/40 italic">None</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3">
+                        {job.applyUrl ? (
+                          <a
+                            href={job.applyUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center rounded-md bg-accentBlue/20 px-2 py-0.5 text-xs font-semibold text-accentCyan hover:bg-accentBlue/30 border border-accentBlue/40 truncate max-w-[140px]"
+                          >
+                            🔗 Apply Link ↗
+                          </a>
+                        ) : (
+                          <span className="text-white/40 italic">None</span>
+                        )}
+                      </td>
                       <td className="px-4 py-3 text-white/50">
                         {new Date(job.postedAt).toLocaleDateString()}
                       </td>
@@ -475,7 +505,7 @@ export default function DashboardPage() {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={6} className="px-4 py-8 text-center text-white/40">
+                    <td colSpan={8} className="px-4 py-8 text-center text-white/40">
                       No job listings posted.
                     </td>
                   </tr>

@@ -238,18 +238,35 @@ class _JobListingsScreenState extends State<JobListingsScreen> {
 
             const SizedBox(height: 16),
 
-            // Action Row: Apply Button / PDF View Link
+            // Action Row: Attached PDF Circular + Apply Portal URL Link
             Row(
               children: [
+                if (job['fileUrl'] != null && String.fromCharCodes((job['fileUrl'] as String).runes).isNotEmpty)
+                  OutlinedButton.icon(
+                    onPressed: () => _openUrl(job['fileUrl']),
+                    icon: const Icon(Icons.picture_as_pdf_rounded, color: Colors.redAccent, size: 14),
+                    label: const Text(
+                      'View PDF Circular ↗',
+                      style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: Colors.white24),
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
+                  ),
                 const Spacer(),
-                if (job['applyUrl'] != null || job['fileUrl'] != null)
+                if (job['applyUrl'] != null && String.fromCharCodes((job['applyUrl'] as String).runes).isNotEmpty)
                   ElevatedButton.icon(
-                    onPressed: () => _openUrl(job['applyUrl'] ?? job['fileUrl']),
+                    onPressed: () => _openUrl(job['applyUrl']),
                     icon: const Icon(Icons.open_in_new_rounded, color: Colors.white, size: 14),
-                    label: const Text('Apply Now', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+                    label: const Text(
+                      'Apply via Portal ↗',
+                      style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                    ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: _accentColor,
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                     ),
                   ),

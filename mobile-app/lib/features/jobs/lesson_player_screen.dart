@@ -64,7 +64,7 @@ class _LessonPlayerScreenState extends State<LessonPlayerScreen> {
                   ? '🎉 Course Completed! Certificate Issued.'
                   : '✅ Lesson marked as completed!',
             ),
-            backgroundColor: Colors.emerald,
+            backgroundColor: const Color(0xFF00E676),
           ),
         );
       }
@@ -209,7 +209,7 @@ class _LessonPlayerScreenState extends State<LessonPlayerScreen> {
                         hintText: 'https://github.com/username/project-repo',
                         hintStyle: const TextStyle(color: Colors.white30),
                         filled: true,
-                        fillColor: Colors.black46,
+                        fillColor: Colors.black54,
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
                       ),
                     ),

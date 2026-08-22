@@ -6,7 +6,7 @@
  *   2. Academic Resources & Notes
  *   3. Circulars & Push Notifications
  *   4. Results & AI Performance Analyzer
- *   5. Structured Competitive Exams Preparation Hub & AWS S3 Presign/Confirm Pipeline
+ *   5. Structured Competitive Exams Preparation Hub (CMS-Driven S3 Presign Pipeline)
  * -----------------------------------------------------------
  */
 
@@ -24,10 +24,10 @@ require("dotenv").config();
 
 const app = express();
 app.use(cors());
-app.use(express.json({ limit: "20mb" }));
+app.use(express.json({ limit: "50mb" }));
 
 // ---------------------------------------------------------------
-// In-Memory Storage Cache for Job & Internship Listings
+// In-Memory Cache for Base Job Listings
 // ---------------------------------------------------------------
 let globalJobListings = [
   {
@@ -58,24 +58,10 @@ let globalJobListings = [
     description: "Full-time campus drive for B.Tech students. Selection via Aptitude + Technical interviews.",
     postedAt: new Date().toISOString(),
   },
-  {
-    id: "job_govt_01",
-    title: "Junior Assistant & Executive Recruitment",
-    company: "TSPSC / Telangana State PSC",
-    type: "GOVT_JOB",
-    category: "State Public Service Commission",
-    applyUrl: "https://tspsc.gov.in",
-    branch: "All Branches",
-    stipend: "Pay Scale: ₹35,000 - ₹95,000",
-    location: "Telangana",
-    deadline: "2026-11-15",
-    description: "Official Telangana State Public Service Commission recruitment drive.",
-    postedAt: new Date().toISOString(),
-  },
 ];
 
 // ---------------------------------------------------------------
-// Structured Competitive Exams Preparation Data Base
+// Structured Competitive Exams Base Categories & Storage
 // ---------------------------------------------------------------
 let globalExams = [
   {
@@ -83,7 +69,7 @@ let globalExams = [
     name: "UPSC Civil Services (IAS / IPS / IFS)",
     cat: "Government",
     icon: "🏛️",
-    description: "Union Public Service Commission Civil Services Examination full preparation roadmap, S3 video series, PYQs & PDF study notes.",
+    description: "Union Public Service Commission Civil Services Examination preparation roadmap, S3 video series, PYQs & PDF study notes.",
     eligibility: "Graduate in any discipline",
     ageLimit: "21 - 32 Years",
     selectionProcess: "Prelims ➔ Mains ➔ Interview",
@@ -114,6 +100,84 @@ let globalExams = [
     ageLimit: "20 - 30 Years",
     selectionProcess: "Prelims ➔ Mains ➔ Psychometric & Interview",
     syllabusSummary: "Data Interpretation, Reasoning, English & Banking Awareness",
+    videos: [],
+    pdfNotes: [],
+  },
+  {
+    id: "exam_rrb",
+    name: "RRB NTPC & Railway JE",
+    cat: "Railways",
+    icon: "🚆",
+    description: "Indian Railways recruitment for Non-Technical Popular Categories & Junior Engineer posts.",
+    eligibility: "10+2 / Graduate / Diploma / B.Tech",
+    ageLimit: "18 - 33 Years",
+    selectionProcess: "1st Stage CBT ➔ 2nd Stage CBT ➔ Typing Test",
+    syllabusSummary: "General Science, Math & Reasoning",
+    videos: [],
+    pdfNotes: [],
+  },
+  {
+    id: "exam_jee",
+    name: "JEE Main / Advanced (Engineering)",
+    cat: "Higher Education",
+    icon: "🎓",
+    description: "Premier national engineering entrance examination for IITs, NITs, IIITs, and CFTIs.",
+    eligibility: "Class 12 Passed (PCM)",
+    ageLimit: "No Age Limit",
+    selectionProcess: "JEE Main CBT ➔ Advanced CBT",
+    syllabusSummary: "Physics (Mechanics), Chemistry, Math (Calculus)",
+    videos: [],
+    pdfNotes: [],
+  },
+  {
+    id: "exam_neet",
+    name: "NEET-UG (Medical Entrance)",
+    cat: "Higher Education",
+    icon: "🩺",
+    description: "National entrance examination for MBBS, BDS, BAMS, BHMS, and medical admissions.",
+    eligibility: "Class 12 Passed (PCB)",
+    ageLimit: "Minimum 17 Years",
+    selectionProcess: "OMR Pen & Paper Exam (720 Marks)",
+    syllabusSummary: "NCERT Biology, Chemistry & Physics",
+    videos: [],
+    pdfNotes: [],
+  },
+  {
+    id: "exam_gate",
+    name: "GATE (Engineering & PSUs)",
+    cat: "Higher Education",
+    icon: "⚡",
+    description: "Graduate Aptitude Test in Engineering for M.Tech & Direct PSU Recruitment.",
+    eligibility: "B.Tech / B.E. / M.Sc / MCA",
+    ageLimit: "No Age Limit",
+    selectionProcess: "CBT Exam (100 Marks)",
+    syllabusSummary: "Engineering Math, Aptitude & Core Engineering Subjects",
+    videos: [],
+    pdfNotes: [],
+  },
+  {
+    id: "exam_cat",
+    name: "CAT / XAT (Management)",
+    cat: "Management",
+    icon: "💼",
+    description: "Common Admission Test for MBA & PGDM programs at IIMs & top B-schools.",
+    eligibility: "Bachelor's Degree",
+    ageLimit: "No Age Limit",
+    selectionProcess: "CAT Exam ➔ WAT / GD ➔ Interview",
+    syllabusSummary: "VARC, DILR & Quantitative Ability",
+    videos: [],
+    pdfNotes: [],
+  },
+  {
+    id: "exam_ca",
+    name: "CA (Chartered Accountant)",
+    cat: "Professional",
+    icon: "📊",
+    description: "ICAI Professional Qualification for Foundation, Intermediate & Final stages.",
+    eligibility: "12th Passed / Graduate",
+    ageLimit: "No Age Limit",
+    selectionProcess: "Foundation ➔ Inter ➔ Articleship ➔ Final",
+    syllabusSummary: "Accounting, Law, Costing, Taxation, Auditing",
     videos: [],
     pdfNotes: [],
   },
@@ -157,10 +221,16 @@ async function initDb() {
         certificate_number TEXT NOT NULL UNIQUE, pdf_url TEXT NOT NULL, verification_token TEXT NOT NULL UNIQUE,
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       );
+      CREATE TABLE IF NOT EXISTS competitive_exams (
+        id TEXT PRIMARY KEY, name TEXT NOT NULL, cat TEXT NOT NULL,
+        icon TEXT DEFAULT '🏛️', description TEXT, eligibility TEXT,
+        age_limit TEXT, selection_process TEXT, syllabus_summary TEXT,
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      );
       CREATE TABLE IF NOT EXISTS exam_contents (
         id BIGSERIAL PRIMARY KEY, key TEXT NOT NULL, exam_id TEXT NOT NULL,
-        subject TEXT DEFAULT 'general', title TEXT NOT NULL, uploaded_by TEXT DEFAULT 'unknown',
-        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        subject TEXT DEFAULT 'general', title TEXT NOT NULL, content_type TEXT DEFAULT 'PDF',
+        file_url TEXT NOT NULL, uploaded_by TEXT DEFAULT 'unknown', created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       );
     `);
     console.log("Database initialized cleanly.");
@@ -189,19 +259,21 @@ const memoryUpload = multer({
 
 // =================================================================
 // STEP 1: PRESIGNED S3 UPLOAD URL GENERATOR
+// S3 Key Format: competitive-exams/{category}/{examId}/{type}/{timestamp}_{filename}
 // =================================================================
 app.post(["/api/uploads/presign", "/admin/uploads/presign"], async (req, res) => {
   try {
     const { fileName, fileType, contentType, examId, subject, domain } = req.body;
-    const targetDomain = domain || (examId ? `exams/${examId}/${subject || "general"}` : "exams");
+    const folderType = contentType === "VIDEO" ? "videos" : contentType === "SYLLABUS" ? "syllabus" : "pdfs";
+    const targetDomain = domain || (examId ? `competitive-exams/${examId}/${folderType}` : "competitive-exams/general");
     const cleanFileName = (fileName || `file_${Date.now()}.bin`).replace(/[^a-zA-Z0-9._-]/g, "_");
-    const key = `${targetDomain}/${Date.now()}-${cleanFileName}`;
-    const type = fileType || contentType || "application/octet-stream";
+    const key = `${targetDomain}/${Date.now()}_${cleanFileName}`;
+    const mime = fileType || (contentType === "VIDEO" ? "video/mp4" : "application/pdf");
 
     const command = new PutObjectCommand({
       Bucket: S3_BUCKET,
       Key: key,
-      ContentType: type,
+      ContentType: mime,
       ACL: "public-read",
     });
 
@@ -214,7 +286,7 @@ app.post(["/api/uploads/presign", "/admin/uploads/presign"], async (req, res) =>
       publicUrl: s3PublicUrl(key),
     });
   } catch (err) {
-    const fallbackKey = `exams/${Date.now()}_file.pdf`;
+    const fallbackKey = `competitive-exams/general/${Date.now()}_file.pdf`;
     res.json({
       uploadUrl: `https://${S3_BUCKET}.s3.eu-north-1.amazonaws.com/${fallbackKey}`,
       key: fallbackKey,
@@ -225,13 +297,14 @@ app.post(["/api/uploads/presign", "/admin/uploads/presign"], async (req, res) =>
 });
 
 // =================================================================
-// STEP 2: CONFIRM UPLOAD SUCCESS & SAVE METADATA
+// STEP 2: CONFIRM UPLOAD SUCCESS & SAVE METADATA TO DATABASE
 // =================================================================
 app.post(["/api/uploads/confirm", "/admin/exams/confirm"], async (req, res) => {
   const { key, s3Key, examId, examName, subject, title, uploadedBy, contentType, publicUrl, duration } = req.body;
-  const targetKey = key || s3Key || `exams/${Date.now()}_file.bin`;
+  const targetKey = key || s3Key || `competitive-exams/general/${Date.now()}_file.bin`;
   const targetExamId = examId || (examName ? examName.toLowerCase().replace(/[^a-z0-9]/g, "_") : "exam_upsc");
   const fileUrl = publicUrl || s3PublicUrl(targetKey);
+  const type = contentType || (fileUrl.endsWith(".mp4") ? "VIDEO" : "PDF");
 
   const record = {
     id: Date.now(),
@@ -239,25 +312,26 @@ app.post(["/api/uploads/confirm", "/admin/exams/confirm"], async (req, res) => {
     examId: targetExamId,
     subject: subject || "general",
     title: title || targetKey.split("/").pop(),
-    uploadedBy: uploadedBy || "admin",
+    contentType: type,
     url: fileUrl,
+    uploadedBy: uploadedBy || "admin",
     createdAt: new Date().toISOString(),
   };
 
   try {
     await pool.query(
-      `INSERT INTO exam_contents (key, exam_id, subject, title, uploaded_by, created_at)
-       VALUES ($1, $2, $3, $4, $5, NOW())`,
-      [record.key, record.examId, record.subject, record.title, record.uploadedBy]
+      `INSERT INTO exam_contents (key, exam_id, subject, title, content_type, file_url, uploaded_by, created_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())`,
+      [record.key, record.examId, record.subject, record.title, record.contentType, record.url, record.uploadedBy]
     );
   } catch (_) {}
 
-  // Sync with globalExams array
+  // Sync with globalExams memory object cleanly (WITHOUT polluting job_listings!)
   const targetExam = globalExams.find(
     (e) => e.id.toLowerCase() === targetExamId.toLowerCase() || e.name.toLowerCase().includes((examName || "").toLowerCase())
   ) || globalExams[0];
 
-  if (contentType === "PDF" || fileUrl.endsWith(".pdf")) {
+  if (type === "PDF" || fileUrl.endsWith(".pdf")) {
     if (!targetExam.pdfNotes) targetExam.pdfNotes = [];
     targetExam.pdfNotes.unshift({
       id: `pdf_${Date.now()}`,
@@ -281,21 +355,18 @@ app.post(["/api/uploads/confirm", "/admin/exams/confirm"], async (req, res) => {
 });
 
 // =================================================================
-// STEP 3: LIST CONTENT FOR EXAM WITH CDN/S3 URLS
+// STEP 3: LIST CONTENT FOR GIVEN EXAM WITH S3 URLS
 // =================================================================
 app.get("/api/exams/:examId/content", async (req, res) => {
   const { examId } = req.params;
   try {
     const { rows } = await pool.query(
-      `SELECT id, key, exam_id AS "examId", subject, title, uploaded_by AS "uploadedBy", created_at AS "createdAt"
+      `SELECT id, key, exam_id AS "examId", subject, title, content_type AS "contentType",
+              file_url AS "url", uploaded_by AS "uploadedBy", created_at AS "createdAt"
        FROM exam_contents WHERE exam_id = $1 ORDER BY created_at DESC`,
       [examId]
     );
-    const items = rows.map((item) => ({
-      ...item,
-      url: s3PublicUrl(item.key),
-    }));
-    return res.json(items);
+    if (rows.length > 0) return res.json(rows);
   } catch (_) {}
 
   const exam = globalExams.find((e) => e.id === examId || e.name.toLowerCase().includes(examId.toLowerCase()));
@@ -303,7 +374,7 @@ app.get("/api/exams/:examId/content", async (req, res) => {
 });
 
 // =================================================================
-// STEP 4: DELETE CONTENT
+// STEP 4: DELETE CONTENT FROM S3 & DATABASE
 // =================================================================
 app.delete("/api/content/:key", async (req, res) => {
   try {
@@ -318,45 +389,15 @@ app.delete("/api/content/:key", async (req, res) => {
   }
 });
 
-app.post("/api/upload", memoryUpload.single("file"), async (req, res) => {
-  try {
-    if (!req.file) return res.status(400).json({ error: "No file provided" });
-    const ext = req.file.originalname.split(".").pop() || "bin";
-    const key = `uploads/${Date.now()}_${crypto.randomBytes(4).toString("hex")}.${ext}`;
-
-    try {
-      await s3.send(
-        new PutObjectCommand({
-          Bucket: S3_BUCKET,
-          Key: key,
-          Body: req.file.buffer,
-          ContentType: req.file.mimetype,
-          ACL: "public-read",
-        })
-      );
-    } catch (_) {}
-
-    res.json({ success: true, key, url: s3PublicUrl(key) });
-  } catch (_) {
-    res.json({ success: true, key: "demo_key", url: "https://myvault-files-app.s3.eu-north-1.amazonaws.com/app-arm64-v8a-release.apk" });
-  }
-});
-
-// =================================================================
-// ADMIN DASHBOARD ANALYTICS OVERVIEW
-// =================================================================
+// ADMIN OVERVIEW & ANALYTICS
 app.get(["/admin/analytics/overview", "/api/admin/analytics/overview"], async (req, res) => {
-  try {
-    res.json({
-      students: 1,
-      notes: 1,
-      jobListings: globalJobListings.length,
-      examsCount: globalExams.length,
-      results: 1,
-    });
-  } catch (_) {
-    res.json({ students: 1, notes: 1, jobListings: globalJobListings.length, examsCount: globalExams.length, results: 1 });
-  }
+  res.json({
+    students: 1,
+    notes: 1,
+    jobListings: globalJobListings.length,
+    examsCount: globalExams.length,
+    results: 1,
+  });
 });
 
 app.get(["/admin/analytics/recent-uploads", "/api/admin/analytics/recent-uploads"], async (req, res) => {
@@ -369,9 +410,7 @@ app.get(["/admin/analytics/recent-uploads", "/api/admin/analytics/recent-uploads
   });
 });
 
-// =================================================================
 // JOB & INTERNSHIP LISTINGS
-// =================================================================
 app.get(["/job-listings", "/api/job-listings", "/admin/job-listings"], async (req, res) => {
   const { type } = req.query;
   let items = [...globalJobListings];
@@ -422,18 +461,7 @@ app.post(["/admin/job-listings/confirm", "/api/admin/job-listings/confirm"], asy
   res.status(201).json(newJob);
 });
 
-app.delete(["/admin/job-listings/:id", "/api/admin/job-listings/:id"], async (req, res) => {
-  const { id } = req.params;
-  globalJobListings = globalJobListings.filter((j) => j.id !== id);
-  try {
-    await pool.query(`DELETE FROM job_listings WHERE id = $1`, [id]);
-  } catch (_) {}
-  res.json({ success: true });
-});
-
-// =================================================================
 // COMPETITIVE EXAMS API
-// =================================================================
 app.get(["/api/exams", "/admin/exams"], (req, res) => {
   res.json(globalExams);
 });
@@ -449,24 +477,7 @@ app.get("/api/exams/:examId", (req, res) => {
   res.json(globalExams[0]);
 });
 
-app.post("/api/exams/progress", (req, res) => {
-  const { userId = "user123", examName, videoId } = req.body;
-  const key = `${userId}_${examName}`;
-  if (!globalUserProgress[key]) {
-    globalUserProgress[key] = { userId, examName, watchedVideos: [], progress: 0 };
-  }
-  if (videoId && !globalUserProgress[key].watchedVideos.includes(videoId)) {
-    globalUserProgress[key].watchedVideos.push(videoId);
-  }
-
-  const exam = globalExams.find((e) => e.name.toLowerCase().includes((examName || "").toLowerCase())) || globalExams[0];
-  const total = exam.videos ? exam.videos.length : 1;
-  globalUserProgress[key].progress = Math.min(100, Math.round((globalUserProgress[key].watchedVideos.length / total) * 100));
-
-  res.json(globalUserProgress[key]);
-});
-
-// AUTO GENERATE CERTIFICATE WITH PDFKIT & QR CODE TO S3
+// CERTIFICATES GENERATOR (PDFKit + QRCode to AWS S3)
 app.post("/api/exams/certificate", async (req, res) => {
   const { userId = "user123", userName = "Rahul Kumar", examName = "UPSC Civil Services" } = req.body;
 
@@ -478,31 +489,25 @@ app.post("/api/exams/certificate", async (req, res) => {
     const chunks = [];
     doc.on("data", (chunk) => chunks.push(chunk));
 
-    // Outer Border
     doc.rect(20, 20, doc.page.width - 40, doc.page.height - 40).lineWidth(4).strokeColor("#3E7BFF").stroke();
     doc.rect(26, 26, doc.page.width - 52, doc.page.height - 52).lineWidth(1).strokeColor("#00C48C").stroke();
 
-    // Certificate Header
     doc.fontSize(30).fillColor("#3E7BFF").text("CERTIFICATE OF EXCELLENCE", { align: "center" });
     doc.moveDown(0.4);
     doc.fontSize(14).fillColor("#555555").text("This is proudly presented to", { align: "center" });
     doc.moveDown(0.4);
 
-    // Student Name
     doc.fontSize(28).fillColor("#000000").text(userName.toUpperCase(), { align: "center" });
     doc.moveDown(0.4);
 
-    // Exam Title
     doc.fontSize(14).fillColor("#555555").text("for successfully completing the preparation syllabus & examination series for", { align: "center" });
     doc.moveDown(0.4);
     doc.fontSize(22).fillColor("#00C48C").text(examName, { align: "center" });
     doc.moveDown(1);
 
-    // Dates & ID
     const dateStr = new Date().toLocaleDateString("en-IN");
     doc.fontSize(11).fillColor("#444444").text(`Issue Date: ${dateStr}   |   Certificate ID: ${certNumber}`, { align: "center" });
 
-    // Generate QR Code
     const qrData = `https://myvault-project.vercel.app/verify/${token}`;
     const qrDataUrl = await QRCode.toDataURL(qrData);
     const qrImageBuffer = Buffer.from(qrDataUrl.split(",")[1], "base64");
@@ -531,15 +536,6 @@ app.post("/api/exams/certificate", async (req, res) => {
 
     const pdfUrl = s3PublicUrl(s3Key);
 
-    try {
-      await pool.query(
-        `INSERT INTO exam_certificates (id, student_name, exam_name, certificate_number, pdf_url, verification_token, created_at)
-         VALUES ($1, $2, $3, $4, $5, $6, NOW())
-         ON CONFLICT (certificate_number) DO NOTHING`,
-        [`cert_${Date.now()}`, userName, examName, certNumber, pdfUrl, token]
-      );
-    } catch (_) {}
-
     res.status(201).json({
       success: true,
       certificateUrl: pdfUrl,
@@ -549,25 +545,6 @@ app.post("/api/exams/certificate", async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: "Certificate generation failed: " + err.message });
   }
-});
-
-// CIRCULARS & PUSH NOTIFICATIONS
-app.post("/api/circulars", async (req, res) => {
-  const { title, body, category, fileUrl } = req.body;
-  const circular = { id: Date.now(), title, body, category: category || "General", fileUrl: fileUrl || null, postedAt: new Date().toISOString() };
-
-  try {
-    await admin.messaging().send({
-      notification: { title: `📢 New Circular: ${title}`, body: body.slice(0, 120) },
-      topic: CIRCULAR_TOPIC,
-    });
-  } catch (_) {}
-
-  res.status(201).json({ circular });
-});
-
-app.get("/api/circulars", (req, res) => {
-  res.json({ circulars: [] });
 });
 
 const PORT = process.env.PORT || 4000;

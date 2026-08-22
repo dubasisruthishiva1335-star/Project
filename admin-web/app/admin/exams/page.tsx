@@ -3,95 +3,96 @@
 import { useState, useEffect, useCallback } from "react";
 import { UploadForm, type UploadFormConfig } from "@/components/admin/UploadForm";
 
-interface PrepResource {
+interface ExamMaterialResource {
   id: string;
   examId: string;
   subject: string;
-  topic: string;
+  unit: string;
+  contentType: "NOTES" | "VIDEO_LECTURE" | "LAB_MANUAL" | "CHEAT_SHEET" | "ASSIGNMENT" | "QUESTION_BANK" | "SYLLABUS";
   title: string;
-  description?: string;
-  contentType: "VIDEO" | "PDF" | "NOTE" | "SYLLABUS" | "PREVIOUS_PAPER" | "CURRENT_AFFAIRS";
   fileUrl: string;
-  thumbnailUrl?: string;
-  fileSize?: number;
-  durationSeconds?: number;
-  isFree: boolean;
-  isPublished: boolean;
-  uploadedBy: string;
-  createdAt: string;
+  uploadedAt: string;
 }
 
-const STORAGE_KEY = "myvault_prep_hub_v1";
+const STORAGE_KEY = "myvault_exam_academic_flow_v1";
 
-export default function PreparationHubAdminPage() {
-  const [resources, setResources] = useState<PrepResource[]>([]);
+const examNotesConfig: UploadFormConfig = {
+  domain: "exams",
+  confirmPath: "/admin/exams/confirm",
+  acceptedFileTypes: "application/pdf,video/mp4",
+  successMessage: "Competitive Exam Preparation Material published successfully — visible to students instantly in the Mobile App.",
+  fields: [
+    { name: "title", label: "Material Title", type: "text", required: true, placeholder: "e.g. Unit 3 — Percentage Concepts & Shortcut Methods" },
+    {
+      name: "examId",
+      label: "Target Competitive Exam",
+      type: "select",
+      required: true,
+      options: [
+        { value: "upsc-cse-2026", label: "🏛️ UPSC Civil Services (IAS / IPS / IFS)" },
+        { value: "ssc-cgl-2026", label: "📚 SSC CGL (Staff Selection Commission)" },
+        { value: "ibps-po-2026", label: "🏦 SBI PO / IBPS PO & Clerk (Banking)" },
+        { value: "rrb-ntpc-2026", label: "🚆 RRB NTPC & Railway JE" },
+        { value: "gate-cse-2027", label: "⚡ GATE CSE (Engineering)" },
+        { value: "jee-main-2026", label: "🎓 JEE Main / Advanced" },
+        { value: "neet-ug-2026", label: "🩺 NEET-UG (Medical Entrance)" },
+        { value: "cat-mba-2026", label: "💼 CAT / XAT (Management)" },
+      ],
+    },
+    {
+      name: "subject",
+      label: "Subject Module",
+      type: "select",
+      required: true,
+      options: [
+        { value: "Quantitative Aptitude", label: "🔢 Quantitative Aptitude" },
+        { value: "Logical Reasoning", label: "🧩 Logical Reasoning" },
+        { value: "English Language", label: "📖 English Language" },
+        { value: "General Awareness", label: "🌐 General Awareness & GK" },
+        { value: "Current Affairs", label: "📰 Current Affairs & Daily News" },
+        { value: "Computer Science Core", label: "💻 Computer Science Core (GATE)" },
+      ],
+    },
+    {
+      name: "unit",
+      label: "Unit Number",
+      type: "select",
+      required: true,
+      options: [
+        { value: "1", label: "Unit 1 — Fundamentals & Basic Concepts" },
+        { value: "2", label: "Unit 2 — Core Methodology" },
+        { value: "3", label: "Unit 3 — Advanced Problem Solving" },
+        { value: "4", label: "Unit 4 — Practice Sets & Mock Drills" },
+        { value: "5", label: "Unit 5 — Solved Previous Year Questions (PYQs)" },
+      ],
+    },
+    {
+      name: "contentType",
+      label: "Material Category",
+      type: "select",
+      required: true,
+      options: [
+        { value: "NOTES", label: "📄 Lecture Notes & Study Material" },
+        { value: "VIDEO_LECTURE", label: "🎬 Video Lecture Stream" },
+        { value: "LAB_MANUAL", label: "🧪 Practice Set / Drill Sheet" },
+        { value: "CHEAT_SHEET", label: "⚡ Formula Sheet & Cheat Sheet" },
+        { value: "ASSIGNMENT", label: "📋 Homework & Practice Problems" },
+        { value: "QUESTION_BANK", label: "📊 Question Bank & Solved PYQs" },
+        { value: "SYLLABUS", label: "📜 Exam Syllabus & Selection Roadmap" },
+      ],
+    },
+  ],
+};
+
+export default function ExamsAdminPage() {
+  const [resources, setResources] = useState<ExamMaterialResource[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedExam, setSelectedExam] = useState<string>("All");
-  const [selectedType, setSelectedType] = useState<string>("All");
-  const [searchQuery, setSearchQuery] = useState<string>("");
-  const [activeMode, setActiveMode] = useState<"VIDEO" | "PDF" | "NOTE" | "SYLLABUS" | "PREVIOUS_PAPER">("VIDEO");
-
-  // Dynamic file requirements based on Content Type
-  const acceptedFileTypes =
-    activeMode === "VIDEO"
-      ? "video/mp4, video/webm, video/*"
-      : activeMode === "SYLLABUS"
-      ? "application/pdf, .doc, .docx"
-      : "application/pdf";
-
-  const targetFolder =
-    activeMode === "VIDEO"
-      ? "competitive-exams/preparation/videos"
-      : activeMode === "SYLLABUS"
-      ? "competitive-exams/preparation/syllabus"
-      : "competitive-exams/preparation/notes";
-
-  const formConfig: UploadFormConfig = {
-    domain: targetFolder,
-    confirmPath: "/admin/exams/confirm",
-    acceptedFileTypes: acceptedFileTypes,
-    requireFile: true,
-    successMessage: `Preparation Resource (${activeMode}) uploaded successfully to AWS S3 & synced with Mobile App instantly!`,
-    fields: [
-      {
-        name: "examId",
-        label: "Target Competitive Exam *",
-        type: "select",
-        required: true,
-        options: [
-          { value: "ssc-cgl-2026", label: "📚 SSC CGL 2026 (Staff Selection Commission)" },
-          { value: "upsc-cse-2026", label: "🏛️ UPSC Civil Services 2026 (IAS / IPS / IFS)" },
-          { value: "ibps-po-2026", label: "🏦 IBPS PO / SBI PO 2026 (Banking)" },
-          { value: "rrb-ntpc-2026", label: "🚆 RRB NTPC & Railway JE 2026" },
-          { value: "gate-cse-2027", label: "⚡ GATE CSE 2027 (Engineering)" },
-          { value: "cat-mba-2026", label: "💼 CAT / XAT 2026 (Management)" },
-        ],
-      },
-      {
-        name: "subject",
-        label: "Subject Module *",
-        type: "select",
-        required: true,
-        options: [
-          { value: "Quantitative Aptitude", label: "🔢 Quantitative Aptitude" },
-          { value: "Logical Reasoning", label: "🧩 Logical Reasoning" },
-          { value: "English Language", label: "📖 English Language" },
-          { value: "General Awareness", label: "🌐 General Awareness & GK" },
-          { value: "Current Affairs", label: "📰 Current Affairs & Daily News" },
-          { value: "Computer Science Core", label: "💻 Computer Science Core (GATE)" },
-        ],
-      },
-      { name: "topic", label: "Chapter Topic (e.g. Percentage, Profit & Loss)", type: "text", required: true, placeholder: "e.g. Percentage - Complete Concept" },
-      { name: "title", label: "Preparation Content Title *", type: "text", required: true, placeholder: "e.g. Percentage Masterclass & Solved PYQs" },
-      { name: "description", label: "Content Description", type: "text", required: false, placeholder: "e.g. Learn percentage concepts from basics with shortcut tricks..." },
-      { name: "duration", label: "Video Duration / Reading Time (e.g. 42:15)", type: "text", required: false, placeholder: "e.g. 42:15" },
-      { name: "publicUrl", label: "External S3 / CDN URL (optional direct link)", type: "text", required: false, placeholder: "https://myvault-files-app.s3.eu-north-1.amazonaws.com/lecture.mp4" },
-    ],
-  };
+  const [selectedCategory, setSelectedCategory] = useState<string>("All");
 
   const loadResources = useCallback(async () => {
     setLoading(true);
-    let localItems: PrepResource[] = [];
+    let localItems: ExamMaterialResource[] = [];
     if (typeof window !== "undefined") {
       try {
         const saved = localStorage.getItem(STORAGE_KEY);
@@ -103,10 +104,20 @@ export default function PreparationHubAdminPage() {
       const response = await fetch("/api/admin/preparation");
       if (response.ok) {
         const res = await response.json();
-        const apiList: PrepResource[] = res.data || [];
-        const mergedMap = new Map<string, PrepResource>();
-        localItems.forEach((item) => mergedMap.set(String(item.id), item));
-        apiList.forEach((item) => mergedMap.set(String(item.id), item));
+        const apiList: ExamMaterialResource[] = (res.data || []).map((item: any) => ({
+          id: String(item.id),
+          examId: item.examId || "upsc-cse-2026",
+          subject: item.subject || "Quantitative Aptitude",
+          unit: String(item.unit || "1"),
+          contentType: item.contentType || "NOTES",
+          title: item.title,
+          fileUrl: item.fileUrl,
+          uploadedAt: item.createdAt || new Date().toISOString(),
+        }));
+
+        const mergedMap = new Map<string, ExamMaterialResource>();
+        localItems.forEach((item) => mergedMap.set(item.id, item));
+        apiList.forEach((item) => mergedMap.set(item.id, item));
         setResources(Array.from(mergedMap.values()));
       } else if (localItems.length > 0) {
         setResources(localItems);
@@ -124,22 +135,18 @@ export default function PreparationHubAdminPage() {
   const handleFormSuccess = (payload: Record<string, any>, file: File | null) => {
     const fileUrl =
       payload.publicUrl ||
-      (file ? `https://myvault-files-app.s3.eu-north-1.amazonaws.com/${targetFolder}/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g, "_")}` : "") ||
+      (file ? `https://myvault-files-app.s3.eu-north-1.amazonaws.com/exams/${payload.examId || "general"}/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g, "_")}` : "") ||
       "https://myvault-files-app.s3.eu-north-1.amazonaws.com/app-arm64-v8a-release.apk";
 
-    const newItem: PrepResource = {
-      id: `local_prep_${Date.now()}`,
-      examId: payload.examId || "ssc-cgl-2026",
+    const newItem: ExamMaterialResource = {
+      id: `local_exam_res_${Date.now()}`,
+      examId: payload.examId || "upsc-cse-2026",
       subject: payload.subject || "Quantitative Aptitude",
-      topic: payload.topic || "General",
+      unit: String(payload.unit || "1"),
+      contentType: payload.contentType || "NOTES",
       title: payload.title || "Uploaded Resource",
-      description: payload.description || "",
-      contentType: activeMode,
       fileUrl,
-      isFree: true,
-      isPublished: true,
-      uploadedBy: "Admin",
-      createdAt: new Date().toISOString(),
+      uploadedAt: new Date().toISOString(),
     };
 
     setResources((prev) => {
@@ -153,157 +160,80 @@ export default function PreparationHubAdminPage() {
     });
   };
 
-  const videoCount = resources.filter((r) => r.contentType === "VIDEO").length;
-  const notesCount = resources.filter((r) => r.contentType === "NOTE").length;
-  const pdfCount = resources.filter((r) => r.contentType === "PDF" || r.fileUrl.endsWith(".pdf")).length;
-  const totalCount = resources.length;
+  const formatCategoryPill = (cat: string) => {
+    switch (cat.toUpperCase()) {
+      case "NOTES": return "📄 Lecture Notes";
+      case "VIDEO_LECTURE": return "🎬 Video Lecture";
+      case "LAB_MANUAL": return "🧪 Practice Set";
+      case "CHEAT_SHEET": return "⚡ Formula Sheet";
+      case "ASSIGNMENT": return "📋 Practice Homework";
+      case "QUESTION_BANK": return "📊 Question Bank / PYQs";
+      case "SYLLABUS": return "📜 Syllabus Roadmap";
+      default: return cat;
+    }
+  };
 
   const filtered = resources.filter((r) => {
     const matchesExam = selectedExam === "All" || r.examId.toLowerCase().includes(selectedExam.toLowerCase());
-    const matchesType = selectedType === "All" || r.contentType === selectedType;
-    const matchesSearch =
-      r.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      r.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      r.topic.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesExam && matchesType && matchesSearch;
+    const matchesCat = selectedCategory === "All" || r.contentType === selectedCategory;
+    return matchesExam && matchesCat;
   });
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-10">
-      {/* Header */}
-      <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h1 className="bg-gradient-to-r from-accentBlue to-accentCyan bg-clip-text text-3xl font-black text-transparent flex items-center gap-2">
-            <span>Competitive Exam Preparation Hub</span>
-            <span className="rounded-full bg-accentCyan/20 px-3 py-1 text-xs font-bold text-accentCyan border border-accentCyan/30">
-              CMS ⭐
-            </span>
-          </h1>
-          <p className="mt-1 text-sm text-white/60">
-            Manage preparation content for competitive exams. Admin uploads videos, notes, PDFs & syllabus ➔ Syncs to Mobile App instantly.
-          </p>
-        </div>
-        <button
-          onClick={() => window.scrollTo({ top: 300, behavior: "smooth" })}
-          className="rounded-xl bg-accentBlue px-5 py-2.5 text-xs font-bold text-white shadow-lg shadow-accentBlue/30 hover:bg-blue-600 transition"
-        >
-          + Upload Content
-        </button>
+    <div className="mx-auto max-w-4xl px-4 py-10">
+      <div className="mb-8">
+        <h1 className="bg-gradient-to-r from-accentBlue to-accentCyan bg-clip-text text-2xl font-black text-transparent">
+          Upload Competitive Exam Resources
+        </h1>
+        <p className="mt-1 text-sm text-white/50">
+          Files upload directly to AWS S3 storage; students see them instantly under their selected exam, subject module, and unit (using Academic Hub flow).
+        </p>
       </div>
 
-      {/* Analytics Summary Cards */}
-      <div className="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-purple-500/20 to-indigo-500/10 p-5 backdrop-blur-xl">
-          <span className="text-2xl">🎬</span>
-          <div className="mt-2 text-2xl font-black text-white">{videoCount}</div>
-          <div className="text-xs font-semibold text-purple-300">Preparation Videos</div>
-        </div>
-        <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-cyan-500/20 to-teal-500/10 p-5 backdrop-blur-xl">
-          <span className="text-2xl">📚</span>
-          <div className="mt-2 text-2xl font-black text-white">{notesCount}</div>
-          <div className="text-xs font-semibold text-cyan-300">Study Notes</div>
-        </div>
-        <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-amber-500/20 to-yellow-500/10 p-5 backdrop-blur-xl">
-          <span className="text-2xl">📄</span>
-          <div className="mt-2 text-2xl font-black text-white">{pdfCount}</div>
-          <div className="text-xs font-semibold text-amber-300">PDF Documents</div>
-        </div>
-        <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-emerald-500/20 to-green-500/10 p-5 backdrop-blur-xl">
-          <span className="text-2xl">⚡</span>
-          <div className="mt-2 text-2xl font-black text-white">{totalCount}</div>
-          <div className="text-xs font-semibold text-emerald-300">Total Resources</div>
-        </div>
-      </div>
-
-      {/* Resource Format Switcher */}
-      <div className="mb-6 flex flex-wrap items-center gap-2 rounded-2xl border border-white/10 bg-black/40 p-2 backdrop-blur-xl">
-        <span className="text-xs font-bold text-white/70 px-3">Content Type:</span>
-        <button
-          onClick={() => setActiveMode("VIDEO")}
-          className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition ${
-            activeMode === "VIDEO" ? "bg-accentBlue text-white shadow-lg" : "text-white/60 hover:text-white"
-          }`}
-        >
-          🎬 Video
-        </button>
-        <button
-          onClick={() => setActiveMode("PDF")}
-          className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition ${
-            activeMode === "PDF" ? "bg-accentBlue text-white shadow-lg" : "text-white/60 hover:text-white"
-          }`}
-        >
-          📄 PDF
-        </button>
-        <button
-          onClick={() => setActiveMode("NOTE")}
-          className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition ${
-            activeMode === "NOTE" ? "bg-accentBlue text-white shadow-lg" : "text-white/60 hover:text-white"
-          }`}
-        >
-          📝 Notes
-        </button>
-        <button
-          onClick={() => setActiveMode("SYLLABUS")}
-          className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition ${
-            activeMode === "SYLLABUS" ? "bg-accentBlue text-white shadow-lg" : "text-white/60 hover:text-white"
-          }`}
-        >
-          📖 Syllabus
-        </button>
-        <button
-          onClick={() => setActiveMode("PREVIOUS_PAPER")}
-          className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition ${
-            activeMode === "PREVIOUS_PAPER" ? "bg-accentBlue text-white shadow-lg" : "text-white/60 hover:text-white"
-          }`}
-        >
-          📜 Previous Paper
-        </button>
-      </div>
-
-      {/* Upload Screen Card */}
+      {/* Upload Form Component (Matching Academic Hub Flow) */}
       <div className="mb-12 rounded-2xl border border-white/10 bg-white/[0.02] p-6 backdrop-blur-xl">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-base font-bold text-white flex items-center gap-2">
-            <span>📤 Upload Preparation Content ({activeMode}) to AWS S3</span>
-          </h2>
-          <span className="rounded-full bg-cyan-400/10 px-3 py-1 text-xs font-semibold text-cyan-300 border border-cyan-400/20">
-            Accepted: {acceptedFileTypes}
-          </span>
-        </div>
-        <UploadForm key={activeMode} config={formConfig} onSuccess={handleFormSuccess} />
+        <UploadForm config={examNotesConfig} onSuccess={handleFormSuccess} />
       </div>
 
-      {/* Management Directory & Table */}
+      {/* Uploaded Materials Table */}
       <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-6 backdrop-blur-xl">
         <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h2 className="text-xl font-extrabold text-white">📚 Preparation Content Library ({filtered.length})</h2>
-            <p className="text-xs text-white/50">All published items stream live on the Student Mobile App</p>
+            <h2 className="text-lg font-bold text-white">📚 Published Exam Preparation Materials ({filtered.length})</h2>
+            <p className="text-xs text-white/50">Students see these resources instantly in the Mobile App</p>
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
-            <input
-              type="text"
-              placeholder="Search content, topic, subject..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="rounded-xl border border-white/10 bg-black/60 px-4 py-2 text-xs text-white placeholder-white/40 focus:border-accentCyan focus:outline-none w-56"
-            />
             <select
               value={selectedExam}
               onChange={(e) => setSelectedExam(e.target.value)}
-              className="rounded-xl border border-white/10 bg-black/60 px-3.5 py-2 text-xs text-white focus:border-accentCyan focus:outline-none"
+              className="rounded-xl border border-white/10 bg-black/60 px-3.5 py-1.5 text-xs text-white focus:border-accentCyan focus:outline-none"
             >
-              <option value="All">All Exams</option>
+              <option value="All">Filter by Exam (All)</option>
+              <option value="upsc">UPSC Civil Services</option>
               <option value="ssc">SSC CGL</option>
-              <option value="upsc">UPSC CSE</option>
-              <option value="ibps">IBPS PO</option>
+              <option value="ibps">SBI / IBPS Banking</option>
               <option value="rrb">RRB Railways</option>
               <option value="gate">GATE Engineering</option>
             </select>
+
+            <select
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              className="rounded-xl border border-white/10 bg-black/60 px-3.5 py-1.5 text-xs text-white focus:border-accentCyan focus:outline-none"
+            >
+              <option value="All">Filter by Category (All)</option>
+              <option value="NOTES">📄 Lecture Notes</option>
+              <option value="VIDEO_LECTURE">🎬 Video Lecture</option>
+              <option value="LAB_MANUAL">🧪 Practice Set</option>
+              <option value="CHEAT_SHEET">⚡ Formula Sheet</option>
+              <option value="QUESTION_BANK">📊 Question Bank / PYQs</option>
+              <option value="SYLLABUS">📜 Syllabus Roadmap</option>
+            </select>
+
             <button
               onClick={loadResources}
-              className="rounded-xl border border-white/10 bg-white/5 px-3.5 py-2 text-xs font-semibold text-white/80 hover:bg-white/10"
+              className="rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-semibold text-white/80 hover:bg-white/10"
             >
               🔄 Refresh
             </button>
@@ -316,18 +246,17 @@ export default function PreparationHubAdminPage() {
             <thead className="border-b border-white/10 bg-white/[0.02] text-white/50 uppercase">
               <tr>
                 <th className="px-4 py-3">Exam Target</th>
-                <th className="px-4 py-3">Subject / Topic</th>
-                <th className="px-4 py-3">Content Title</th>
-                <th className="px-4 py-3">Type</th>
-                <th className="px-4 py-3">Status</th>
+                <th className="px-4 py-3">Subject / Unit</th>
+                <th className="px-4 py-3">Title</th>
+                <th className="px-4 py-3">Category</th>
                 <th className="px-4 py-3 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5 text-white/80">
               {loading && resources.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-8 text-center text-white/40">
-                    Loading preparation resources…
+                  <td colSpan={5} className="px-4 py-8 text-center text-white/40">
+                    Loading exam preparation materials…
                   </td>
                 </tr>
               ) : filtered.length > 0 ? (
@@ -335,17 +264,12 @@ export default function PreparationHubAdminPage() {
                   <tr key={item.id} className="hover:bg-white/[0.02]">
                     <td className="px-4 py-3 font-semibold text-white uppercase">{item.examId}</td>
                     <td className="px-4 py-3 text-accentCyan font-medium">
-                      {item.subject} <span className="text-white/40">({item.topic})</span>
+                      {item.subject} <span className="text-white/40">(Unit {item.unit})</span>
                     </td>
                     <td className="px-4 py-3 font-medium text-white/90">{item.title}</td>
                     <td className="px-4 py-3">
-                      <span className={`rounded px-2 py-0.5 font-bold ${item.contentType === "VIDEO" ? "bg-purple-500/20 text-purple-300" : "bg-amber-500/20 text-amber-300"}`}>
-                        {item.contentType}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className="rounded bg-emerald-500/20 px-2 py-0.5 text-xs font-bold text-emerald-400 border border-emerald-500/30">
-                        Published
+                      <span className="rounded bg-white/10 px-2 py-0.5 font-bold text-white/90">
+                        {formatCategoryPill(item.contentType)}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-right space-x-2">
@@ -354,7 +278,7 @@ export default function PreparationHubAdminPage() {
                           href={item.fileUrl}
                           target="_blank"
                           rel="noreferrer"
-                          className="inline-flex items-center rounded-lg bg-accentBlue/20 px-3 py-1 text-xs font-semibold text-accentCyan hover:bg-accentBlue/30 border border-accentBlue/40"
+                          className="inline-flex items-center rounded-lg bg-accentBlue/20 px-2.5 py-1 text-xs font-semibold text-accentCyan hover:bg-accentBlue/30 border border-accentBlue/40"
                         >
                           View S3 Media ↗
                         </a>
@@ -364,8 +288,8 @@ export default function PreparationHubAdminPage() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={6} className="px-4 py-12 text-center text-white/40">
-                    No preparation content uploaded yet. Upload a video or PDF above to start!
+                  <td colSpan={5} className="px-4 py-12 text-center text-white/40">
+                    No competitive exam materials published yet. Fill out the form above to upload a resource!
                   </td>
                 </tr>
               )}

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:dio/dio.dart';
 import '../../core/colors.dart';
 import '../../core/api_client.dart';
-import 'exam_preparation_screen.dart';
 
 class CompetitiveExamsScreen extends StatefulWidget {
   const CompetitiveExamsScreen({super.key});
@@ -14,216 +14,164 @@ class CompetitiveExamsScreen extends StatefulWidget {
 
 class _CompetitiveExamsScreenState extends State<CompetitiveExamsScreen>
     with SingleTickerProviderStateMixin {
-  late TabController _tabController;
-  List<dynamic> _exams = [];
+  late TabController _subjectTabController;
+  List<dynamic> _resources = [];
   bool _loading = true;
+  String _selectedExamId = 'upsc-cse-2026';
+  String _selectedUnit = 'All';
+  String _selectedCategory = 'All';
   String _searchQuery = '';
 
+  final List<Map<String, String>> _examsList = [
+    {'id': 'upsc-cse-2026', 'name': 'UPSC Civil Services', 'icon': '🏛️'},
+    {'id': 'ssc-cgl-2026', 'name': 'SSC CGL', 'icon': '📚'},
+    {'id': 'ibps-po-2026', 'name': 'SBI / IBPS Banking', 'icon': '🏦'},
+    {'id': 'rrb-ntpc-2026', 'name': 'RRB Railways', 'icon': '🚆'},
+    {'id': 'gate-cse-2027', 'name': 'GATE Engineering', 'icon': '⚡'},
+    {'id': 'jee-main-2026', 'name': 'JEE Entrance', 'icon': '🎓'},
+    {'id': 'neet-ug-2026', 'name': 'NEET Medical', 'icon': '🩺'},
+    {'id': 'cat-mba-2026', 'name': 'CAT Management', 'icon': '💼'},
+  ];
+
+  final List<String> _subjects = [
+    'All Subjects',
+    'Quantitative Aptitude',
+    'Logical Reasoning',
+    'English Language',
+    'General Awareness',
+    'Current Affairs',
+    'Computer Science Core',
+  ];
+
+  final List<String> _units = ['All', '1', '2', '3', '4', '5'];
   final List<String> _categories = [
     'All',
-    'SSC',
-    'Banking',
-    'UPSC',
-    'Railway',
-    'Defence',
-    'GATE',
-    'Police',
-    'Teaching',
+    'NOTES',
+    'VIDEO_LECTURE',
+    'LAB_MANUAL',
+    'CHEAT_SHEET',
+    'QUESTION_BANK',
+    'SYLLABUS',
   ];
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: _categories.length, vsync: this);
-    _tabController.addListener(() => setState(() {}));
-    _loadExams();
+    _subjectTabController = TabController(length: _subjects.length, vsync: this);
+    _subjectTabController.addListener(() => setState(() {}));
+    _loadResources();
   }
 
   @override
   void dispose() {
-    _tabController.dispose();
+    _subjectTabController.dispose();
     super.dispose();
   }
 
-  bool _isExamMatch(String targetId, String examId, String examName) {
-    final t = targetId.toLowerCase();
-    final id = examId.toLowerCase();
-    final n = examName.toLowerCase();
-
-    if (t == id || id.contains(t) || t.contains(id)) return true;
-    if (t.contains('upsc') && (n.contains('upsc') || id.contains('upsc'))) return true;
-    if (t.contains('ssc') && (n.contains('ssc') || id.contains('ssc'))) return true;
-    if ((t.contains('ibps') || t.contains('banking') || t.contains('bank')) &&
-        (n.contains('banking') || n.contains('sbi') || n.contains('ibps') || id.contains('banking'))) return true;
-    if ((t.contains('rrb') || t.contains('railway')) &&
-        (n.contains('rrb') || n.contains('railway') || id.contains('rrb'))) return true;
-    if (t.contains('gate') && (n.contains('gate') || id.contains('gate'))) return true;
-    if (t.contains('jee') && (n.contains('jee') || id.contains('jee'))) return true;
-    if (t.contains('neet') && (n.contains('neet') || id.contains('neet'))) return true;
-    if (t.contains('cat') && (n.contains('cat') || id.contains('cat'))) return true;
-    return false;
-  }
-
-  Future<void> _loadExams() async {
+  Future<void> _loadResources() async {
     setState(() => _loading = true);
-    List<dynamic> baseList = [];
+    List<dynamic> fetchedList = [];
 
     try {
-      final res = await ApiClient.instance.dio.get('/api/exams');
-      if (res.data is List && (res.data as List).isNotEmpty) {
-        baseList = res.data as List<dynamic>;
+      final res = await ApiClient.instance.dio.get('/api/admin/preparation');
+      if (res.data != null && res.data['data'] is List) {
+        fetchedList = res.data['data'] as List<dynamic>;
       }
     } catch (_) {}
 
-    if (baseList.isEmpty) {
+    if (fetchedList.isEmpty) {
       try {
-        final vercelRes = await Dio().get('https://myvault-project.vercel.app/api/exams');
-        if (vercelRes.data is List && (vercelRes.data as List).isNotEmpty) {
-          baseList = vercelRes.data as List<dynamic>;
+        final vercelRes = await Dio().get('https://myvault-project.vercel.app/api/admin/preparation');
+        if (vercelRes.data != null && vercelRes.data['data'] is List) {
+          fetchedList = vercelRes.data['data'] as List<dynamic>;
         }
       } catch (_) {}
     }
 
-    if (baseList.isEmpty) {
-      baseList = _fallbackExams;
-    }
-
-    // Merge uploaded S3 materials from Web Admin into exam list in real-time
-    try {
-      final prepRes = await Dio().get('https://myvault-project.vercel.app/api/admin/preparation');
-      if (prepRes.data != null && prepRes.data['data'] is List) {
-        final List prepList = prepRes.data['data'];
-        for (var exam in baseList) {
-          final examId = (exam['id'] as String? ?? '').toLowerCase();
-          final examName = (exam['name'] as String? ?? '').toLowerCase();
-          final matchingItems = prepList.where((p) {
-            final targetId = (p['examId'] as String? ?? '').toLowerCase();
-            return _isExamMatch(targetId, examId, examName);
-          }).toList();
-
-          if (matchingItems.isNotEmpty) {
-            final vList = matchingItems.where((i) => i['contentType'] == 'VIDEO').toList();
-            final pList = matchingItems.where((i) => i['contentType'] != 'VIDEO').toList();
-            
-            // Deduplicate and merge
-            final existingVideoIds = (exam['videos'] as List? ?? []).map((e) => e['id']).toSet();
-            final existingPdfIds = (exam['pdfNotes'] as List? ?? []).map((e) => e['id']).toSet();
-
-            for (var v in vList) {
-              if (!existingVideoIds.contains(v['id'])) {
-                (exam['videos'] as List).add({
-                  'id': v['id'],
-                  'title': v['title'],
-                  'subject': v['subject'] ?? 'General',
-                  'duration': v['duration'] ?? '20:00',
-                  's3Url': v['fileUrl'],
-                  'pdfUrl': v['fileUrl'],
-                });
-              }
-            }
-
-            for (var p in pList) {
-              if (!existingPdfIds.contains(p['id'])) {
-                (exam['pdfNotes'] as List).add({
-                  'id': p['id'],
-                  'title': p['title'],
-                  'subject': p['subject'] ?? 'General',
-                  'fileUrl': p['fileUrl'],
-                });
-              }
-            }
-          }
-        }
-      }
-    } catch (_) {}
-
     if (mounted) {
       setState(() {
-        _exams = baseList;
+        _resources = fetchedList;
         _loading = false;
       });
     }
   }
 
-  List<dynamic> get _fallbackExams => [
-        {
-          'id': 'ssc-cgl-2026',
-          'name': 'SSC CGL 2026 (Staff Selection Commission)',
-          'cat': 'SSC',
-          'icon': '📚',
-          'description': 'Combined Graduate Level Examination for Group B & C central government posts.',
-          'eligibility': 'Bachelor\'s Degree in any stream',
-          'ageLimit': '18 - 30 Years',
-          'selectionProcess': 'Tier-1 CBT ➔ Tier-2 CBT & Speed Test',
-          'syllabusSummary': 'Quantitative Aptitude, Reasoning, English & General Awareness',
-          'videos': [],
-          'pdfNotes': [],
-        },
-        {
-          'id': 'upsc-cse-2026',
-          'name': 'UPSC Civil Services 2026 (IAS / IPS / IFS)',
-          'cat': 'UPSC',
-          'icon': '🏛️',
-          'description': 'Union Public Service Commission Civil Services Examination full preparation roadmap, S3 video series, PYQs & PDF study notes.',
-          'eligibility': 'Graduate in any discipline',
-          'ageLimit': '21 - 32 Years',
-          'selectionProcess': 'Prelims ➔ Mains ➔ Interview',
-          'syllabusSummary': 'History, Polity, Economy, Geography, Ethics & Current Affairs',
-          'videos': [],
-          'pdfNotes': [],
-        },
-        {
-          'id': 'ibps-po-2026',
-          'name': 'IBPS PO / SBI PO 2026',
-          'cat': 'Banking',
-          'icon': '🏦',
-          'description': 'Probationary Officer & Specialist Officer examinations for nationalized banks.',
-          'eligibility': 'Graduate in any discipline',
-          'ageLimit': '20 - 30 Years',
-          'selectionProcess': 'Prelims ➔ Mains ➔ Psychometric & Interview',
-          'syllabusSummary': 'Data Interpretation, Reasoning, English & Banking Awareness',
-          'videos': [],
-          'pdfNotes': [],
-        },
-        {
-          'id': 'rrb-ntpc-2026',
-          'name': 'RRB NTPC & Railway JE 2026',
-          'cat': 'Railway',
-          'icon': '🚆',
-          'description': 'Indian Railways recruitment for Non-Technical Popular Categories & Junior Engineer posts.',
-          'eligibility': '10+2 / Graduate / Diploma / B.Tech',
-          'ageLimit': '18 - 33 Years',
-          'selectionProcess': '1st Stage CBT ➔ 2nd Stage CBT ➔ Typing Test',
-          'syllabusSummary': 'General Science, Math & Reasoning',
-          'videos': [],
-          'pdfNotes': [],
-        },
-        {
-          'id': 'gate-cse-2027',
-          'name': 'GATE CSE 2027 (Engineering)',
-          'cat': 'GATE',
-          'icon': '⚡',
-          'description': 'Graduate Aptitude Test in Engineering for M.Tech & Direct PSU Recruitment.',
-          'eligibility': 'B.Tech / B.E. / M.Sc / MCA',
-          'ageLimit': 'No Age Limit',
-          'selectionProcess': 'CBT Exam (100 Marks)',
-          'syllabusSummary': 'Engineering Math, Aptitude & Core Computer Science',
-          'videos': [],
-          'pdfNotes': [],
-        },
-      ];
+  void _openUrl(String? url) async {
+    final target = (url == null || url.isEmpty)
+        ? 'https://myvault-files-app.s3.eu-north-1.amazonaws.com/app-arm64-v8a-release.apk'
+        : url;
+    final uri = Uri.parse(target);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
+  }
 
-  List<dynamic> get _filteredExams {
-    final selectedCat = _categories[_tabController.index];
-    return _exams.where((e) {
-      final name = (e['name'] as String? ?? '').toLowerCase();
-      final cat = (e['cat'] as String? ?? '').toLowerCase();
-      final matchesSearch = name.contains(_searchQuery.toLowerCase()) ||
-          cat.contains(_searchQuery.toLowerCase());
-      final matchesCat = selectedCat == 'All' ||
-          cat.contains(selectedCat.toLowerCase());
-      return matchesSearch && matchesCat;
+  bool _isExamMatch(String targetId, String examId) {
+    final t = targetId.toLowerCase();
+    final id = examId.toLowerCase();
+    if (t == id || id.contains(t) || t.contains(id)) return true;
+    if (t.contains('upsc') && id.contains('upsc')) return true;
+    if (t.contains('ssc') && id.contains('ssc')) return true;
+    if ((t.contains('ibps') || t.contains('banking') || t.contains('bank')) &&
+        (id.contains('banking') || id.contains('ibps') || id.contains('bank'))) return true;
+    if ((t.contains('rrb') || t.contains('railway')) && id.contains('rrb')) return true;
+    if (t.contains('gate') && id.contains('gate')) return true;
+    return false;
+  }
+
+  List<dynamic> get _filteredResources {
+    final selectedSubject = _subjects[_subjectTabController.index];
+
+    return _resources.where((r) {
+      final examId = (r['examId'] as String? ?? '').toLowerCase();
+      final subject = r['subject'] as String? ?? 'General';
+      final unit = String(r['unit'] ?? '1');
+      final cat = r['contentType'] as String? ?? 'NOTES';
+      final title = (r['title'] as String? ?? '').toLowerCase();
+
+      final matchesExam = _isExamMatch(examId, _selectedExamId);
+      final matchesSubject = selectedSubject == 'All Subjects' || subject.toLowerCase() == selectedSubject.toLowerCase();
+      final matchesUnit = _selectedUnit == 'All' || unit == _selectedUnit;
+      final matchesCat = _selectedCategory == 'All' || cat == _selectedCategory;
+      final matchesSearch = title.contains(_searchQuery.toLowerCase()) || subject.toLowerCase().contains(_searchQuery.toLowerCase());
+
+      return matchesExam && matchesSubject && matchesUnit && matchesCat && matchesSearch;
     }).toList();
+  }
+
+  String _formatCategoryPill(String cat) {
+    switch (cat.toUpperCase()) {
+      case 'NOTES': return '📄 Lecture Notes';
+      case 'VIDEO_LECTURE': return '🎬 Video Lecture';
+      case 'LAB_MANUAL': return '🧪 Practice Set';
+      case 'CHEAT_SHEET': return '⚡ Formula Sheet';
+      case 'ASSIGNMENT': return '📋 Homework';
+      case 'QUESTION_BANK': return '📊 Question Bank / PYQs';
+      case 'SYLLABUS': return '📜 Syllabus Roadmap';
+      default: return cat;
+    }
+  }
+
+  IconData _getCategoryIcon(String cat) {
+    switch (cat.toUpperCase()) {
+      case 'VIDEO_LECTURE': return Icons.play_circle_fill_rounded;
+      case 'CHEAT_SHEET': return Icons.bolt_rounded;
+      case 'LAB_MANUAL': return Icons.science_rounded;
+      case 'QUESTION_BANK': return Icons.bar_chart_rounded;
+      case 'SYLLABUS': return Icons.assignment_outlined;
+      default: return Icons.picture_as_pdf_rounded;
+    }
+  }
+
+  Color _getCategoryColor(String cat) {
+    switch (cat.toUpperCase()) {
+      case 'VIDEO_LECTURE': return Colors.purpleAccent;
+      case 'CHEAT_SHEET': return Colors.amberAccent;
+      case 'LAB_MANUAL': return Colors.emeraldAccent;
+      case 'QUESTION_BANK': return Colors.orangeAccent;
+      case 'SYLLABUS': return Colors.cyanAccent;
+      default: return MyVaultColors.accentCyan;
+    }
   }
 
   @override
@@ -263,57 +211,169 @@ class _CompetitiveExamsScreenState extends State<CompetitiveExamsScreen>
             ],
           ),
           bottom: TabBar(
-            controller: _tabController,
+            controller: _subjectTabController,
             isScrollable: true,
             indicatorColor: MyVaultColors.accentCyan,
             labelColor: MyVaultColors.accentCyan,
             unselectedLabelColor: Colors.white54,
             indicatorWeight: 3,
-            tabs: _categories.map((c) => Tab(text: c)).toList(),
+            tabs: _subjects.map((s) => Tab(text: s)).toList(),
           ),
         ),
         body: Column(
           children: [
-            // Search Input
-            Padding(
-              padding: const EdgeInsets.all(14),
-              child: Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(14),
-                  color: MyVaultColors.glassFill,
-                  border: Border.all(color: MyVaultColors.glassBorder),
-                ),
-                child: TextField(
-                  style: const TextStyle(color: Colors.white, fontSize: 14),
-                  onChanged: (v) => setState(() => _searchQuery = v),
-                  decoration: const InputDecoration(
-                    hintText: 'Search SSC CGL, UPSC, IBPS, GATE, RRB...',
-                    hintStyle: TextStyle(color: Colors.white38, fontSize: 13),
-                    prefixIcon: Icon(Icons.search_rounded, color: MyVaultColors.accentCyan, size: 20),
-                    border: InputBorder.none,
-                    contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                  ),
-                ),
+            // Target Exam Horizontal Selector Chips (Academic Hub Style)
+            Container(
+              height: 52,
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 14),
+                itemCount: _examsList.length,
+                itemBuilder: (ctx, i) {
+                  final exam = _examsList[i];
+                  final isSelected = _selectedExamId == exam['id'];
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: ChoiceChip(
+                      selected: isSelected,
+                      showCheckmark: false,
+                      selectedColor: MyVaultColors.accentBlue,
+                      backgroundColor: MyVaultColors.glassFill,
+                      side: BorderSide(color: isSelected ? MyVaultColors.accentCyan : MyVaultColors.glassBorder),
+                      label: Text(
+                        '${exam['icon']} ${exam['name']}',
+                        style: TextStyle(
+                          color: isSelected ? Colors.white : Colors.white70,
+                          fontSize: 12,
+                          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                        ),
+                      ),
+                      onSelected: (s) {
+                        if (s) setState(() => _selectedExamId = exam['id']!);
+                      },
+                    ),
+                  );
+                },
               ),
             ),
 
+            // Search Bar & Unit Selector Pills
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        color: MyVaultColors.glassFill,
+                        border: Border.all(color: MyVaultColors.glassBorder),
+                      ),
+                      child: TextField(
+                        style: const TextStyle(color: Colors.white, fontSize: 13),
+                        onChanged: (v) => setState(() => _searchQuery = v),
+                        decoration: const InputDecoration(
+                          hintText: 'Search notes, units, topics...',
+                          hintStyle: TextStyle(color: Colors.white38, fontSize: 12),
+                          prefixIcon: Icon(Icons.search_rounded, color: MyVaultColors.accentCyan, size: 18),
+                          border: InputBorder.none,
+                          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  // Unit Selector Pill
+                  PopupMenuButton<String>(
+                    initialValue: _selectedUnit,
+                    onSelected: (u) => setState(() => _selectedUnit = u),
+                    color: MyVaultColors.obsidian,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: MyVaultColors.glassFill,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: MyVaultColors.glassBorder),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.filter_list_rounded, color: MyVaultColors.accentCyan, size: 16),
+                          const SizedBox(width: 4),
+                          Text(
+                            _selectedUnit == 'All' ? 'Units' : 'Unit $_selectedUnit',
+                            style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                      ),
+                    ),
+                    itemBuilder: (ctx) => _units.map((u) {
+                      return PopupMenuItem(
+                        value: u,
+                        child: Text(u == 'All' ? 'All Units (1-5)' : 'Unit $u', style: const TextStyle(color: Colors.white, fontSize: 13)),
+                      );
+                    }).toList(),
+                  ),
+                ],
+              ),
+            ),
+
+            // Material Category Filter Pills (Academic Hub Style)
+            Container(
+              height: 42,
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 14),
+                itemCount: _categories.length,
+                itemBuilder: (ctx, i) {
+                  final cat = _categories[i];
+                  final isSelected = _selectedCategory == cat;
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 6),
+                    child: FilterChip(
+                      selected: isSelected,
+                      showCheckmark: false,
+                      selectedColor: MyVaultColors.accentCyan.withValues(alpha: 0.2),
+                      backgroundColor: Colors.transparent,
+                      side: BorderSide(color: isSelected ? MyVaultColors.accentCyan : Colors.white12),
+                      label: Text(
+                        cat == 'All' ? 'All Formats' : _formatCategoryPill(cat),
+                        style: TextStyle(
+                          color: isSelected ? MyVaultColors.accentCyan : Colors.white60,
+                          fontSize: 11,
+                          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                        ),
+                      ),
+                      onSelected: (s) {
+                        setState(() => _selectedCategory = cat);
+                      },
+                    ),
+                  );
+                },
+              ),
+            ),
+
+            const SizedBox(height: 6),
+
+            // Resource Card List (Exact Academic Hub Layout)
             Expanded(
               child: _loading
                   ? const Center(child: CircularProgressIndicator(color: MyVaultColors.accentCyan))
-                  : _filteredExams.isEmpty
+                  : _filteredResources.isEmpty
                       ? const Center(
                           child: Text(
-                            'No competitive exam modules found matching your search',
-                            style: TextStyle(color: Colors.white54, fontSize: 14),
+                            'No preparation materials uploaded for this selection',
+                            style: TextStyle(color: Colors.white54, fontSize: 13),
                           ),
                         )
                       : RefreshIndicator(
-                          onRefresh: _loadExams,
+                          onRefresh: _loadResources,
                           color: MyVaultColors.accentCyan,
                           child: ListView.builder(
                             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-                            itemCount: _filteredExams.length,
-                            itemBuilder: (ctx, i) => _buildExamCard(_filteredExams[i]),
+                            itemCount: _filteredResources.length,
+                            itemBuilder: (ctx, i) => _buildResourceCard(_filteredResources[i]),
                           ),
                         ),
             ),
@@ -323,166 +383,90 @@ class _CompetitiveExamsScreenState extends State<CompetitiveExamsScreen>
     );
   }
 
-  Widget _buildExamCard(Map<String, dynamic> exam) {
-    final id = exam['id'] ?? 'ssc-cgl-2026';
-    final name = exam['name'] ?? 'Competitive Exam';
-    final cat = exam['cat'] ?? 'Government';
-    final icon = exam['icon'] ?? '📚';
-    final desc = exam['description'] ?? 'Exam roadmap, S3 video series, PYQs & study notes.';
-    final eligibility = exam['eligibility'] ?? 'Graduate';
-    final ageLimit = exam['ageLimit'] ?? '18+ Years';
-    final selection = exam['selectionProcess'] ?? 'Written Exam ➔ Interview';
-    final syllabus = exam['syllabusSummary'] ?? 'Core Subjects & Aptitude';
-    final videos = (exam['videos'] as List<dynamic>?) ?? [];
-    final pdfNotes = (exam['pdfNotes'] as List<dynamic>?) ?? [];
+  Widget _buildResourceCard(Map<String, dynamic> item) {
+    final title = item['title'] ?? 'Preparation Resource';
+    final subject = item['subject'] ?? 'Quantitative Aptitude';
+    final unit = String(item['unit'] ?? '1');
+    final cat = item['contentType'] as String? ?? 'NOTES';
+    final url = item['fileUrl'] as String?;
+    final icon = _getCategoryIcon(cat);
+    final color = _getCategoryColor(cat);
+    final isVideo = cat == 'VIDEO_LECTURE';
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 14),
+      margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(16),
         color: MyVaultColors.glassFill,
         border: Border.all(color: MyVaultColors.glassBorder),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        padding: const EdgeInsets.all(14),
+        child: Row(
           children: [
-            Row(
-              children: [
-                Text(icon, style: const TextStyle(fontSize: 28)),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: color.withValues(alpha: 0.3)),
+              ),
+              child: Icon(icon, color: color, size: 24),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
                     children: [
                       Text(
-                        name,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
+                        subject,
+                        style: const TextStyle(color: MyVaultColors.accentCyan, fontSize: 11, fontWeight: FontWeight.w600),
                       ),
-                      const SizedBox(height: 2),
-                      Text(
-                        cat.toUpperCase(),
-                        style: const TextStyle(
-                          color: MyVaultColors.accentCyan,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: 0.5,
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.08),
+                          borderRadius: BorderRadius.circular(5),
+                        ),
+                        child: Text(
+                          'Unit $unit',
+                          style: const TextStyle(color: Colors.white70, fontSize: 10, fontWeight: FontWeight.bold),
                         ),
                       ),
                     ],
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-            const SizedBox(height: 10),
-
-            Text(
-              desc,
-              style: const TextStyle(color: Colors.white70, fontSize: 12.5, height: 1.4),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-            const SizedBox(height: 12),
-
-            // Preparation Progress Bar
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text('Your Preparation Progress', style: TextStyle(color: Colors.white70, fontSize: 11.5, fontWeight: FontWeight.w600)),
-                    Text('72%', style: TextStyle(color: MyVaultColors.accentCyan, fontSize: 12, fontWeight: FontWeight.bold)),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(6),
-                  child: const LinearProgressIndicator(
-                    value: 0.72,
-                    minHeight: 6,
-                    backgroundColor: Colors.white12,
-                    valueColor: AlwaysStoppedAnimation<Color>(MyVaultColors.accentCyan),
-                  ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 14),
-
-            Wrap(
-              spacing: 8,
-              runSpacing: 6,
-              children: [
-                _chip(Icons.school_outlined, eligibility),
-                _chip(Icons.person_outline_rounded, 'Age: $ageLimit'),
-                _chip(Icons.play_circle_fill_rounded, '${videos.length} Videos'),
-                _chip(Icons.picture_as_pdf_rounded, '${pdfNotes.length} PDFs'),
-              ],
-            ),
-
-            const SizedBox(height: 14),
-
-            SizedBox(
-              width: double.infinity,
-              height: 42,
-              child: ElevatedButton.icon(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => ExamPreparationScreen(
-                        examId: id,
-                        examName: name,
-                        category: cat,
-                        initialVideos: videos,
-                        initialPdfNotes: pdfNotes,
-                        syllabusSummary: syllabus,
-                        selectionProcess: selection,
-                      ),
-                    ),
-                  );
-                },
-                icon: const Icon(Icons.play_arrow_rounded, color: Colors.white, size: 18),
-                label: const Text(
-                  'Prepare Now ➔',
-                  style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: MyVaultColors.accentBlue,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                ),
+            const SizedBox(width: 10),
+            ElevatedButton(
+              onPressed: () => _openUrl(url),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: isVideo ? Colors.purpleAccent.withValues(alpha: 0.8) : MyVaultColors.accentBlue,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              ),
+              child: Text(
+                isVideo ? 'Watch 🎬' : 'Read 📄',
+                style: const TextStyle(color: Colors.white, fontSize: 11.5, fontWeight: FontWeight.bold),
               ),
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _chip(IconData icon, String label) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.06),
-        borderRadius: BorderRadius.circular(7),
-        border: Border.all(color: Colors.white12),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 12, color: MyVaultColors.accentCyan),
-          const SizedBox(width: 5),
-          Text(
-            label,
-            style: const TextStyle(color: Colors.white70, fontSize: 11),
-          ),
-        ],
       ),
     );
   }

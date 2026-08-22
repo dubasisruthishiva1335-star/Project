@@ -22,9 +22,9 @@ export default function ExamsAdminPage() {
   const examConfig: UploadFormConfig = {
     domain: "exams",
     confirmPath: "/admin/exams/confirm",
-    acceptedFileTypes: "video/*,application/pdf",
-    requireFile: false,
-    successMessage: "Competitive Exam resource published successfully to AWS S3 & synced with Mobile App instantly.",
+    acceptedFileTypes: ".pdf,.mp4,.mkv,.webm,.doc,.docx,.zip,video/*,application/pdf",
+    requireFile: true,
+    successMessage: "Competitive Exam file uploaded successfully to AWS S3 & synced with Mobile App instantly.",
     fields: [
       {
         name: "examName",
@@ -49,22 +49,21 @@ export default function ExamsAdminPage() {
         type: "select",
         required: true,
         options: [
-          { value: "VIDEO", label: "🎬 S3 Video Lecture Stream" },
-          { value: "PDF", label: "📄 PDF Study Material / PYQ Handout" },
-          { value: "SYLLABUS", label: "📜 Syllabus & Selection Roadmap" },
+          { value: "VIDEO", label: "🎬 S3 Video Lecture Stream (.mp4 / .mkv / .webm)" },
+          { value: "PDF", label: "📄 PDF Study Material / Solved PYQ Handout (.pdf)" },
+          { value: "SYLLABUS", label: "📜 Syllabus & Selection Roadmap (.pdf / .doc)" },
         ],
       },
       { name: "title", label: "Lecture / Document Title *", type: "text", required: true, placeholder: "e.g. Indian Polity Laxmikanth Masterclass & Solved PYQs" },
       { name: "subject", label: "Subject / Module Topic *", type: "text", required: true, placeholder: "e.g. Indian Polity / Quantitative Aptitude / Biology" },
-      { name: "duration", label: "Video Duration (e.g. 25:00)", type: "text", required: false, placeholder: "e.g. 25:00" },
-      { name: "publicUrl", label: "External S3 Media Stream URL / Link", type: "text", required: false, placeholder: "https://myvault-files-app.s3.eu-north-1.amazonaws.com/lecture.mp4" },
+      { name: "duration", label: "Video Duration (optional, e.g. 25:00)", type: "text", required: false, placeholder: "e.g. 25:00" },
+      { name: "publicUrl", label: "External S3 Media Stream URL / Direct Link (optional)", type: "text", required: false, placeholder: "https://myvault-files-app.s3.eu-north-1.amazonaws.com/lecture.mp4" },
     ],
   };
 
   const loadResources = useCallback(async () => {
     setLoading(true);
     try {
-      // 1. Fetch from Next.js serverless route /api/exams directly
       const response = await fetch("/api/exams");
       if (response.ok) {
         const res = await response.json();
@@ -119,14 +118,14 @@ export default function ExamsAdminPage() {
           Competitive Exam Content Uploading Portal
         </h1>
         <p className="mt-1 text-sm text-white/50">
-          Upload video lectures, PDF notes, previous year papers (PYQs), and syllabus roadmaps directly to AWS S3 storage for Mobile App aspirants.
+          Upload video lectures (.mp4, .webm), PDF notes (.pdf), solved question papers (PYQs), and syllabus guides directly to AWS S3 storage for Mobile App aspirants.
         </p>
       </div>
 
-      {/* Upload Form Component */}
+      {/* Upload Form Component with File Dropzone */}
       <div className="mb-12 rounded-2xl border border-white/10 bg-white/[0.02] p-6 backdrop-blur-xl">
         <h2 className="mb-4 text-base font-bold text-white flex items-center gap-2">
-          <span>📤 Upload New Lecture Video or S3 PDF Material</span>
+          <span>📤 Upload Competitive Exam File & Media to AWS S3</span>
         </h2>
         <UploadForm config={examConfig} />
       </div>

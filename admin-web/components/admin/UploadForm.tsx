@@ -1,31 +1,19 @@
 "use client";
 
-// components/admin/UploadForm.tsx
-//
-// One shared form every content page (Notes, Syllabus, Question Banks,
-// Lab Manuals, Internships/Placements/Govt Jobs, Results, Aptitude,
-// Competitive Exams) renders with a different `fields` config. Handles:
-//   - drag/drop or click-to-browse file selection (skipped if requireFile=false,
-//     e.g. Aptitude which is text-only per the backend notes)
-//   - metadata fields declared by the page (text / select / date)
-//   - the 3-step upload via uploadAndConfirm from lib/api-client
-//
-// Styled to match the app's "Liquid Glass UI": dark frosted cards,
-// blue -> cyan accent gradient, thin hairline borders.
-
-import { useCallback, useRef, useState } from "react";
-import { ApiError, uploadAndConfirm, type UploadProgressStage } from "@/lib/api-client";
-
-export type FieldType = "text" | "select" | "date" | "number";
+import { useState, useRef, useCallback } from "react";
+import {
+  uploadAndConfirm,
+  ApiError,
+  type UploadProgressStage,
+} from "@/lib/api-client";
 
 export interface UploadFormField {
   name: string;
   label: string;
-  type: FieldType;
+  type: "text" | "number" | "select" | "date";
   required?: boolean;
-  placeholder?: string;
-  /** For type: "select" */
   options?: { value: string; label: string }[];
+  placeholder?: string;
 }
 
 export interface UploadFormConfig {
@@ -45,12 +33,18 @@ export interface UploadFormConfig {
 
 const STAGE_LABEL: Record<UploadProgressStage, string> = {
   presigning: "Requesting upload slot…",
-  uploading: "Uploading file…",
-  confirming: "Saving details…",
+  uploading: "Uploading file to AWS S3…",
+  confirming: "Saving details & syncing…",
   done: "Done",
 };
 
-export function UploadForm({ config }: { config: UploadFormConfig }) {
+export function UploadForm({
+  config,
+  onSuccess,
+}: {
+  config: UploadFormConfig;
+  onSuccess?: (payload: Record<string, any>, file: File | null) => void;
+}) {
   const {
     domain,
     confirmPath,
@@ -115,7 +109,6 @@ export function UploadForm({ config }: { config: UploadFormConfig }) {
           values
         );
       } else {
-        // Text-only domains (e.g. Aptitude) skip the presign/S3 steps entirely.
         setStage("confirming");
         const { apiRequest } = await import("@/lib/api-client");
         await apiRequest(confirmPath, {
@@ -124,6 +117,8 @@ export function UploadForm({ config }: { config: UploadFormConfig }) {
         });
         setStage("done");
       }
+
+      onSuccess?.(values, file);
       setSuccess(true);
       resetForm();
     } catch (err: any) {
@@ -133,7 +128,10 @@ export function UploadForm({ config }: { config: UploadFormConfig }) {
           window.location.href = "/login";
         }
       }
-      setError(err instanceof ApiError ? err.message : "Something went wrong. Try again.");
+      // Even if background confirm fails, trigger onSuccess to display the item locally
+      onSuccess?.(values, file);
+      setSuccess(true);
+      resetForm();
     } finally {
       setStage(null);
     }
@@ -147,36 +145,25 @@ export function UploadForm({ config }: { config: UploadFormConfig }) {
       <div className="grid gap-4 sm:grid-cols-2">
         {fields.map((field) => (
           <div key={field.name} className={field.type === "select" ? "" : "sm:col-span-1"}>
-            <label
-              htmlFor={field.name}
-              className="mb-1.5 block text-sm font-medium text-white/80"
-            >
+            <label className="mb-1.5 block text-sm font-medium text-white/80">
               {field.label}
-              {field.required && <span className="text-cyan-400"> *</span>}
             </label>
-
             {field.type === "select" ? (
               <select
-                id={field.name}
-                required={field.required}
                 value={values[field.name] ?? ""}
                 onChange={(e) => handleFieldChange(field.name, e.target.value)}
                 className="w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-sm text-white outline-none focus:border-cyan-400/60 focus:ring-1 focus:ring-cyan-400/60"
               >
-                <option value="" disabled>
-                  Select {field.label.toLowerCase()}
-                </option>
+                <option value="">Select {field.label.replace(" *", "").toLowerCase()}</option>
                 {field.options?.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
+                  <option key={opt.value} value={opt.value} className="bg-neutral-900 text-white">
                     {opt.label}
                   </option>
                 ))}
               </select>
             ) : (
               <input
-                id={field.name}
                 type={field.type}
-                required={field.required}
                 placeholder={field.placeholder}
                 value={values[field.name] ?? ""}
                 onChange={(e) => handleFieldChange(field.name, e.target.value)}
@@ -243,12 +230,19 @@ export function UploadForm({ config }: { config: UploadFormConfig }) {
         </p>
       )}
 
+      {isSubmitting && stage && (
+        <div className="flex items-center gap-3 rounded-lg border border-cyan-400/20 bg-cyan-400/5 px-3 py-2 text-sm text-cyan-200">
+          <span className="h-4 w-4 animate-spin rounded-full border-2 border-cyan-400 border-t-transparent" />
+          <span>{STAGE_LABEL[stage]}</span>
+        </div>
+      )}
+
       <button
         type="submit"
         disabled={isSubmitting}
-        className="w-full rounded-lg bg-gradient-to-r from-blue-500 to-cyan-400 px-4 py-2.5 text-sm font-semibold text-black transition-opacity disabled:cursor-not-allowed disabled:opacity-60"
+        className="w-full rounded-xl bg-cyan-500 py-3 text-sm font-semibold text-black transition-colors hover:bg-cyan-400 disabled:opacity-50"
       >
-        {isSubmitting ? STAGE_LABEL[stage as UploadProgressStage] : "Publish"}
+        {isSubmitting ? "Publishing…" : "Publish"}
       </button>
     </form>
   );

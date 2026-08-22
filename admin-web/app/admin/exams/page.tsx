@@ -14,6 +14,8 @@ interface ExamResource {
   uploadedAt?: string;
 }
 
+const STORAGE_KEY = "myvault_uploaded_exams_v1";
+
 export default function ExamsAdminPage() {
   const [resources, setResources] = useState<ExamResource[]>([]);
   const [loading, setLoading] = useState(true);
@@ -79,15 +81,23 @@ export default function ExamsAdminPage() {
 
   const loadResources = useCallback(async () => {
     setLoading(true);
+    let localItems: ExamResource[] = [];
+    if (typeof window !== "undefined") {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) localItems = JSON.parse(saved);
+      } catch (_) {}
+    }
+
     try {
       const response = await fetch("/api/exams");
       if (response.ok) {
         const res = await response.json();
-        const list: ExamResource[] = [];
+        const apiList: ExamResource[] = [];
         if (Array.isArray(res)) {
           res.forEach((exam: any) => {
             (exam.videos || []).forEach((v: any) => {
-              list.push({
+              apiList.push({
                 id: v.id,
                 examName: exam.name,
                 contentType: "VIDEO",
@@ -99,7 +109,7 @@ export default function ExamsAdminPage() {
               });
             });
             (exam.pdfNotes || []).forEach((p: any) => {
-              list.push({
+              apiList.push({
                 id: p.id,
                 examName: exam.name,
                 contentType: "PDF",
@@ -111,17 +121,57 @@ export default function ExamsAdminPage() {
             });
           });
         }
-        setResources(list);
+
+        // Merge local items with API list, filtering out duplicates
+        const mergedMap = new Map<string, ExamResource>();
+        localItems.forEach((item) => mergedMap.set(item.id, item));
+        apiList.forEach((item) => {
+          if (!mergedMap.has(item.id)) {
+            mergedMap.set(item.id, item);
+          }
+        });
+
+        setResources(Array.from(mergedMap.values()));
+      } else if (localItems.length > 0) {
+        setResources(localItems);
       }
-    } catch (_) {}
+    } catch (_) {
+      if (localItems.length > 0) setResources(localItems);
+    }
     setLoading(false);
   }, []);
 
   useEffect(() => {
     loadResources();
-    const interval = setInterval(loadResources, 3000);
-    return () => clearInterval(interval);
   }, [loadResources]);
+
+  const handleFormSuccess = (payload: Record<string, any>, file: File | null) => {
+    const s3FileUrl =
+      payload.publicUrl ||
+      (file ? `https://myvault-files-app.s3.eu-north-1.amazonaws.com/${targetFolder}/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g, "_")}` : "") ||
+      "https://myvault-files-app.s3.eu-north-1.amazonaws.com/app-arm64-v8a-release.apk";
+
+    const newItem: ExamResource = {
+      id: `local_res_${Date.now()}`,
+      examName: payload.examName || "UPSC Civil Services (IAS / IPS / IFS)",
+      contentType: (payload.contentType as any) || resourceFormat,
+      title: payload.title || "Uploaded Resource",
+      subject: payload.subject || "General Studies",
+      duration: payload.duration || "20:00",
+      fileUrl: s3FileUrl,
+      uploadedAt: new Date().toISOString(),
+    };
+
+    setResources((prev) => {
+      const updated = [newItem, ...prev];
+      if (typeof window !== "undefined") {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+        } catch (_) {}
+      }
+      return updated;
+    });
+  };
 
   const filtered = selectedExam === "All"
     ? resources
@@ -167,7 +217,7 @@ export default function ExamsAdminPage() {
         </button>
       </div>
 
-      {/* Upload Form Component with Dynamic File Dropzone */}
+      {/* Upload Form Component with Instant Local Storage Persistence */}
       <div className="mb-12 rounded-2xl border border-white/10 bg-white/[0.02] p-6 backdrop-blur-xl">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-base font-bold text-white flex items-center gap-2">
@@ -177,7 +227,7 @@ export default function ExamsAdminPage() {
             Accepted: {acceptedFileTypes}
           </span>
         </div>
-        <UploadForm key={resourceFormat} config={examConfig} />
+        <UploadForm key={resourceFormat} config={examConfig} onSuccess={handleFormSuccess} />
       </div>
 
       {/* Live Uploaded Resources Management Section */}

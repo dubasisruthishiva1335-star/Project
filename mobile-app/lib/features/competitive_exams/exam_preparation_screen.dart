@@ -277,7 +277,7 @@ class _ExamPreparationScreenState extends State<ExamPreparationScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text('Your Preparation Progress', style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
-                      Text('72%', style: TextStyle(color: MyVaultColors.accentCyan, fontSize: 16, fontWeight: FontWeight.black)),
+                      Text('72%', style: TextStyle(color: MyVaultColors.accentCyan, fontSize: 16, fontWeight: FontWeight.w900)),
                     ],
                   ),
                   const SizedBox(height: 8),
@@ -296,7 +296,7 @@ class _ExamPreparationScreenState extends State<ExamPreparationScreen> {
                     children: [
                       Text('${_videos.length} Video Classes', style: const TextStyle(color: Colors.white70, fontSize: 11.5)),
                       Text('${_pdfNotes.length} Study Notes', style: const TextStyle(color: Colors.white70, fontSize: 11.5)),
-                      const Text('Verified S3 Certified', style: TextStyle(color: Colors.emeraldAccent, fontSize: 11.5, fontWeight: FontWeight.bold)),
+                      const Text('Verified S3 Certified', style: TextStyle(color: Color(0xFF00C48C), fontSize: 11.5, fontWeight: FontWeight.bold)),
                     ],
                   ),
                 ],
@@ -396,7 +396,7 @@ class _ExamPreparationScreenState extends State<ExamPreparationScreen> {
                 _buildActionCard(
                   title: '📝 Previous Papers',
                   subtitle: '2025 - 2020 PYQs',
-                  color: Colors.emeraldAccent,
+                  color: const Color(0xFF00C48C),
                   icon: Icons.history_edu_rounded,
                   onTap: () => _showContentListModal('Previous Papers (PYQs)', _pdfNotes, false),
                 ),
@@ -423,6 +423,8 @@ class _ExamPreparationScreenState extends State<ExamPreparationScreen> {
                         builder: (_) => ExamCertificateScreen(
                           examName: widget.examName,
                           studentName: 'Rahul Kumar',
+                          certificateNumber: 'MV-EXAM-2026-102941',
+                          pdfUrl: 'https://myvault-files-app.s3.eu-north-1.amazonaws.com/app-arm64-v8a-release.apk',
                         ),
                       ),
                     );

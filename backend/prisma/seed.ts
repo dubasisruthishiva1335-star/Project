@@ -49,24 +49,8 @@ async function main() {
     },
   });
 
-  await prisma.jobListing.createMany({
-    data: [
-      {
-        type: 'INTERNSHIP',
-        title: 'Frontend Engineering Intern',
-        company: 'Acme Labs',
-        applyUrl: 'https://example.com/apply/acme-frontend-intern',
-        branch: 'CSE',
-      },
-      {
-        type: 'GOVT_JOB',
-        title: 'Junior Assistant — TSPSC',
-        company: 'Telangana State PSC',
-        applyUrl: 'https://example.com/apply/tspsc-junior-assistant',
-      },
-    ],
-    skipDuplicates: true,
-  });
+  // Clean empty job listings
+  await prisma.jobListing.deleteMany({});
 
   await prisma.announcement.createMany({
     data: [
@@ -84,8 +68,7 @@ async function main() {
     skipDuplicates: true,
   });
 
-  console.log('Seed complete. Admin login: ADMIN001 / admin123');
-  console.log('Student login: 21A91A0501 / 21A91A0501');
+  console.log('Seed complete. Clean database.');
 }
 
 main()

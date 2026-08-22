@@ -45,6 +45,12 @@ export class JobListingsAdminController {
     });
   }
 
+  @Delete('all')
+  async deleteAllJobs() {
+    await this.prisma.jobListing.deleteMany({});
+    return { success: true, message: 'All job listings deleted' };
+  }
+
   @Delete(':id')
   async deleteJob(@Param('id') id: string) {
     return this.prisma.jobListing.delete({

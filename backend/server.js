@@ -31,6 +31,23 @@ app.use(express.json({ limit: "50mb" }));
 // ---------------------------------------------------------------
 let globalJobListings = [];
 
+function isTestListing(job) {
+  if (!job) return true;
+  const title = (job.title || "").toLowerCase();
+  const company = (job.company || "").toLowerCase();
+  const url = (job.applyUrl || job.apply_url || "").toLowerCase();
+  return (
+    title.includes("tspsc") ||
+    title.includes("frontend engineering") ||
+    title.includes("acme") ||
+    title.includes("html") ||
+    title.includes("jhbb") ||
+    company.includes("acme") ||
+    company.includes("tspsc") ||
+    url.includes("example.com")
+  );
+}
+
 let globalCourses = [
   {
     id: "course_flutter_dev",
@@ -144,9 +161,9 @@ async function initDb() {
       );
     `);
 
-    // Truncate and purge all old mock listings from DB on server startup
-    await pool.query(`TRUNCATE TABLE job_listings`);
-    console.log("Database initialized & TRUNCATED job_listings table.");
+    // Purge test listings from database on startup
+    await pool.query(`DELETE FROM job_listings WHERE title ILIKE '%TSPSC%' OR title ILIKE '%Frontend%' OR title ILIKE '%html%' OR title ILIKE '%jhbb%' OR apply_url ILIKE '%example.com%'`);
+    console.log("Database initialized & purged test listings.");
   } catch (_) {}
 }
 initDb();
@@ -169,14 +186,36 @@ function s3PublicUrl(key) {
 // ADMIN ANALYTICS ENDPOINTS
 // =================================================================
 
-app.get(["/admin/analytics/overview", "/api/admin/analytics/overview"], (req, res) => {
-  res.json({ students: 1, notes: 0, jobListings: globalJobListings.length, examsCount: 0, results: 0 });
+app.get(["/admin/analytics/overview", "/api/admin/analytics/overview"], async (req, res) => {
+  let cleanJobs = globalJobListings.filter((j) => !isTestListing(j));
+  try {
+    const dbRes = await pool.query(`SELECT * FROM job_listings`);
+    const validDbJobs = dbRes.rows.filter((j) => !isTestListing(j));
+    cleanJobs = validDbJobs;
+  } catch (_) {}
+
+  res.json({ students: 1, notes: 0, jobListings: cleanJobs.length, examsCount: 0, results: 0 });
 });
 
-app.get(["/admin/analytics/recent-uploads", "/api/admin/analytics/recent-uploads"], (req, res) => {
+app.get(["/admin/analytics/recent-uploads", "/api/admin/analytics/recent-uploads"], async (req, res) => {
+  let cleanJobs = globalJobListings.filter((j) => !isTestListing(j));
+  try {
+    const dbRes = await pool.query(`SELECT * FROM job_listings ORDER BY posted_at DESC`);
+    cleanJobs = dbRes.rows.filter((j) => !isTestListing(j)).map((j) => ({
+      id: j.id,
+      title: j.title,
+      company: j.company,
+      type: j.type,
+      branch: j.branch,
+      applyUrl: j.apply_url,
+      fileUrl: j.file_url,
+      postedAt: j.posted_at,
+    }));
+  } catch (_) {}
+
   res.json({
     recentNotes: [],
-    recentJobs: globalJobListings,
+    recentJobs: cleanJobs,
     recentExams: [],
     recentResults: [],
     allStudents: [{ id: "s1", hallTicket: "21A91A0501", fullName: "Rahul Kumar", branch: "CSE", semester: 6, createdAt: new Date().toISOString() }],
@@ -321,9 +360,29 @@ app.get("/api/students/:studentId/certificates", (req, res) => {
 // JOB & INTERNSHIP LISTINGS APIs (Clean, Admin-driven)
 // =================================================================
 
-app.get(["/job-listings", "/api/job-listings", "/admin/job-listings"], (req, res) => {
+app.get(["/job-listings", "/api/job-listings", "/admin/job-listings"], async (req, res) => {
   const { type } = req.query;
-  let items = [...globalJobListings];
+  let items = globalJobListings.filter((j) => !isTestListing(j));
+  try {
+    const dbRes = await pool.query(`SELECT * FROM job_listings ORDER BY posted_at DESC`);
+    if (dbRes.rows && dbRes.rows.length > 0) {
+      items = dbRes.rows.map((j) => ({
+        id: j.id,
+        title: j.title,
+        company: j.company,
+        type: j.type,
+        applyUrl: j.apply_url,
+        branch: j.branch,
+        fileUrl: j.file_url,
+        stipend: j.stipend,
+        location: j.location,
+        deadline: j.deadline,
+        description: j.description,
+        postedAt: j.posted_at,
+      })).filter((j) => !isTestListing(j));
+    }
+  } catch (_) {}
+
   if (type) items = items.filter((j) => j.type.toUpperCase() === String(type).toUpperCase());
   res.json(items);
 });

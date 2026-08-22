@@ -16,10 +16,21 @@ interface ExamResource {
 
 const STORAGE_KEY = "myvault_uploaded_exams_v1";
 
+const CATEGORIES = [
+  "All",
+  "Government",
+  "Banking",
+  "Railways",
+  "Higher Education",
+  "Management",
+  "Professional",
+];
+
 export default function ExamsAdminPage() {
   const [resources, setResources] = useState<ExamResource[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedExam, setSelectedExam] = useState<string>("All");
+  const [selectedCategory, setSelectedCategory] = useState<string>("All");
+  const [searchQuery, setSearchQuery] = useState<string>("");
   const [resourceFormat, setResourceFormat] = useState<"VIDEO" | "PDF" | "SYLLABUS">("VIDEO");
 
   // Dynamic accepted file types and S3 target folder based on selected Resource Format
@@ -122,7 +133,6 @@ export default function ExamsAdminPage() {
           });
         }
 
-        // Merge local items with API list, filtering out duplicates
         const mergedMap = new Map<string, ExamResource>();
         localItems.forEach((item) => mergedMap.set(item.id, item));
         apiList.forEach((item) => {
@@ -173,28 +183,32 @@ export default function ExamsAdminPage() {
     });
   };
 
-  const filtered = selectedExam === "All"
-    ? resources
-    : resources.filter((r) => r.examName.toLowerCase().includes(selectedExam.toLowerCase()));
+  const filteredResources = resources.filter((r) => {
+    const matchesSearch =
+      r.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      r.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      r.examName.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesSearch;
+  });
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-10">
+    <div className="mx-auto max-w-6xl px-4 py-10">
       <div className="mb-8">
-        <h1 className="bg-gradient-to-r from-accentBlue to-accentCyan bg-clip-text text-2xl font-extrabold text-transparent">
-          Competitive Exam Content Uploading Portal
+        <h1 className="bg-gradient-to-r from-accentBlue to-accentCyan bg-clip-text text-3xl font-black text-transparent">
+          Competitive Exams Preparation Hub
         </h1>
-        <p className="mt-1 text-sm text-white/50">
-          Upload video lectures (.mp4, .webm), PDF notes (.pdf), solved question papers (PYQs), and syllabus guides directly to AWS S3 storage under target exam folders.
+        <p className="mt-1 text-sm text-white/60">
+          Upload video lectures (.mp4, .webm), PDF notes (.pdf), solved question papers (PYQs), and syllabus roadmaps directly to AWS S3 storage for Mobile App aspirants.
         </p>
       </div>
 
       {/* Resource Format Switcher */}
-      <div className="mb-6 flex items-center gap-3 rounded-2xl border border-white/10 bg-black/40 p-2">
+      <div className="mb-6 flex flex-wrap items-center gap-3 rounded-2xl border border-white/10 bg-black/40 p-2 backdrop-blur-xl">
         <span className="text-xs font-bold text-white/70 px-3">Select Format Mode:</span>
         <button
           onClick={() => setResourceFormat("VIDEO")}
           className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition ${
-            resourceFormat === "VIDEO" ? "bg-accentBlue text-white shadow-lg" : "text-white/60 hover:text-white"
+            resourceFormat === "VIDEO" ? "bg-accentBlue text-white shadow-lg shadow-accentBlue/20" : "text-white/60 hover:text-white"
           }`}
         >
           🎬 Video Lecture Stream (video/mp4)
@@ -202,7 +216,7 @@ export default function ExamsAdminPage() {
         <button
           onClick={() => setResourceFormat("PDF")}
           className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition ${
-            resourceFormat === "PDF" ? "bg-accentBlue text-white shadow-lg" : "text-white/60 hover:text-white"
+            resourceFormat === "PDF" ? "bg-accentBlue text-white shadow-lg shadow-accentBlue/20" : "text-white/60 hover:text-white"
           }`}
         >
           📄 PDF Notes & PYQ (application/pdf)
@@ -210,14 +224,14 @@ export default function ExamsAdminPage() {
         <button
           onClick={() => setResourceFormat("SYLLABUS")}
           className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition ${
-            resourceFormat === "SYLLABUS" ? "bg-accentBlue text-white shadow-lg" : "text-white/60 hover:text-white"
+            resourceFormat === "SYLLABUS" ? "bg-accentBlue text-white shadow-lg shadow-accentBlue/20" : "text-white/60 hover:text-white"
           }`}
         >
           📜 Syllabus & Roadmap (.pdf / .doc)
         </button>
       </div>
 
-      {/* Upload Form Component with Instant Local Storage Persistence */}
+      {/* Upload Form Component */}
       <div className="mb-12 rounded-2xl border border-white/10 bg-white/[0.02] p-6 backdrop-blur-xl">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-base font-bold text-white flex items-center gap-2">
@@ -230,44 +244,51 @@ export default function ExamsAdminPage() {
         <UploadForm key={resourceFormat} config={examConfig} onSuccess={handleFormSuccess} />
       </div>
 
-      {/* Live Uploaded Resources Management Section */}
-      <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-6 backdrop-blur-xl">
+      {/* Interactive Mobile App-Style Category Tabs & Search Bar */}
+      <div className="mb-8 rounded-2xl border border-white/10 bg-white/[0.02] p-6 backdrop-blur-xl">
         <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h2 className="text-lg font-bold text-white flex items-center gap-2">
-              <span>📚 Live Uploaded Competitive Exam Materials ({filtered.length})</span>
+            <h2 className="text-xl font-extrabold text-white flex items-center gap-2">
+              <span>🎓 Competitive Exam Directory & Materials ({filteredResources.length})</span>
             </h2>
-            <p className="text-xs text-white/50">Everything listed here streams live on the Mobile App</p>
+            <p className="text-xs text-white/50">Everything uploaded streams live on the Mobile App</p>
           </div>
 
-          <div className="flex items-center gap-3">
-            <select
-              value={selectedExam}
-              onChange={(e) => setSelectedExam(e.target.value)}
-              className="rounded-xl border border-white/10 bg-black/60 px-3.5 py-1.5 text-xs text-white focus:border-accentCyan focus:outline-none"
-            >
-              <option value="All">Filter by Exam (All)</option>
-              <option value="UPSC">UPSC Civil Services</option>
-              <option value="SSC">SSC CGL</option>
-              <option value="Banking">Banking PO / Clerk</option>
-              <option value="Railways">RRB Railways</option>
-              <option value="JEE">JEE Main / Advanced</option>
-              <option value="NEET">NEET-UG Medical</option>
-              <option value="GATE">GATE Engineering</option>
-              <option value="CAT">CAT Management</option>
-              <option value="CA">CA Qualification</option>
-            </select>
-
+          <div className="flex flex-wrap items-center gap-3">
+            <input
+              type="text"
+              placeholder="Search UPSC, SSC, Banking, JEE, NEET..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="rounded-xl border border-white/10 bg-black/60 px-4 py-2 text-xs text-white placeholder-white/40 focus:border-accentCyan focus:outline-none w-64"
+            />
             <button
               onClick={loadResources}
-              className="rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-semibold text-white/80 hover:bg-white/10"
+              className="rounded-xl border border-white/10 bg-white/5 px-3.5 py-2 text-xs font-semibold text-white/80 hover:bg-white/10"
             >
-              🔄 Refresh List
+              🔄 Refresh
             </button>
           </div>
         </div>
 
-        {/* Resources Table */}
+        {/* Category Filter Pills */}
+        <div className="mb-6 flex flex-wrap gap-2 border-b border-white/10 pb-4">
+          {CATEGORIES.map((cat) => (
+            <button
+              key={cat}
+              onClick={() => setSelectedCategory(cat)}
+              className={`rounded-xl px-3.5 py-1.5 text-xs font-semibold transition ${
+                selectedCategory === cat
+                  ? "bg-accentCyan text-black font-bold shadow-md shadow-accentCyan/20"
+                  : "bg-white/5 text-white/70 hover:bg-white/10 hover:text-white"
+              }`}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
+
+        {/* Uploaded Materials Management Table */}
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead className="border-b border-white/10 bg-white/[0.02] text-white/50 uppercase">
@@ -275,7 +296,7 @@ export default function ExamsAdminPage() {
                 <th className="px-4 py-3">Exam Target</th>
                 <th className="px-4 py-3">Resource Format</th>
                 <th className="px-4 py-3">Title</th>
-                <th className="px-4 py-3">Subject</th>
+                <th className="px-4 py-3">Subject / Topic</th>
                 <th className="px-4 py-3 text-right">Actions</th>
               </tr>
             </thead>
@@ -283,11 +304,11 @@ export default function ExamsAdminPage() {
               {loading && resources.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="px-4 py-8 text-center text-white/40">
-                    Loading live uploaded exam resources…
+                    Loading competitive exam materials…
                   </td>
                 </tr>
-              ) : filtered.length > 0 ? (
-                filtered.map((item) => (
+              ) : filteredResources.length > 0 ? (
+                filteredResources.map((item) => (
                   <tr key={item.id} className="hover:bg-white/[0.02]">
                     <td className="px-4 py-3 font-semibold text-white">{item.examName}</td>
                     <td className="px-4 py-3">
@@ -296,16 +317,16 @@ export default function ExamsAdminPage() {
                       </span>
                     </td>
                     <td className="px-4 py-3 font-medium text-white/90">{item.title}</td>
-                    <td className="px-4 py-3 text-accentCyan">{item.subject}</td>
+                    <td className="px-4 py-3 text-accentCyan font-medium">{item.subject}</td>
                     <td className="px-4 py-3 text-right space-x-2">
                       {item.fileUrl && (
                         <a
                           href={item.fileUrl}
                           target="_blank"
                           rel="noreferrer"
-                          className="inline-flex items-center rounded-lg bg-accentBlue/20 px-2.5 py-1 text-xs font-semibold text-accentCyan hover:bg-accentBlue/30 border border-accentBlue/40"
+                          className="inline-flex items-center rounded-lg bg-accentBlue/20 px-3 py-1.5 text-xs font-semibold text-accentCyan hover:bg-accentBlue/30 border border-accentBlue/40"
                         >
-                          Open S3 ↗
+                          Open S3 Media ↗
                         </a>
                       )}
                     </td>
@@ -313,8 +334,8 @@ export default function ExamsAdminPage() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={5} className="px-4 py-8 text-center text-white/40">
-                    No uploaded resources found for this filter.
+                  <td colSpan={5} className="px-4 py-12 text-center text-white/40">
+                    No competitive exam materials uploaded yet. Upload a video or PDF above to start!
                   </td>
                 </tr>
               )}

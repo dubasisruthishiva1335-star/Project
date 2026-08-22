@@ -6,7 +6,7 @@
  *   2. Academic Resources & Notes
  *   3. Circulars & Push Notifications
  *   4. Results & AI Performance Analyzer
- *   5. Structured Competitive Exams Preparation Hub & Govt Jobs Dual Sync
+ *   5. Structured Competitive Exams Preparation Hub & AWS S3 Presign/Confirm Pipeline
  * -----------------------------------------------------------
  */
 
@@ -17,7 +17,8 @@ const multer = require("multer");
 const PDFDocument = require("pdfkit");
 const QRCode = require("qrcode");
 const { Pool } = require("pg");
-const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
+const { S3Client, PutObjectCommand, DeleteObjectCommand } = require("@aws-sdk/client-s3");
+const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
 const crypto = require("crypto");
 require("dotenv").config();
 
@@ -156,6 +157,11 @@ async function initDb() {
         certificate_number TEXT NOT NULL UNIQUE, pdf_url TEXT NOT NULL, verification_token TEXT NOT NULL UNIQUE,
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       );
+      CREATE TABLE IF NOT EXISTS exam_contents (
+        id BIGSERIAL PRIMARY KEY, key TEXT NOT NULL, exam_id TEXT NOT NULL,
+        subject TEXT DEFAULT 'general', title TEXT NOT NULL, uploaded_by TEXT DEFAULT 'unknown',
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
     `);
     console.log("Database initialized cleanly.");
   } catch (_) {}
@@ -181,15 +187,135 @@ const memoryUpload = multer({
   limits: { fileSize: 50 * 1024 * 1024 },
 });
 
-// Presign / Upload handler
-app.post("/admin/uploads/presign", (req, res) => {
-  const { fileName, domain } = req.body;
-  const s3Key = `${domain || "uploads"}/${Date.now()}_${fileName || "file.bin"}`;
-  res.json({
-    uploadUrl: `https://${S3_BUCKET}.s3.eu-north-1.amazonaws.com/${s3Key}`,
-    s3Key,
-    publicUrl: s3PublicUrl(s3Key),
-  });
+// =================================================================
+// STEP 1: PRESIGNED S3 UPLOAD URL GENERATOR
+// =================================================================
+app.post(["/api/uploads/presign", "/admin/uploads/presign"], async (req, res) => {
+  try {
+    const { fileName, fileType, contentType, examId, subject, domain } = req.body;
+    const targetDomain = domain || (examId ? `exams/${examId}/${subject || "general"}` : "exams");
+    const cleanFileName = (fileName || `file_${Date.now()}.bin`).replace(/[^a-zA-Z0-9._-]/g, "_");
+    const key = `${targetDomain}/${Date.now()}-${cleanFileName}`;
+    const type = fileType || contentType || "application/octet-stream";
+
+    const command = new PutObjectCommand({
+      Bucket: S3_BUCKET,
+      Key: key,
+      ContentType: type,
+      ACL: "public-read",
+    });
+
+    const uploadUrl = await getSignedUrl(s3, command, { expiresIn: 300 });
+
+    res.json({
+      uploadUrl,
+      key,
+      s3Key: key,
+      publicUrl: s3PublicUrl(key),
+    });
+  } catch (err) {
+    const fallbackKey = `exams/${Date.now()}_file.pdf`;
+    res.json({
+      uploadUrl: `https://${S3_BUCKET}.s3.eu-north-1.amazonaws.com/${fallbackKey}`,
+      key: fallbackKey,
+      s3Key: fallbackKey,
+      publicUrl: s3PublicUrl(fallbackKey),
+    });
+  }
+});
+
+// =================================================================
+// STEP 2: CONFIRM UPLOAD SUCCESS & SAVE METADATA
+// =================================================================
+app.post(["/api/uploads/confirm", "/admin/exams/confirm"], async (req, res) => {
+  const { key, s3Key, examId, examName, subject, title, uploadedBy, contentType, publicUrl, duration } = req.body;
+  const targetKey = key || s3Key || `exams/${Date.now()}_file.bin`;
+  const targetExamId = examId || (examName ? examName.toLowerCase().replace(/[^a-z0-9]/g, "_") : "exam_upsc");
+  const fileUrl = publicUrl || s3PublicUrl(targetKey);
+
+  const record = {
+    id: Date.now(),
+    key: targetKey,
+    examId: targetExamId,
+    subject: subject || "general",
+    title: title || targetKey.split("/").pop(),
+    uploadedBy: uploadedBy || "admin",
+    url: fileUrl,
+    createdAt: new Date().toISOString(),
+  };
+
+  try {
+    await pool.query(
+      `INSERT INTO exam_contents (key, exam_id, subject, title, uploaded_by, created_at)
+       VALUES ($1, $2, $3, $4, $5, NOW())`,
+      [record.key, record.examId, record.subject, record.title, record.uploadedBy]
+    );
+  } catch (_) {}
+
+  // Sync with globalExams array
+  const targetExam = globalExams.find(
+    (e) => e.id.toLowerCase() === targetExamId.toLowerCase() || e.name.toLowerCase().includes((examName || "").toLowerCase())
+  ) || globalExams[0];
+
+  if (contentType === "PDF" || fileUrl.endsWith(".pdf")) {
+    if (!targetExam.pdfNotes) targetExam.pdfNotes = [];
+    targetExam.pdfNotes.unshift({
+      id: `pdf_${Date.now()}`,
+      title: record.title,
+      subject: record.subject,
+      fileUrl: record.url,
+    });
+  } else {
+    if (!targetExam.videos) targetExam.videos = [];
+    targetExam.videos.unshift({
+      id: `v_${Date.now()}`,
+      title: record.title,
+      subject: record.subject,
+      duration: duration || "20:00",
+      s3Url: record.url,
+      pdfUrl: record.url,
+    });
+  }
+
+  res.status(201).json({ success: true, item: record });
+});
+
+// =================================================================
+// STEP 3: LIST CONTENT FOR EXAM WITH CDN/S3 URLS
+// =================================================================
+app.get("/api/exams/:examId/content", async (req, res) => {
+  const { examId } = req.params;
+  try {
+    const { rows } = await pool.query(
+      `SELECT id, key, exam_id AS "examId", subject, title, uploaded_by AS "uploadedBy", created_at AS "createdAt"
+       FROM exam_contents WHERE exam_id = $1 ORDER BY created_at DESC`,
+      [examId]
+    );
+    const items = rows.map((item) => ({
+      ...item,
+      url: s3PublicUrl(item.key),
+    }));
+    return res.json(items);
+  } catch (_) {}
+
+  const exam = globalExams.find((e) => e.id === examId || e.name.toLowerCase().includes(examId.toLowerCase()));
+  res.json(exam ? [...(exam.videos || []), ...(exam.pdfNotes || [])] : []);
+});
+
+// =================================================================
+// STEP 4: DELETE CONTENT
+// =================================================================
+app.delete("/api/content/:key", async (req, res) => {
+  try {
+    const key = decodeURIComponent(req.params.key);
+    await s3.send(new DeleteObjectCommand({ Bucket: S3_BUCKET, Key: key }));
+    try {
+      await pool.query(`DELETE FROM exam_contents WHERE key = $1`, [key]);
+    } catch (_) {}
+    res.json({ deleted: key });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to delete" });
+  }
 });
 
 app.post("/api/upload", memoryUpload.single("file"), async (req, res) => {
@@ -244,7 +370,7 @@ app.get(["/admin/analytics/recent-uploads", "/api/admin/analytics/recent-uploads
 });
 
 // =================================================================
-// JOB & INTERNSHIP LISTINGS (Placement, Govt Jobs, Internships)
+// JOB & INTERNSHIP LISTINGS
 // =================================================================
 app.get(["/job-listings", "/api/job-listings", "/admin/job-listings"], async (req, res) => {
   const { type } = req.query;
@@ -306,7 +432,7 @@ app.delete(["/admin/job-listings/:id", "/api/admin/job-listings/:id"], async (re
 });
 
 // =================================================================
-// DUAL-SYNCED COMPETITIVE EXAMS & GOVT JOBS API
+// COMPETITIVE EXAMS API
 // =================================================================
 app.get(["/api/exams", "/admin/exams"], (req, res) => {
   res.json(globalExams);
@@ -321,73 +447,6 @@ app.get("/api/exams/:examId", (req, res) => {
     return res.json(exam);
   }
   res.json(globalExams[0]);
-});
-
-app.post(["/admin/exams/confirm", "/api/admin/exams/confirm"], async (req, res) => {
-  const { examName, title, subject, duration, contentType = "VIDEO", publicUrl, s3Key } = req.body;
-
-  const targetExamName = examName || "UPSC Civil Services";
-  let exam = globalExams.find((e) => e.name.toLowerCase().includes(targetExamName.toLowerCase()));
-
-  if (!exam) {
-    exam = {
-      id: `exam_${Date.now()}`,
-      name: targetExamName,
-      cat: "Government",
-      icon: "🏛️",
-      description: "Competitive examination study materials & video series.",
-      eligibility: "Graduate",
-      ageLimit: "21-32 Years",
-      selectionProcess: "Written Exam ➔ Interview",
-      syllabusSummary: "General Studies, Aptitude & Core Subjects",
-      videos: [],
-      pdfNotes: [],
-    };
-    globalExams.push(exam);
-  }
-
-  const fileUrl = publicUrl || (s3Key ? s3PublicUrl(s3Key) : "https://myvault-files-app.s3.eu-north-1.amazonaws.com/app-arm64-v8a-release.apk");
-
-  // DUAL SYNC: Also create a Govt Job listing so it appears in Govt Jobs screen too!
-  const syncGovtJob = {
-    id: `job_govt_${Date.now()}`,
-    title: title || targetExamName,
-    company: targetExamName,
-    type: "GOVT_JOB",
-    applyUrl: fileUrl,
-    branch: "All Branches",
-    fileUrl: fileUrl,
-    stipend: "Competitive Exam Material",
-    location: "Online / S3",
-    deadline: null,
-    description: `Published Resource: ${title || "Exam Material"} (${subject || "General"})`,
-    postedAt: new Date().toISOString(),
-  };
-  globalJobListings.unshift(syncGovtJob);
-
-  if (contentType === "PDF" || (fileUrl && fileUrl.endsWith(".pdf"))) {
-    const newPdf = {
-      id: `pdf_${Date.now()}`,
-      title: title || "Study Material PDF",
-      subject: subject || "General Studies",
-      fileUrl: fileUrl,
-    };
-    if (!exam.pdfNotes) exam.pdfNotes = [];
-    exam.pdfNotes.unshift(newPdf);
-    return res.status(201).json({ success: true, item: newPdf, govtJob: syncGovtJob });
-  } else {
-    const newVideo = {
-      id: `v_${Date.now()}`,
-      title: title || "Exam Preparation Lecture",
-      subject: subject || "General Studies",
-      duration: duration || "20:00",
-      s3Url: fileUrl,
-      pdfUrl: fileUrl,
-    };
-    if (!exam.videos) exam.videos = [];
-    exam.videos.unshift(newVideo);
-    return res.status(201).json({ success: true, item: newVideo, govtJob: syncGovtJob });
-  }
 });
 
 app.post("/api/exams/progress", (req, res) => {

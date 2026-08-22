@@ -324,13 +324,13 @@ class _InternshipHubScreenState extends State<InternshipHubScreen> with SingleTi
           // Course Cards List
           _loading
               ? const Center(child: CircularProgressIndicator(color: MyVaultColors.accentCyan))
-              : _filteredResources.isEmpty
+              : _filteredCourses.isEmpty
                   ? const Center(child: Text('No courses found matching search', style: TextStyle(color: Colors.white54)))
                   : ListView.builder(
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
-                      itemCount: _filteredResources.length,
-                      itemBuilder: (ctx, i) => _buildCourseCard(_filteredResources[i]),
+                      itemCount: _filteredCourses.length,
+                      itemBuilder: (ctx, i) => _buildCourseCard(_filteredCourses[i]),
                     ),
 
           const SizedBox(height: 20),

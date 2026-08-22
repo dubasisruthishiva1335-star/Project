@@ -27,7 +27,7 @@ class CourseCompletionScreen extends StatelessWidget {
               ),
               const SizedBox(height: 20),
 
-              const Text('🎉 COURSE COMPLETED!', style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.black, letterSpacing: 0.5)),
+              const Text('🎉 COURSE COMPLETED!', style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w900, letterSpacing: 0.5)),
               const SizedBox(height: 8),
               Text(courseTitle, style: const TextStyle(color: MyVaultColors.accentCyan, fontSize: 16, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
               const SizedBox(height: 24),

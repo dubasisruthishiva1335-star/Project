@@ -57,7 +57,7 @@ class CourseDetailsScreen extends StatelessWidget {
             ),
             const SizedBox(height: 14),
 
-            Text(title, style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.black)),
+            Text(title, style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w900)),
             const SizedBox(height: 10),
             Text(description, style: const TextStyle(color: Colors.white70, fontSize: 13.5, height: 1.5)),
             const SizedBox(height: 18),
@@ -95,7 +95,7 @@ class CourseDetailsScreen extends StatelessWidget {
                         const Icon(Icons.check_circle_rounded, color: Color(0xFF00C48C), size: 18),
                         const SizedBox(width: 10),
                         Expanded(
-                          child: Text(l.toString(), style: const TextStyle(color: Colors.white87, fontSize: 13, height: 1.4)),
+                          child: Text(l.toString(), style: const TextStyle(color: Colors.white70, fontSize: 13, height: 1.4)),
                         ),
                       ],
                     ),

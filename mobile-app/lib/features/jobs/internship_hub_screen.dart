@@ -1,1 +1,1 @@
-export '../internship_hub/internship_hub_screen.dart';
+export 'job_listings_screen.dart';

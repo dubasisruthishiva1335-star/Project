@@ -79,12 +79,11 @@ export class AcademicController {
       const url = (j.applyUrl || '').toLowerCase();
       return (
         title.includes('tspsc') ||
-        title.includes('frontend') ||
-        title.includes('acme') ||
+        (title.includes('frontend engineering intern') && company.includes('acme')) ||
         title.includes('html') ||
         title.includes('jhbb') ||
-        company.includes('acme') ||
-        company.includes('tspsc') ||
+        company.includes('acme labs') ||
+        company.includes('telangana state psc') ||
         url.includes('example.com')
       );
     };

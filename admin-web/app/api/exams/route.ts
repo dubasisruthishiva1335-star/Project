@@ -102,7 +102,7 @@ export async function GET() {
 
   // Map uploaded resources into the matching exam object
   for (const res of uploadedExamResources) {
-    const resExam = res.examName.toLowerCase();
+    const resExam = (res.examName || res.examId || "").toLowerCase();
 
     let exam = baseExams.find((e) => {
       const name = e.name.toLowerCase();

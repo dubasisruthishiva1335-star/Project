@@ -70,27 +70,61 @@ class _CompetitiveExamsScreenState extends State<CompetitiveExamsScreen>
 
   Future<void> _loadResources() async {
     setState(() => _loading = true);
-    List<dynamic> fetchedList = [];
+    List<dynamic> fetchedExams = [];
 
     try {
-      final res = await ApiClient.instance.dio.get('/api/admin/preparation');
-      if (res.data != null && res.data['data'] is List) {
-        fetchedList = res.data['data'] as List<dynamic>;
+      final res = await ApiClient.instance.dio.get('/api/exams');
+      if (res.data is List && (res.data as List).isNotEmpty) {
+        fetchedExams = res.data as List<dynamic>;
       }
     } catch (_) {}
 
-    if (fetchedList.isEmpty) {
+    if (fetchedExams.isEmpty) {
       try {
-        final vercelRes = await Dio().get('https://myvault-project.vercel.app/api/admin/preparation');
-        if (vercelRes.data != null && vercelRes.data['data'] is List) {
-          fetchedList = vercelRes.data['data'] as List<dynamic>;
+        final vercelRes = await Dio().get('https://myvault-project.vercel.app/api/exams');
+        if (vercelRes.data is List && (vercelRes.data as List).isNotEmpty) {
+          fetchedExams = vercelRes.data as List<dynamic>;
         }
       } catch (_) {}
     }
 
+    final List<dynamic> extractedResources = [];
+    for (var exam in fetchedExams) {
+      final examId = (exam['id'] as String? ?? 'upsc-cse-2026').toLowerCase();
+      final examName = (exam['name'] as String? ?? 'UPSC Civil Services');
+      final pdfNotes = (exam['pdfNotes'] as List<dynamic>?) ?? [];
+      final videos = (exam['videos'] as List<dynamic>?) ?? [];
+
+      for (var pdf in pdfNotes) {
+        extractedResources.add({
+          'id': pdf['id'] ?? `pdf_${Date.now()}`,
+          'examId': examId,
+          'examName': examName,
+          'subject': pdf['subject'] ?? 'Quantitative Aptitude',
+          'unit': (pdf['unit'] ?? '1').toString(),
+          'contentType': pdf['contentType'] ?? 'NOTES',
+          'title': pdf['title'] ?? 'Lecture Note',
+          'fileUrl': pdf['fileUrl'] ?? pdf['s3Url'],
+        });
+      }
+
+      for (var video in videos) {
+        extractedResources.add({
+          'id': video['id'] ?? `vid_${Date.now()}`,
+          'examId': examId,
+          'examName': examName,
+          'subject': video['subject'] ?? 'Quantitative Aptitude',
+          'unit': (video['unit'] ?? '1').toString(),
+          'contentType': video['contentType'] ?? 'VIDEO_LECTURE',
+          'title': video['title'] ?? 'Video Stream',
+          'fileUrl': video['fileUrl'] ?? video['s3Url'],
+        });
+      }
+    }
+
     if (mounted) {
       setState(() {
-        _resources = fetchedList;
+        _resources = extractedResources;
         _loading = false;
       });
     }

@@ -27,38 +27,9 @@ app.use(cors());
 app.use(express.json({ limit: "50mb" }));
 
 // ---------------------------------------------------------------
-// In-Memory Global Stores (Fallback & Cache)
+// In-Memory Global Stores (Clean — No Dummy/Mock Listings)
 // ---------------------------------------------------------------
-let globalJobListings = [
-  {
-    id: "job_int_01",
-    title: "Full Stack Developer Intern",
-    company: "Google / TechCorp",
-    type: "INTERNSHIP",
-    category: "Full Stack",
-    applyUrl: "https://careers.google.com",
-    branch: "CSE & IT",
-    stipend: "₹25,000 / month",
-    location: "Hyderabad / Remote",
-    deadline: "2026-09-30",
-    description: "Hands-on industrial development experience with React, Node.js, and Cloud services.",
-    postedAt: new Date().toISOString(),
-  },
-  {
-    id: "job_plc_01",
-    title: "Software Engineer — Graduate Trainee",
-    company: "TCS / Infosys",
-    type: "PLACEMENT",
-    category: "Software Engineering",
-    applyUrl: "https://tcs.com/careers",
-    branch: "All Branches",
-    stipend: "7.5 LPA",
-    location: "Bangalore",
-    deadline: "2026-10-15",
-    description: "Full-time campus drive for B.Tech students. Selection via Aptitude + Technical interviews.",
-    postedAt: new Date().toISOString(),
-  },
-];
+let globalJobListings = [];
 
 let globalCourses = [
   {
@@ -150,6 +121,12 @@ const pool = new Pool({
 async function initDb() {
   try {
     await pool.query(`
+      CREATE TABLE IF NOT EXISTS job_listings (
+        id TEXT PRIMARY KEY, title TEXT NOT NULL, company TEXT NOT NULL,
+        type TEXT NOT NULL, category TEXT, apply_url TEXT, branch TEXT,
+        stipend TEXT, location TEXT, deadline DATE, description TEXT,
+        posted_at TIMESTAMPTZ DEFAULT NOW()
+      );
       CREATE TABLE IF NOT EXISTS internship_courses (
         id TEXT PRIMARY KEY, title TEXT NOT NULL, category TEXT NOT NULL,
         level TEXT, duration TEXT, is_free BOOLEAN DEFAULT TRUE,
@@ -189,7 +166,6 @@ function s3PublicUrl(key) {
 // INTERNSHIP LEARNING HUB: COURSE APIs
 // =================================================================
 
-// GET ALL FREE COURSES
 app.get(["/api/courses", "/admin/courses"], (req, res) => {
   const { category } = req.query;
   let items = [...globalCourses];
@@ -199,14 +175,12 @@ app.get(["/api/courses", "/admin/courses"], (req, res) => {
   res.json({ success: true, data: items });
 });
 
-// GET SINGLE COURSE DETAILS
 app.get("/api/courses/:courseId", (req, res) => {
   const { courseId } = req.params;
   const course = globalCourses.find((c) => c.id.toLowerCase() === courseId.toLowerCase());
   res.json({ success: true, data: course || globalCourses[0] });
 });
 
-// ENROLL STUDENT IN COURSE
 app.post("/api/courses/:courseId/enroll", (req, res) => {
   const { courseId } = req.params;
   const { studentId = "student_1" } = req.body;
@@ -225,7 +199,6 @@ app.post("/api/courses/:courseId/enroll", (req, res) => {
   res.json({ success: true, enrollment: globalEnrollments[key] });
 });
 
-// MARK LESSON COMPLETE
 app.post("/api/lessons/:lessonId/complete", (req, res) => {
   const { lessonId } = req.params;
   const { studentId = "student_1", courseId = "course_flutter_dev" } = req.body;
@@ -242,7 +215,6 @@ app.post("/api/lessons/:lessonId/complete", (req, res) => {
   res.json({ success: true, completedLessons: globalEnrollments[key].completedLessons });
 });
 
-// SUBMIT ASSIGNMENT
 app.post("/api/assignments/:assignmentId/submit", (req, res) => {
   const { assignmentId } = req.params;
   const { studentId = "student_1", submissionUrl = "", repoUrl = "" } = req.body;
@@ -259,7 +231,6 @@ app.post("/api/assignments/:assignmentId/submit", (req, res) => {
   res.json({ success: true, status: "PASSED" });
 });
 
-// SUBMIT FINAL EXAM & GENERATE CERTIFICATE
 app.post("/api/courses/:courseId/final-exam/submit", async (req, res) => {
   const { courseId } = req.params;
   const { studentId = "student_1", studentName = "Rahul Kumar", score = 85 } = req.body;
@@ -321,12 +292,14 @@ app.post("/api/courses/:courseId/final-exam/submit", async (req, res) => {
   }
 });
 
-// GET STUDENT CERTIFICATES
 app.get("/api/students/:studentId/certificates", (req, res) => {
   res.json({ success: true, data: globalCertificates });
 });
 
-// OTHER MYVAULT ENDPOINTS (JOB LISTINGS, PREPARATION, RESULTS)
+// =================================================================
+// JOB & INTERNSHIP LISTINGS APIs (Clean, Admin-driven)
+// =================================================================
+
 app.get(["/job-listings", "/api/job-listings", "/admin/job-listings"], (req, res) => {
   const { type } = req.query;
   let items = [...globalJobListings];
@@ -334,11 +307,52 @@ app.get(["/job-listings", "/api/job-listings", "/admin/job-listings"], (req, res
   res.json(items);
 });
 
-app.post(["/admin/job-listings/confirm", "/api/admin/job-listings/confirm"], (req, res) => {
+app.post(["/admin/job-listings/confirm", "/api/admin/job-listings/confirm"], async (req, res) => {
   const { title, company, type = "INTERNSHIP", applyUrl, branch, fileUrl, stipend, location, deadline, description } = req.body;
-  const newJob = { id: `job_${Date.now()}`, title: title || "Full Stack Developer Intern", company: company || "MyVault Partner", type, applyUrl: applyUrl || "https://myvault-project.vercel.app", branch: branch || "All Branches", fileUrl: fileUrl || null, stipend: stipend || "₹20,000 / month", location: location || "Hyderabad / Remote", deadline: deadline || null, description: description || null, postedAt: new Date().toISOString() };
+  const newJob = {
+    id: `job_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
+    title: title || "New Opportunity",
+    company: company || "Organization",
+    type,
+    applyUrl: applyUrl || "https://myvault-project.vercel.app",
+    branch: branch || "All Branches",
+    fileUrl: fileUrl || null,
+    stipend: stipend || null,
+    location: location || null,
+    deadline: deadline || null,
+    description: description || null,
+    postedAt: new Date().toISOString(),
+  };
+
   globalJobListings.unshift(newJob);
+
+  try {
+    await pool.query(
+      `INSERT INTO job_listings (id, title, company, type, apply_url, branch, file_url, stipend, location, deadline, description, posted_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW())`,
+      [newJob.id, newJob.title, newJob.company, newJob.type, newJob.applyUrl, newJob.branch, newJob.fileUrl, newJob.stipend, newJob.location, newJob.deadline, newJob.description]
+    );
+  } catch (_) {}
+
   res.status(201).json(newJob);
+});
+
+app.delete(["/admin/job-listings/:id", "/api/job-listings/:id"], async (req, res) => {
+  const { id } = req.params;
+  globalJobListings = globalJobListings.filter((j) => String(j.id) !== String(id));
+  try {
+    await pool.query(`DELETE FROM job_listings WHERE id = $1`, [id]);
+  } catch (_) {}
+  res.json({ success: true, id });
+});
+
+// Clear all dummy/test listings endpoint
+app.delete(["/admin/job-listings", "/api/job-listings"], async (req, res) => {
+  globalJobListings = [];
+  try {
+    await pool.query(`TRUNCATE TABLE job_listings`);
+  } catch (_) {}
+  res.json({ success: true, message: "All job listings cleared cleanly." });
 });
 
 const PORT = process.env.PORT || 4000;

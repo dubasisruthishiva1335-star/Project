@@ -41,47 +41,16 @@ class _JobListingsScreenState extends State<JobListingsScreen> {
           .get('/job-listings', queryParameters: {'type': widget.type});
       final fetched = res.data as List<dynamic>;
       setState(() {
-        _jobs = fetched.isNotEmpty ? fetched : _fallbackList;
+        _jobs = fetched;
         _loading = false;
       });
     } catch (e) {
       setState(() {
-        _jobs = _fallbackList;
+        _jobs = [];
         _loading = false;
       });
     }
   }
-
-  List<dynamic> get _fallbackList => [
-        {
-          'id': 'int_fullstack_001',
-          'title': 'Full Stack Developer Intern',
-          'company': 'Google / TechCorp',
-          'type': widget.type,
-          'category': 'Full Stack',
-          'applyUrl': 'https://myvault-project.vercel.app',
-          'branch': 'CSE & IT',
-          'stipend': '₹25,000 / month',
-          'location': 'Hyderabad / Remote',
-          'deadline': '2026-09-30',
-          'description': 'Hands-on industrial development experience with React, Node.js, and Cloud services.',
-          'postedAt': DateTime.now().toIso8601String(),
-        },
-        {
-          'id': 'plc_tcs_002',
-          'title': 'Software Engineer — Graduate Trainee',
-          'company': 'TCS / Infosys',
-          'type': widget.type,
-          'category': 'Software Engineering',
-          'applyUrl': 'https://myvault-project.vercel.app',
-          'branch': 'All Branches',
-          'stipend': '7.5 LPA',
-          'location': 'Bangalore',
-          'deadline': '2026-10-15',
-          'description': 'Full-time campus drive for B.Tech students. Selection via Aptitude + Technical interviews.',
-          'postedAt': DateTime.now().toIso8601String(),
-        },
-      ];
 
   Future<void> _openUrl(String? url) async {
     if (url == null || url.isEmpty) return;

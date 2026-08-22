@@ -67,7 +67,7 @@ class ResultAnalyzerNotifier extends StateNotifier<ResultAnalyzerState> {
 
       final analysis = ResultAnalysis.fromJson(response.data);
       state = state.copyWith(stage: AnalyzerStage.done, result: analysis);
-    } on DioException catch (e) {
+    } on DioException catch (_) {
       // Fallback demo data if backend offline
       final mockAnalysis = ResultAnalysis(
         uploadId: 'mock-${DateTime.now().millisecondsSinceEpoch}',

@@ -344,38 +344,6 @@ class _ResultsScreenState extends State<ResultsScreen> {
     );
   }
 
-  void _showUploadOptions() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: MyVaultColors.obsidian,
-      builder: (context) => SafeArea(
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          child: Wrap(
-            children: [
-              ListTile(
-                leading: const Icon(Icons.photo_camera_rounded, color: MyVaultColors.accentCyan),
-                title: const Text('Take a photo of marksheet', style: TextStyle(color: Colors.white)),
-                onTap: () {
-                  Navigator.pop(context);
-                  _pickAndAnalyze(ImageSource.camera);
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.photo_library_rounded, color: MyVaultColors.accentBlue),
-                title: const Text('Choose from gallery / Documents Hub', style: TextStyle(color: Colors.white)),
-                onTap: () {
-                  Navigator.pop(context);
-                  _pickAndAnalyze(ImageSource.gallery);
-                },
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return PopScope(

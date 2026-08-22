@@ -31,7 +31,6 @@ class ExamPreparationScreen extends StatefulWidget {
 class _ExamPreparationScreenState extends State<ExamPreparationScreen> {
   List<dynamic> _videos = [];
   List<dynamic> _pdfNotes = [];
-  bool _loading = true;
 
   @override
   void initState() {
@@ -53,13 +52,10 @@ class _ExamPreparationScreenState extends State<ExamPreparationScreen> {
           setState(() {
             if (fetchedVideos.isNotEmpty) _videos = fetchedVideos;
             if (fetchedNotes.isNotEmpty) _pdfNotes = fetchedNotes;
-            _loading = false;
           });
         }
       }
-    } catch (_) {
-      if (mounted) setState(() => _loading = false);
-    }
+    } catch (_) {}
   }
 
   void _showInAppUploadModal() {

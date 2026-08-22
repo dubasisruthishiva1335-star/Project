@@ -125,7 +125,7 @@ class _CompetitiveExamsScreenState extends State<CompetitiveExamsScreen>
     return _resources.where((r) {
       final examId = (r['examId'] as String? ?? '').toLowerCase();
       final subject = r['subject'] as String? ?? 'General';
-      final unit = String(r['unit'] ?? '1');
+      final unit = (r['unit'] ?? '1').toString();
       final cat = r['contentType'] as String? ?? 'NOTES';
       final title = (r['title'] as String? ?? '').toLowerCase();
 
@@ -167,7 +167,7 @@ class _CompetitiveExamsScreenState extends State<CompetitiveExamsScreen>
     switch (cat.toUpperCase()) {
       case 'VIDEO_LECTURE': return Colors.purpleAccent;
       case 'CHEAT_SHEET': return Colors.amberAccent;
-      case 'LAB_MANUAL': return Colors.emeraldAccent;
+      case 'LAB_MANUAL': return const Color(0xFF00C48C);
       case 'QUESTION_BANK': return Colors.orangeAccent;
       case 'SYLLABUS': return Colors.cyanAccent;
       default: return MyVaultColors.accentCyan;
@@ -386,7 +386,7 @@ class _CompetitiveExamsScreenState extends State<CompetitiveExamsScreen>
   Widget _buildResourceCard(Map<String, dynamic> item) {
     final title = item['title'] ?? 'Preparation Resource';
     final subject = item['subject'] ?? 'Quantitative Aptitude';
-    final unit = String(item['unit'] ?? '1');
+    final unit = (item['unit'] ?? '1').toString();
     final cat = item['contentType'] as String? ?? 'NOTES';
     final url = item['fileUrl'] as String?;
     final icon = _getCategoryIcon(cat);

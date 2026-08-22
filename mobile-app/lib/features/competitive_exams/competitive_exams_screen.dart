@@ -3,7 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:dio/dio.dart';
 import '../../core/colors.dart';
 import '../../core/api_client.dart';
-import 'exam_video_screen.dart';
+import 'exam_preparation_screen.dart';
 
 class CompetitiveExamsScreen extends StatefulWidget {
   const CompetitiveExamsScreen({super.key});
@@ -21,12 +21,14 @@ class _CompetitiveExamsScreenState extends State<CompetitiveExamsScreen>
 
   final List<String> _categories = [
     'All',
-    'Government',
+    'SSC',
     'Banking',
-    'Railways',
-    'Higher Education',
-    'Management',
-    'Professional',
+    'UPSC',
+    'Railway',
+    'Defence',
+    'GATE',
+    'Police',
+    'Teaching',
   ];
 
   @override
@@ -46,7 +48,6 @@ class _CompetitiveExamsScreenState extends State<CompetitiveExamsScreen>
   Future<void> _loadExams() async {
     setState(() => _loading = true);
 
-    // 1. Try Primary Railway API endpoint
     try {
       final res = await ApiClient.instance.dio.get('/api/exams');
       final fetched = res.data as List<dynamic>;
@@ -59,7 +60,6 @@ class _CompetitiveExamsScreenState extends State<CompetitiveExamsScreen>
       }
     } catch (_) {}
 
-    // 2. Dual Fallback: Fetch directly from Vercel Web API endpoint
     try {
       final vercelRes = await Dio().get('https://myvault-project.vercel.app/api/exams');
       final vercelFetched = vercelRes.data as List<dynamic>;
@@ -72,203 +72,30 @@ class _CompetitiveExamsScreenState extends State<CompetitiveExamsScreen>
       }
     } catch (_) {}
 
-    // 3. Static Fallback
     setState(() {
       _exams = _fallbackExams;
       _loading = false;
     });
   }
 
-  void _showInAppUploadModal() {
-    final titleCtrl = TextEditingController();
-    final subjectCtrl = TextEditingController();
-    final urlCtrl = TextEditingController();
-    String selectedExam = 'UPSC Civil Services (IAS / IPS / IFS)';
-    String contentType = 'VIDEO';
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: MyVaultColors.obsidian,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) {
-        return StatefulBuilder(
-          builder: (context, setModalState) {
-            return Padding(
-              padding: EdgeInsets.only(
-                left: 20,
-                right: 20,
-                top: 20,
-                bottom: MediaQuery.of(ctx).viewInsets.bottom + 20,
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        '📤 Upload Exam Resource to S3',
-                        style: TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.bold),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.close, color: Colors.white54),
-                        onPressed: () => Navigator.pop(ctx),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-
-                  // Exam Picker
-                  const Text('Select Target Exam', style: TextStyle(color: Colors.white70, fontSize: 12)),
-                  const SizedBox(height: 4),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    decoration: BoxDecoration(
-                      color: MyVaultColors.glassFill,
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: MyVaultColors.glassBorder),
-                    ),
-                    child: DropdownButtonHideUnderline(
-                      child: DropdownButton<String>(
-                        value: selectedExam,
-                        isExpanded: true,
-                        dropdownColor: MyVaultColors.obsidian,
-                        style: const TextStyle(color: Colors.white, fontSize: 13),
-                        items: const [
-                          DropdownMenuItem(value: 'UPSC Civil Services (IAS / IPS / IFS)', child: Text('🏛️ UPSC Civil Services')),
-                          DropdownMenuItem(value: 'SSC CGL (Staff Selection Commission)', child: Text('🏛️ SSC CGL')),
-                          DropdownMenuItem(value: 'SBI PO / IBPS PO & Clerk', child: Text('🏦 SBI / IBPS Banking PO')),
-                          DropdownMenuItem(value: 'RRB NTPC & Railway JE', child: Text('🚆 RRB Railways')),
-                          DropdownMenuItem(value: 'JEE Main / Advanced (Engineering)', child: Text('🎓 JEE Main / Advanced')),
-                          DropdownMenuItem(value: 'NEET-UG (Medical Entrance)', child: Text('🩺 NEET-UG Medical')),
-                          DropdownMenuItem(value: 'GATE (Engineering & PSUs)', child: Text('⚡ GATE Engineering')),
-                          DropdownMenuItem(value: 'CAT / XAT (Management)', child: Text('💼 CAT Management')),
-                          DropdownMenuItem(value: 'CA (Chartered Accountant)', child: Text('📊 CA Professional')),
-                        ],
-                        onChanged: (v) {
-                          if (v != null) setModalState(() => selectedExam = v);
-                        },
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  // Resource Type
-                  Row(
-                    children: [
-                      ChoiceChip(
-                        label: const Text('🎬 Video Stream'),
-                        selected: contentType == 'VIDEO',
-                        selectedColor: MyVaultColors.accentBlue,
-                        onSelected: (s) => setModalState(() => contentType = 'VIDEO'),
-                      ),
-                      const SizedBox(width: 10),
-                      ChoiceChip(
-                        label: const Text('📄 PDF Note / PYQ'),
-                        selected: contentType == 'PDF',
-                        selectedColor: Colors.amber,
-                        onSelected: (s) => setModalState(() => contentType = 'PDF'),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  TextField(
-                    controller: titleCtrl,
-                    style: const TextStyle(color: Colors.white, fontSize: 13),
-                    decoration: InputDecoration(
-                      labelText: 'Resource Title',
-                      labelStyle: const TextStyle(color: Colors.white54),
-                      filled: true,
-                      fillColor: MyVaultColors.glassFill,
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                    ),
-                  ),
-
-                  const SizedBox(height: 10),
-
-                  TextField(
-                    controller: subjectCtrl,
-                    style: const TextStyle(color: Colors.white, fontSize: 13),
-                    decoration: InputDecoration(
-                      labelText: 'Subject / Topic (e.g. Polity, Quant)',
-                      labelStyle: const TextStyle(color: Colors.white54),
-                      filled: true,
-                      fillColor: MyVaultColors.glassFill,
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                    ),
-                  ),
-
-                  const SizedBox(height: 10),
-
-                  TextField(
-                    controller: urlCtrl,
-                    style: const TextStyle(color: Colors.white, fontSize: 13),
-                    decoration: InputDecoration(
-                      labelText: 'S3 File URL / External Link',
-                      labelStyle: const TextStyle(color: Colors.white54),
-                      filled: true,
-                      fillColor: MyVaultColors.glassFill,
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                    ),
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  SizedBox(
-                    width: double.infinity,
-                    height: 46,
-                    child: ElevatedButton.icon(
-                      onPressed: () async {
-                        if (titleCtrl.text.trim().isEmpty) return;
-                        final payload = {
-                          'examName': selectedExam,
-                          'contentType': contentType,
-                          'title': titleCtrl.text.trim(),
-                          'subject': subjectCtrl.text.trim().isEmpty ? 'General' : subjectCtrl.text.trim(),
-                          'publicUrl': urlCtrl.text.trim().isEmpty ? 'https://myvault-files-app.s3.eu-north-1.amazonaws.com/app-arm64-v8a-release.apk' : urlCtrl.text.trim(),
-                        };
-
-                        try {
-                          await Dio().post('https://myvault-project.vercel.app/api/admin/exams/confirm', data: payload);
-                        } catch (_) {}
-
-                        if (ctx.mounted) {
-                          Navigator.pop(ctx);
-                          _loadExams();
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Exam Resource published successfully!')),
-                          );
-                        }
-                      },
-                      icon: const Icon(Icons.cloud_upload_rounded, color: Colors.white),
-                      label: const Text('Publish Resource to AWS S3 & App', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: MyVaultColors.accentBlue,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-
   List<dynamic> get _fallbackExams => [
         {
-          'id': 'exam_upsc',
-          'name': 'UPSC Civil Services (IAS / IPS / IFS)',
-          'cat': 'Government',
+          'id': 'ssc-cgl-2026',
+          'name': 'SSC CGL 2026 (Staff Selection Commission)',
+          'cat': 'SSC',
+          'icon': '📚',
+          'description': 'Combined Graduate Level Examination for Group B & C central government posts.',
+          'eligibility': 'Bachelor\'s Degree in any stream',
+          'ageLimit': '18 - 30 Years',
+          'selectionProcess': 'Tier-1 CBT ➔ Tier-2 CBT & Speed Test',
+          'syllabusSummary': 'Quantitative Aptitude, Reasoning, English & General Awareness',
+          'videos': [],
+          'pdfNotes': [],
+        },
+        {
+          'id': 'upsc-cse-2026',
+          'name': 'UPSC Civil Services 2026 (IAS / IPS / IFS)',
+          'cat': 'UPSC',
           'icon': '🏛️',
           'description': 'Union Public Service Commission Civil Services Examination full preparation roadmap, S3 video series, PYQs & PDF study notes.',
           'eligibility': 'Graduate in any discipline',
@@ -279,21 +106,8 @@ class _CompetitiveExamsScreenState extends State<CompetitiveExamsScreen>
           'pdfNotes': [],
         },
         {
-          'id': 'exam_ssc',
-          'name': 'SSC CGL (Staff Selection Commission)',
-          'cat': 'Government',
-          'icon': '🏛️',
-          'description': 'Combined Graduate Level Examination for Group B & C central government posts.',
-          'eligibility': 'Bachelor\'s Degree in any stream',
-          'ageLimit': '18 - 30 Years',
-          'selectionProcess': 'Tier-1 CBT ➔ Tier-2 CBT & Speed Test',
-          'syllabusSummary': 'Quantitative Aptitude, Reasoning, English & General Awareness',
-          'videos': [],
-          'pdfNotes': [],
-        },
-        {
-          'id': 'exam_banking',
-          'name': 'SBI PO / IBPS PO & Clerk',
+          'id': 'ibps-po-2026',
+          'name': 'IBPS PO / SBI PO 2026',
           'cat': 'Banking',
           'icon': '🏦',
           'description': 'Probationary Officer & Specialist Officer examinations for nationalized banks.',
@@ -301,6 +115,32 @@ class _CompetitiveExamsScreenState extends State<CompetitiveExamsScreen>
           'ageLimit': '20 - 30 Years',
           'selectionProcess': 'Prelims ➔ Mains ➔ Psychometric & Interview',
           'syllabusSummary': 'Data Interpretation, Reasoning, English & Banking Awareness',
+          'videos': [],
+          'pdfNotes': [],
+        },
+        {
+          'id': 'rrb-ntpc-2026',
+          'name': 'RRB NTPC & Railway JE 2026',
+          'cat': 'Railway',
+          'icon': '🚆',
+          'description': 'Indian Railways recruitment for Non-Technical Popular Categories & Junior Engineer posts.',
+          'eligibility': '10+2 / Graduate / Diploma / B.Tech',
+          'ageLimit': '18 - 33 Years',
+          'selectionProcess': '1st Stage CBT ➔ 2nd Stage CBT ➔ Typing Test',
+          'syllabusSummary': 'General Science, Math & Reasoning',
+          'videos': [],
+          'pdfNotes': [],
+        },
+        {
+          'id': 'gate-cse-2027',
+          'name': 'GATE CSE 2027 (Engineering)',
+          'cat': 'GATE',
+          'icon': '⚡',
+          'description': 'Graduate Aptitude Test in Engineering for M.Tech & Direct PSU Recruitment.',
+          'eligibility': 'B.Tech / B.E. / M.Sc / MCA',
+          'ageLimit': 'No Age Limit',
+          'selectionProcess': 'CBT Exam (100 Marks)',
+          'syllabusSummary': 'Engineering Math, Aptitude & Core Computer Science',
           'videos': [],
           'pdfNotes': [],
         },
@@ -349,19 +189,12 @@ class _CompetitiveExamsScreenState extends State<CompetitiveExamsScreen>
               ShaderMask(
                 shaderCallback: (b) => MyVaultColors.accentGradient.createShader(b),
                 child: const Text(
-                  'Competitive Exams Hub',
+                  'Preparation Hub',
                   style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 18),
                 ),
               ),
             ],
           ),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.cloud_upload_outlined, color: MyVaultColors.accentCyan, size: 24),
-              tooltip: 'Upload Exam Resource',
-              onPressed: _showInAppUploadModal,
-            ),
-          ],
           bottom: TabBar(
             controller: _tabController,
             isScrollable: true,
@@ -374,49 +207,29 @@ class _CompetitiveExamsScreenState extends State<CompetitiveExamsScreen>
         ),
         body: Column(
           children: [
-            // Search Bar & Upload Banner
+            // Search Input
             Padding(
               padding: const EdgeInsets.all(14),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(14),
-                        color: MyVaultColors.glassFill,
-                        border: Border.all(color: MyVaultColors.glassBorder),
-                      ),
-                      child: TextField(
-                        style: const TextStyle(color: Colors.white, fontSize: 14),
-                        onChanged: (v) => setState(() => _searchQuery = v),
-                        decoration: const InputDecoration(
-                          hintText: 'Search UPSC, SSC, Banking, JEE, NEET...',
-                          hintStyle: TextStyle(color: Colors.white38, fontSize: 13),
-                          prefixIcon: Icon(Icons.search_rounded, color: MyVaultColors.accentCyan, size: 20),
-                          border: InputBorder.none,
-                          contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                        ),
-                      ),
-                    ),
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(14),
+                  color: MyVaultColors.glassFill,
+                  border: Border.all(color: MyVaultColors.glassBorder),
+                ),
+                child: TextField(
+                  style: const TextStyle(color: Colors.white, fontSize: 14),
+                  onChanged: (v) => setState(() => _searchQuery = v),
+                  decoration: const InputDecoration(
+                    hintText: 'Search SSC CGL, UPSC, IBPS, GATE, RRB...',
+                    hintStyle: TextStyle(color: Colors.white38, fontSize: 13),
+                    prefixIcon: Icon(Icons.search_rounded, color: MyVaultColors.accentCyan, size: 20),
+                    border: InputBorder.none,
+                    contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                   ),
-                  const SizedBox(width: 8),
-                  InkWell(
-                    onTap: _showInAppUploadModal,
-                    borderRadius: BorderRadius.circular(14),
-                    child: Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        gradient: MyVaultColors.accentGradient,
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      child: const Icon(Icons.add_rounded, color: Colors.white, size: 22),
-                    ),
-                  ),
-                ],
+                ),
               ),
             ),
 
-            // Exam Preparation Directory
             Expanded(
               child: _loading
                   ? const Center(child: CircularProgressIndicator(color: MyVaultColors.accentCyan))
@@ -444,9 +257,10 @@ class _CompetitiveExamsScreenState extends State<CompetitiveExamsScreen>
   }
 
   Widget _buildExamCard(Map<String, dynamic> exam) {
+    final id = exam['id'] ?? 'ssc-cgl-2026';
     final name = exam['name'] ?? 'Competitive Exam';
     final cat = exam['cat'] ?? 'Government';
-    final icon = exam['icon'] ?? '🏛️';
+    final icon = exam['icon'] ?? '📚';
     final desc = exam['description'] ?? 'Exam roadmap, S3 video series, PYQs & study notes.';
     final eligibility = exam['eligibility'] ?? 'Graduate';
     final ageLimit = exam['ageLimit'] ?? '18+ Years';
@@ -469,7 +283,7 @@ class _CompetitiveExamsScreenState extends State<CompetitiveExamsScreen>
           children: [
             Row(
               children: [
-                Text(icon, style: const TextStyle(fontSize: 30)),
+                Text(icon, style: const TextStyle(fontSize: 28)),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
@@ -508,55 +322,31 @@ class _CompetitiveExamsScreenState extends State<CompetitiveExamsScreen>
             ),
             const SizedBox(height: 12),
 
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              decoration: BoxDecoration(
-                color: MyVaultColors.accentBlue.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: MyVaultColors.accentBlue.withValues(alpha: 0.25)),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.alt_route_rounded, color: MyVaultColors.accentCyan, size: 14),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: Text(
-                      'Flow: $selection',
-                      style: const TextStyle(color: MyVaultColors.accentCyan, fontSize: 11.5, fontWeight: FontWeight.w600),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
+            // Preparation Progress Bar
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('Your Preparation Progress', style: TextStyle(color: Colors.white70, fontSize: 11.5, fontWeight: FontWeight.w600)),
+                    Text('72%', style: TextStyle(color: MyVaultColors.accentCyan, fontSize: 12, fontWeight: FontWeight.bold)),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(6),
+                  child: const LinearProgressIndicator(
+                    value: 0.72,
+                    minHeight: 6,
+                    backgroundColor: Colors.white12,
+                    valueColor: AlwaysStoppedAnimation<Color>(MyVaultColors.accentCyan),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
 
-            const SizedBox(height: 10),
-
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.04),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.white12),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.menu_book_rounded, color: Colors.white70, size: 14),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: Text(
-                      'Syllabus: $syllabus',
-                      style: const TextStyle(color: Colors.white70, fontSize: 11.5),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 12),
+            const SizedBox(height: 14),
 
             Wrap(
               spacing: 8,
@@ -564,8 +354,8 @@ class _CompetitiveExamsScreenState extends State<CompetitiveExamsScreen>
               children: [
                 _chip(Icons.school_outlined, eligibility),
                 _chip(Icons.person_outline_rounded, 'Age: $ageLimit'),
-                _chip(Icons.play_circle_fill_rounded, '${videos.length} Lectures'),
-                _chip(Icons.picture_as_pdf_rounded, '${pdfNotes.length} S3 PDFs'),
+                _chip(Icons.play_circle_fill_rounded, '${videos.length} Videos'),
+                _chip(Icons.picture_as_pdf_rounded, '${pdfNotes.length} PDFs'),
               ],
             ),
 
@@ -579,7 +369,8 @@ class _CompetitiveExamsScreenState extends State<CompetitiveExamsScreen>
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => ExamVideoScreen(
+                      builder: (_) => ExamPreparationScreen(
+                        examId: id,
                         examName: name,
                         category: cat,
                         initialVideos: videos,
@@ -590,9 +381,9 @@ class _CompetitiveExamsScreenState extends State<CompetitiveExamsScreen>
                     ),
                   );
                 },
-                icon: const Icon(Icons.school_rounded, color: Colors.white, size: 16),
+                icon: const Icon(Icons.play_arrow_rounded, color: Colors.white, size: 18),
                 label: const Text(
-                  'Start Preparation ➔',
+                  'Prepare Now ➔',
                   style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold),
                 ),
                 style: ElevatedButton.styleFrom(

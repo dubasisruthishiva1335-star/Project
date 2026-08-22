@@ -33,6 +33,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   <Link href="/admin/notes" className={`block rounded-lg px-3 py-2 transition-colors ${pathname === "/admin/notes" ? "bg-white/10 text-accentCyan font-medium" : "hover:bg-white/5 hover:text-white"}`}>Notes & Materials</Link>
                   <Link href="/admin/results" className={`block rounded-lg px-3 py-2 transition-colors ${pathname === "/admin/results" ? "bg-white/10 text-accentCyan font-medium" : "hover:bg-white/5 hover:text-white"}`}>Exam Results</Link>
                   <Link href="/admin/internships" className={`block rounded-lg px-3 py-2 transition-colors ${pathname === "/admin/internships" ? "bg-white/10 text-accentCyan font-medium" : "hover:bg-white/5 hover:text-white"}`}>Internships & Jobs</Link>
+                  <Link href="/admin/exams" className={`block rounded-lg px-3 py-2 transition-colors ${pathname === "/admin/exams" ? "bg-white/10 text-accentCyan font-medium" : "hover:bg-white/5 hover:text-white"}`}>🎓 Preparation Hub ⭐</Link>
                 </nav>
               </div>
 

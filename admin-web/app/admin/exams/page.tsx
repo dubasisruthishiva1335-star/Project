@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { UploadForm, type UploadFormConfig } from "@/components/admin/UploadForm";
-import { apiRequest } from "@/lib/api-client";
 
 interface ExamResource {
   id: string;
@@ -62,46 +61,52 @@ export default function ExamsAdminPage() {
     ],
   };
 
-  const loadResources = async () => {
+  const loadResources = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await apiRequest<any[]>("/api/exams");
-      const list: ExamResource[] = [];
-      if (Array.isArray(res)) {
-        res.forEach((exam) => {
-          (exam.videos || []).forEach((v: any) => {
-            list.push({
-              id: v.id,
-              examName: exam.name,
-              contentType: "VIDEO",
-              title: v.title,
-              subject: v.subject || "General",
-              duration: v.duration || "20:00",
-              fileUrl: v.s3Url || v.pdfUrl || "",
-              uploadedAt: new Date().toISOString(),
+      // 1. Fetch from Next.js serverless route /api/exams directly
+      const response = await fetch("/api/exams");
+      if (response.ok) {
+        const res = await response.json();
+        const list: ExamResource[] = [];
+        if (Array.isArray(res)) {
+          res.forEach((exam: any) => {
+            (exam.videos || []).forEach((v: any) => {
+              list.push({
+                id: v.id,
+                examName: exam.name,
+                contentType: "VIDEO",
+                title: v.title,
+                subject: v.subject || "General",
+                duration: v.duration || "20:00",
+                fileUrl: v.s3Url || v.pdfUrl || "",
+                uploadedAt: new Date().toISOString(),
+              });
+            });
+            (exam.pdfNotes || []).forEach((p: any) => {
+              list.push({
+                id: p.id,
+                examName: exam.name,
+                contentType: "PDF",
+                title: p.title,
+                subject: p.subject || "General",
+                fileUrl: p.fileUrl || "",
+                uploadedAt: new Date().toISOString(),
+              });
             });
           });
-          (exam.pdfNotes || []).forEach((p: any) => {
-            list.push({
-              id: p.id,
-              examName: exam.name,
-              contentType: "PDF",
-              title: p.title,
-              subject: p.subject || "General",
-              fileUrl: p.fileUrl || "",
-              uploadedAt: new Date().toISOString(),
-            });
-          });
-        });
+        }
+        setResources(list);
       }
-      setResources(list);
     } catch (_) {}
     setLoading(false);
-  };
+  }, []);
 
   useEffect(() => {
     loadResources();
-  }, []);
+    const interval = setInterval(loadResources, 3000);
+    return () => clearInterval(interval);
+  }, [loadResources]);
 
   const filtered = selectedExam === "All"
     ? resources
@@ -176,7 +181,7 @@ export default function ExamsAdminPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5 text-white/80">
-              {loading ? (
+              {loading && resources.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="px-4 py-8 text-center text-white/40">
                     Loading live uploaded exam resources…

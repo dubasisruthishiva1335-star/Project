@@ -2,7 +2,7 @@ import { UploadForm, type UploadFormConfig } from "@/components/admin/UploadForm
 
 const internshipConfig: UploadFormConfig = {
   domain: "internships",
-  confirmPath: "/api/admin/job-listings/confirm",
+  confirmPath: "/admin/job-listings/confirm",
   acceptedFileTypes: "application/pdf,video/mp4",
   requireFile: true,
   successMessage: "Internship / Job Opportunity published successfully — visible to students in Mobile App instantly.",

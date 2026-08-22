@@ -1,13 +1,15 @@
-import { IsIn, IsISO8601, IsOptional, IsString } from 'class-validator';
+import { IsOptional, IsString } from 'class-validator';
 
 export class ConfirmJobListingDto {
-  @IsIn(['INTERNSHIP', 'PLACEMENT', 'GOVT_JOB']) type: string;
-  @IsString() title: string;
-  @IsString() company: string;
+  @IsOptional() @IsString() type?: string;
+  @IsOptional() @IsString() title?: string;
+  @IsOptional() @IsString() company?: string;
   @IsOptional() @IsString() description?: string;
-  @IsString() applyUrl: string;
-  @IsOptional() @IsISO8601() deadline?: string;
+  @IsOptional() @IsString() applyUrl?: string;
+  @IsOptional() @IsString() deadline?: string;
   @IsOptional() @IsString() branch?: string;
+  @IsOptional() @IsString() stipend?: string;
+  @IsOptional() @IsString() location?: string;
   @IsOptional() @IsString() s3Key?: string;
   @IsOptional() @IsString() publicUrl?: string;
 }

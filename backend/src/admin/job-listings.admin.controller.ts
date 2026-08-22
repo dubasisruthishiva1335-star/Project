@@ -11,6 +11,14 @@ export class JobListingsAdminController {
 
   @Post('confirm')
   async confirm(@Body() dto: ConfirmJobListingDto) {
+    let parsedDeadline: Date | undefined = undefined;
+    if (dto.deadline) {
+      const d = new Date(dto.deadline);
+      if (!isNaN(d.getTime())) {
+        parsedDeadline = d;
+      }
+    }
+
     return this.prisma.jobListing.create({
       data: {
         type: (dto.type || 'INTERNSHIP') as any,
@@ -18,7 +26,7 @@ export class JobListingsAdminController {
         company: dto.company || 'Organization',
         description: dto.description || undefined,
         applyUrl: dto.applyUrl || 'https://myvault-project.vercel.app',
-        deadline: dto.deadline ? new Date(dto.deadline) : undefined,
+        deadline: parsedDeadline,
         branch: dto.branch || 'All Branches',
         s3Key: dto.s3Key,
         fileUrl: dto.s3Key ? dto.publicUrl || this.storage.publicUrlFor(dto.s3Key) : dto.publicUrl || undefined,

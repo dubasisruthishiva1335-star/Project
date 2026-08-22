@@ -275,15 +275,8 @@ class _CompetitiveExamsScreenState extends State<CompetitiveExamsScreen>
           'ageLimit': '21 - 32 Years',
           'selectionProcess': 'Prelims ➔ Mains ➔ Interview',
           'syllabusSummary': 'History, Polity, Economy, Geography, Ethics & Current Affairs',
-          'videos': [
-            {'title': 'UPSC Prelims & Mains Complete Strategy & Exam Pattern', 'duration': '18:30', 'subject': 'Exam Strategy'},
-            {'title': 'Indian Polity & Constitution Fundamental Rights', 'duration': '25:40', 'subject': 'Indian Polity'},
-            {'title': 'Indian Economy & Budget Analysis', 'duration': '22:15', 'subject': 'Economy'},
-          ],
-          'pdfNotes': [
-            {'title': 'UPSC Indian Polity Laxmikanth Summary Notes', 'subject': 'Polity'},
-            {'title': 'UPSC Prelims Last 10 Years Solved PYQ Paper', 'subject': 'PYQs'},
-          ],
+          'videos': [],
+          'pdfNotes': [],
         },
         {
           'id': 'exam_ssc',
@@ -295,13 +288,8 @@ class _CompetitiveExamsScreenState extends State<CompetitiveExamsScreen>
           'ageLimit': '18 - 30 Years',
           'selectionProcess': 'Tier-1 CBT ➔ Tier-2 CBT & Speed Test',
           'syllabusSummary': 'Quantitative Aptitude, Reasoning, English & General Awareness',
-          'videos': [
-            {'title': 'Quantitative Aptitude Shortcut Methods & Vedic Math', 'duration': '28:10', 'subject': 'Quant'},
-            {'title': 'Logical Reasoning & Non-Verbal Tricks', 'duration': '20:00', 'subject': 'Reasoning'},
-          ],
-          'pdfNotes': [
-            {'title': 'SSC CGL Math Formulas & Speed Test Sheet', 'subject': 'Quant'},
-          ],
+          'videos': [],
+          'pdfNotes': [],
         },
         {
           'id': 'exam_banking',
@@ -313,12 +301,8 @@ class _CompetitiveExamsScreenState extends State<CompetitiveExamsScreen>
           'ageLimit': '20 - 30 Years',
           'selectionProcess': 'Prelims ➔ Mains ➔ Psychometric & Interview',
           'syllabusSummary': 'Data Interpretation, Reasoning, English & Banking Awareness',
-          'videos': [
-            {'title': 'Banking Awareness & RBI Monetary Policy Masterclass', 'duration': '24:30', 'subject': 'Banking GK'},
-          ],
-          'pdfNotes': [
-            {'title': 'Banking Terms & Financial Awareness PDF Capsule', 'subject': 'Banking GK'},
-          ],
+          'videos': [],
+          'pdfNotes': [],
         },
       ];
 

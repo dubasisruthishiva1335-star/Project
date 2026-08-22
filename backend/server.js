@@ -87,32 +87,8 @@ let globalExams = [
     ageLimit: "21 - 32 Years",
     selectionProcess: "Prelims ➔ Mains ➔ Interview",
     syllabusSummary: "History, Polity, Economy, Geography, Ethics & Current Affairs",
-    videos: [
-      {
-        id: "v_upsc_01",
-        title: "UPSC Prelims & Mains Complete Strategy & Exam Pattern",
-        subject: "Exam Strategy",
-        duration: "18:30",
-        s3Url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
-        pdfUrl: "https://myvault-files-app.s3.eu-north-1.amazonaws.com/app-arm64-v8a-release.apk",
-      },
-      {
-        id: "v_upsc_02",
-        title: "Indian Polity & Constitution Fundamental Rights & Articles",
-        subject: "Indian Polity",
-        duration: "25:40",
-        s3Url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
-        pdfUrl: "https://myvault-files-app.s3.eu-north-1.amazonaws.com/app-arm64-v8a-release.apk",
-      },
-    ],
-    pdfNotes: [
-      {
-        id: "pdf_upsc_01",
-        title: "UPSC Indian Polity Laxmikanth Summary Notes",
-        subject: "Polity",
-        fileUrl: "https://myvault-files-app.s3.eu-north-1.amazonaws.com/app-arm64-v8a-release.apk",
-      },
-    ],
+    videos: [],
+    pdfNotes: [],
   },
   {
     id: "exam_ssc",
@@ -124,24 +100,8 @@ let globalExams = [
     ageLimit: "18 - 30 Years",
     selectionProcess: "Tier-1 CBT ➔ Tier-2 CBT & Speed Test",
     syllabusSummary: "Quantitative Aptitude, Reasoning, English & General Awareness",
-    videos: [
-      {
-        id: "v_ssc_01",
-        title: "Quantitative Aptitude Shortcut Methods & Vedic Math",
-        subject: "Quant",
-        duration: "28:10",
-        s3Url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
-        pdfUrl: "https://myvault-files-app.s3.eu-north-1.amazonaws.com/app-arm64-v8a-release.apk",
-      },
-    ],
-    pdfNotes: [
-      {
-        id: "pdf_ssc_01",
-        title: "SSC CGL Math Formulas & Speed Test Sheet",
-        subject: "Quant",
-        fileUrl: "https://myvault-files-app.s3.eu-north-1.amazonaws.com/app-arm64-v8a-release.apk",
-      },
-    ],
+    videos: [],
+    pdfNotes: [],
   },
   {
     id: "exam_banking",
@@ -153,24 +113,8 @@ let globalExams = [
     ageLimit: "20 - 30 Years",
     selectionProcess: "Prelims ➔ Mains ➔ Psychometric & Interview",
     syllabusSummary: "Data Interpretation, Reasoning, English & Banking Awareness",
-    videos: [
-      {
-        id: "v_bank_01",
-        title: "Banking Awareness & RBI Monetary Policy Masterclass",
-        subject: "Banking GK",
-        duration: "24:30",
-        s3Url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
-        pdfUrl: "https://myvault-files-app.s3.eu-north-1.amazonaws.com/app-arm64-v8a-release.apk",
-      },
-    ],
-    pdfNotes: [
-      {
-        id: "pdf_bank_01",
-        title: "Banking Terms & Financial Awareness PDF Capsule",
-        subject: "Banking GK",
-        fileUrl: "https://myvault-files-app.s3.eu-north-1.amazonaws.com/app-arm64-v8a-release.apk",
-      },
-    ],
+    videos: [],
+    pdfNotes: [],
   },
 ];
 

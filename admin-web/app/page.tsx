@@ -84,37 +84,24 @@ const DEFAULT_EXAMS: ExamItem[] = [
     name: "UPSC Civil Services (IAS / IPS / IFS)",
     cat: "Government",
     icon: "🏛️",
-    videos: [
-      { id: "v_upsc_01", title: "UPSC Prelims & Mains Complete Strategy", subject: "Exam Strategy", duration: "18:30", s3Url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4" },
-      { id: "v_upsc_02", title: "Indian Polity & Constitution Fundamental Rights", subject: "Polity", duration: "25:40", s3Url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4" },
-    ],
-    pdfNotes: [
-      { id: "pdf_upsc_01", title: "UPSC Indian Polity Laxmikanth Summary Notes", subject: "Polity", fileUrl: "https://myvault-files-app.s3.eu-north-1.amazonaws.com/app-arm64-v8a-release.apk" },
-    ],
+    videos: [],
+    pdfNotes: [],
   },
   {
     id: "exam_ssc",
     name: "SSC CGL (Staff Selection Commission)",
     cat: "Government",
     icon: "🏛️",
-    videos: [
-      { id: "v_ssc_01", title: "Quantitative Aptitude Shortcut Methods", subject: "Quant", duration: "28:10", s3Url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4" },
-    ],
-    pdfNotes: [
-      { id: "pdf_ssc_01", title: "SSC CGL Math Formulas & Speed Test Sheet", subject: "Quant", fileUrl: "https://myvault-files-app.s3.eu-north-1.amazonaws.com/app-arm64-v8a-release.apk" },
-    ],
+    videos: [],
+    pdfNotes: [],
   },
   {
     id: "exam_banking",
     name: "SBI PO / IBPS PO & Clerk",
     cat: "Banking",
     icon: "🏦",
-    videos: [
-      { id: "v_bank_01", title: "Banking Awareness & RBI Monetary Policy", subject: "Banking GK", duration: "24:30", s3Url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" },
-    ],
-    pdfNotes: [
-      { id: "pdf_bank_01", title: "Banking Terms & Financial Awareness PDF", subject: "Banking GK", fileUrl: "https://myvault-files-app.s3.eu-north-1.amazonaws.com/app-arm64-v8a-release.apk" },
-    ],
+    videos: [],
+    pdfNotes: [],
   },
 ];
 

@@ -187,13 +187,31 @@ app.get(["/admin/analytics/recent-uploads", "/api/admin/analytics/recent-uploads
 // INTERNSHIP LEARNING HUB: COURSE APIs
 // =================================================================
 
-app.get(["/api/courses", "/admin/courses"], (req, res) => {
+app.get(["/api/courses", "/admin/courses", "/api/internship-hub/courses"], (req, res) => {
   const { category } = req.query;
   let items = [...globalCourses];
   if (category && category !== "All") {
     items = items.filter((c) => c.category.toLowerCase() === category.toLowerCase());
   }
   res.json({ success: true, data: items });
+});
+
+app.post("/api/admin/internship-hub/courses/confirm", (req, res) => {
+  const { title, category = "Mobile", level = "Beginner", duration = "8 Hours", description = "", fileUrl = "" } = req.body;
+  const newCourse = {
+    id: `course_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
+    title: title || "New Industrial Course",
+    category,
+    level,
+    duration,
+    lessonsCount: 6,
+    isFree: true,
+    description,
+    fileUrl,
+    createdAt: new Date().toISOString(),
+  };
+  globalCourses.unshift(newCourse);
+  res.status(201).json({ success: true, course: newCourse });
 });
 
 app.get("/api/courses/:courseId", (req, res) => {
@@ -321,7 +339,7 @@ app.get("/api/students/:studentId/certificates", (req, res) => {
 // JOB & INTERNSHIP LISTINGS APIs (Clean, Admin-driven)
 // =================================================================
 
-app.get(["/job-listings", "/api/job-listings", "/admin/job-listings"], async (req, res) => {
+app.get(["/job-listings", "/api/job-listings", "/admin/job-listings", "/api/internship-hub/opportunities"], async (req, res) => {
   const { type } = req.query;
   try {
     await pool.query(`TRUNCATE TABLE job_listings CASCADE`);

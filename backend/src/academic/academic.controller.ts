@@ -72,8 +72,27 @@ export class AcademicController {
       orderBy: { postedAt: 'desc' },
     });
 
+    const isTestJob = (j: any) => {
+      if (!j) return true;
+      const title = (j.title || '').toLowerCase();
+      const company = (j.company || '').toLowerCase();
+      const url = (j.applyUrl || '').toLowerCase();
+      return (
+        title.includes('tspsc') ||
+        title.includes('frontend') ||
+        title.includes('acme') ||
+        title.includes('html') ||
+        title.includes('jhbb') ||
+        company.includes('acme') ||
+        company.includes('tspsc') ||
+        url.includes('example.com')
+      );
+    };
+
+    const cleanJobs = jobs.filter((j) => !isTestJob(j));
+
     return Promise.all(
-      jobs.map(async (job) => ({
+      cleanJobs.map(async (job) => ({
         ...job,
         fileUrl: job.fileUrl ? await this.signUrl(job.s3Key, job.fileUrl) : undefined,
       }))

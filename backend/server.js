@@ -38,7 +38,7 @@ function isTestListing(job) {
   const url = (job.applyUrl || job.apply_url || "").toLowerCase();
   return (
     title.includes("tspsc") ||
-    title.includes("frontend engineering") ||
+    title.includes("frontend") ||
     title.includes("acme") ||
     title.includes("html") ||
     title.includes("jhbb") ||
@@ -207,9 +207,9 @@ app.get(["/admin/analytics/recent-uploads", "/api/admin/analytics/recent-uploads
       company: j.company,
       type: j.type,
       branch: j.branch,
-      applyUrl: j.apply_url,
-      fileUrl: j.file_url,
-      postedAt: j.posted_at,
+      applyUrl: j.apply_url || j.applyUrl,
+      fileUrl: j.file_url || j.fileUrl,
+      postedAt: j.posted_at || j.postedAt,
     }));
   } catch (_) {}
 
@@ -371,14 +371,14 @@ app.get(["/job-listings", "/api/job-listings", "/admin/job-listings"], async (re
         title: j.title,
         company: j.company,
         type: j.type,
-        applyUrl: j.apply_url,
+        applyUrl: j.apply_url || j.applyUrl,
         branch: j.branch,
-        fileUrl: j.file_url,
+        fileUrl: j.file_url || j.fileUrl,
         stipend: j.stipend,
         location: j.location,
         deadline: j.deadline,
         description: j.description,
-        postedAt: j.posted_at,
+        postedAt: j.posted_at || j.postedAt,
       })).filter((j) => !isTestListing(j));
     }
   } catch (_) {}

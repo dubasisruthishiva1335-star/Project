@@ -4,6 +4,8 @@ import { addJobListing } from "@/lib/job-store";
 export async function POST(request: Request) {
   try {
     const body = await request.json();
+    const authHeader = request.headers.get("authorization") || "";
+
     console.log("Received job listing upload confirm on Vercel:", body);
 
     const title = body.title || "Full Stack Developer Intern";
@@ -36,14 +38,20 @@ export async function POST(request: Request) {
       fileUrl,
     });
 
-    // 2. Forward to Railway backend server in background
+    // 2. Forward to Railway backend server
     try {
-      await fetch("https://romantic-serenity-production-3e5b.up.railway.app/admin/job-listings/confirm", {
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (authHeader) headers["Authorization"] = authHeader;
+
+      const railwayRes = await fetch("https://romantic-serenity-production-3e5b.up.railway.app/admin/job-listings/confirm", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify(body),
       });
-    } catch (_) {}
+      console.log("Railway confirm status:", railwayRes.status);
+    } catch (e: any) {
+      console.error("Failed forwarding to Railway:", e.message);
+    }
 
     return NextResponse.json({ success: true, item: newListing }, { status: 201 });
   } catch (error: any) {

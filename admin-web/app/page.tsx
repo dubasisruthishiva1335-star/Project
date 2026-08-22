@@ -192,10 +192,8 @@ export default function DashboardPage() {
   };
 
   const examsList = recent?.recentExams ?? DEFAULT_EXAMS;
-  const totalExamLectures = examsList.reduce((sum, e) => sum + (e.videos?.length ?? 0) + (e.pdfNotes?.length ?? 0), 0);
-
   const cards: Array<{
-    id: "notes" | "jobs" | "exams" | "students" | "results";
+    id: "notes" | "jobs" | "students" | "results";
     label: string;
     value: number | undefined;
     icon: string;
@@ -203,7 +201,6 @@ export default function DashboardPage() {
   }> = [
     { id: "notes", label: "Academic Materials Uploaded", value: recent?.recentNotes?.length ?? data?.notes, icon: "📚", color: "from-cyan-500/20 to-teal-500/20" },
     { id: "jobs", label: "Job & Internship Listings", value: recent?.recentJobs?.length ?? data?.jobListings, icon: "💼", color: "from-purple-500/20 to-indigo-500/20" },
-    { id: "exams", label: "Competitive Exams Uploaded", value: totalExamLectures, icon: "🎓", color: "from-fuchsia-500/20 to-pink-500/20" },
     { id: "students", label: "Students Registered", value: recent?.allStudents?.length ?? data?.students, icon: "👤", color: "from-blue-500/20 to-cyan-500/20" },
     { id: "results", label: "Exam Results Uploaded", value: recent?.recentResults?.length ?? data?.results, icon: "📊", color: "from-amber-500/20 to-yellow-500/20" },
   ];
@@ -330,14 +327,6 @@ export default function DashboardPage() {
                 }`}
               >
                 Jobs ({recent?.recentJobs?.length ?? 0})
-              </button>
-              <button
-                onClick={() => setActiveTab("exams")}
-                className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition ${
-                  activeTab === "exams" ? "bg-accentBlue text-white" : "text-white/60 hover:text-white"
-                }`}
-              >
-                Exams ({totalExamLectures})
               </button>
               <button
                 onClick={() => setActiveTab("students")}

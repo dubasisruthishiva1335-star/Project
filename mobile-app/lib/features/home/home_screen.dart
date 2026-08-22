@@ -68,6 +68,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final tiles = [
       _HomeTile('Academic Hub', 'Notes, Syllabus, Papers', Icons.menu_book_rounded, const Color(0xFF3E7BFF), () => context.go('/academic-hub')),
+      _HomeTile('Internship Hub', 'Free Courses & Certificates', Icons.school_rounded, const Color(0xFF00C48C), () => context.go('/internships-hub')),
       _HomeTile('Documents Vault', 'Certificates & Resume', Icons.folder_special_rounded, const Color(0xFF00E676), () => context.go('/documents-vault')),
       _HomeTile('Internships', 'Stipends & Industrial', Icons.work_outline_rounded, const Color(0xFF00D9F5), () => context.go('/internships')),
       _HomeTile('Placements', 'Campus Hiring Drives', Icons.business_center_outlined, const Color(0xFF7C3AFF), () => context.go('/placements')),

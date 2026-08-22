@@ -144,9 +144,9 @@ async function initDb() {
       );
     `);
 
-    // Clean old mock listings from DB on boot
-    await pool.query(`DELETE FROM job_listings WHERE title LIKE '%Junior Assistant%' OR title LIKE '%Frontend Engineering%' OR title LIKE '%html%' OR title LIKE '%jhbb%'`);
-    console.log("Database initialized & clean.");
+    // Truncate and purge all old mock listings from DB on server startup
+    await pool.query(`TRUNCATE TABLE job_listings`);
+    console.log("Database initialized & TRUNCATED job_listings table.");
   } catch (_) {}
 }
 initDb();
@@ -358,22 +358,23 @@ app.post(["/admin/job-listings/confirm", "/api/admin/job-listings/confirm"], asy
   res.status(201).json(newJob);
 });
 
-app.delete(["/admin/job-listings/:id", "/api/job-listings/:id"], async (req, res) => {
+// Clear ALL dummy/test listings endpoint (MUST BE BEFORE :id)
+app.delete(["/admin/job-listings", "/api/job-listings", "/api/admin/job-listings"], async (req, res) => {
+  globalJobListings = [];
+  try {
+    await pool.query(`TRUNCATE TABLE job_listings`);
+  } catch (_) {}
+  res.json({ success: true, message: "All job listings cleared cleanly." });
+});
+
+// Delete single job listing by ID
+app.delete(["/admin/job-listings/:id", "/api/job-listings/:id", "/api/admin/job-listings/:id"], async (req, res) => {
   const { id } = req.params;
   globalJobListings = globalJobListings.filter((j) => String(j.id) !== String(id));
   try {
     await pool.query(`DELETE FROM job_listings WHERE id = $1`, [id]);
   } catch (_) {}
   res.json({ success: true, id });
-});
-
-// Clear all dummy/test listings endpoint
-app.delete(["/admin/job-listings", "/api/job-listings"], async (req, res) => {
-  globalJobListings = [];
-  try {
-    await pool.query(`TRUNCATE TABLE job_listings`);
-  } catch (_) {}
-  res.json({ success: true, message: "All job listings cleared cleanly." });
 });
 
 const PORT = process.env.PORT || 4000;

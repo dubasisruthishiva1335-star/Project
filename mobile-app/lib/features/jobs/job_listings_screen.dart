@@ -277,11 +277,11 @@ class _JobListingsScreenState extends State<JobListingsScreen> {
                   ),
                 const Spacer(),
                 ElevatedButton.icon(
-                  onPressed: () => _openUrl('https://myvault-project.vercel.app/lms/course/${job['id']}'),
+                  onPressed: () => context.push('/internships/${job['id']}'),
                   icon: const Icon(Icons.school_rounded, color: Colors.white, size: 14),
-                  label: const Text(
-                    'Enroll & Open LMS Portal ↗',
-                    style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                  label: Text(
+                    job['isLmsEnabled'] == true || job['is_lms_enabled'] == true ? 'Enroll in Course ↗' : 'View Details & Apply ↗',
+                    style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
                   ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: _accentColor,

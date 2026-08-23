@@ -16,6 +16,20 @@ router.get("/", async (req, res) => {
   const { branch, semester, unit, contentType } = req.query;
 
   try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS academic_materials (
+        id            VARCHAR(100) PRIMARY KEY,
+        title         VARCHAR(255) NOT NULL,
+        branch        VARCHAR(100) NOT NULL DEFAULT 'GENERAL',
+        semester      INTEGER NOT NULL DEFAULT 1,
+        unit          INTEGER NOT NULL DEFAULT 1,
+        content_type  VARCHAR(64) NOT NULL DEFAULT 'NOTES',
+        file_url      TEXT NOT NULL,
+        s3_key        TEXT,
+        uploaded_at   TIMESTAMP NOT NULL DEFAULT NOW()
+      );
+    `);
+
     let query = `SELECT * FROM academic_materials WHERE 1=1`;
     const params = [];
 

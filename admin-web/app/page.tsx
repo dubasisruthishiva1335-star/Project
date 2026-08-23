@@ -116,14 +116,34 @@ export default function DashboardPage() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const refreshData = () => {
+    setError(null);
     Promise.all([
-      apiRequest<Overview>("/admin/analytics/overview"),
-      apiRequest<RecentUploads>("/admin/analytics/recent-uploads"),
+      apiRequest<Overview>("/admin/analytics/overview").catch(() => ({ students: 0, notes: 0, jobListings: 0, examsCount: 0, results: 0 })),
+      apiRequest<RecentUploads>("/admin/analytics/recent-uploads").catch(() => ({ recentNotes: [], recentJobs: [], recentExams: [], recentResults: [], allStudents: [] })),
+      apiRequest<any[]>("/admin/internships").catch(() => []),
     ])
-      .then(([overviewData, recentData]) => {
-        setData(overviewData);
+      .then(([overviewData, recentData, internshipsData]) => {
+        const jobsList = (recentData.recentJobs && recentData.recentJobs.length > 0)
+          ? recentData.recentJobs
+          : (internshipsData || []).map((i: any) => ({
+              id: i.id,
+              title: i.title,
+              company: i.company,
+              type: i.type,
+              branch: i.branch,
+              applyUrl: i.apply_url || i.applyUrl,
+              fileUrl: i.file_url || i.fileUrl,
+              postedAt: i.posted_at || i.postedAt || new Date().toISOString(),
+            }));
+
+        setData({
+          ...overviewData,
+          jobListings: jobsList.length,
+        });
+
         setRecent({
           ...recentData,
+          recentJobs: jobsList,
           recentExams: recentData.recentExams && recentData.recentExams.length > 0 ? recentData.recentExams : DEFAULT_EXAMS,
         });
       })
@@ -132,7 +152,6 @@ export default function DashboardPage() {
           localStorage.removeItem("myvault_admin_token");
           router.push("/login");
         } else {
-          setError(err instanceof ApiError ? err.message : "Failed to load dashboard data.");
           setRecent((prev) => prev ?? { recentNotes: [], recentJobs: [], recentExams: DEFAULT_EXAMS, recentResults: [], allStudents: [] });
         }
       });

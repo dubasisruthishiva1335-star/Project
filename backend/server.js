@@ -32,6 +32,7 @@ app.use("/internships", require("./routes/internships"));
 app.use("/job-listings", require("./routes/internships"));
 app.use("/admin/internships", require("./routes/admin/internships"));
 app.use("/admin/job-listings", require("./routes/admin/internships"));
+app.use("/admin/analytics", require("./routes/admin/analytics"));
 app.use("/certificates", require("./routes/certificates"));
 
 // Centralized error handler — keeps stray thrown errors from crashing the process

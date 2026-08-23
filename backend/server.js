@@ -28,8 +28,12 @@ app.get("/health", async (req, res) => {
 });
 
 app.use("/auth", require("./routes/auth"));
+app.use("/notes", require("./routes/notes"));
+app.use("/academic/content", require("./routes/notes"));
+app.use("/subjects", require("./routes/notes"));
 app.use("/internships", require("./routes/internships"));
 app.use("/job-listings", require("./routes/internships"));
+app.use("/admin/notes", require("./routes/admin/notes"));
 app.use("/admin/internships", require("./routes/admin/internships"));
 app.use("/admin/job-listings", require("./routes/admin/internships"));
 app.use("/admin/analytics", require("./routes/admin/analytics"));

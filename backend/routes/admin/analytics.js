@@ -15,13 +15,15 @@ router.get("/overview", async (req, res) => {
   try {
     const jobsRes = await pool.query(`SELECT COUNT(*)::int AS count FROM internships`);
     const enrollRes = await pool.query(`SELECT COUNT(DISTINCT student_id)::int AS count FROM internship_enrollments`);
+    const notesRes = await pool.query(`SELECT COUNT(*)::int AS count FROM academic_materials`);
 
     const jobListings = jobsRes.rows[0]?.count || 0;
     const students = enrollRes.rows[0]?.count || 0;
+    const notes = notesRes.rows[0]?.count || 0;
 
     res.json({
       students,
-      notes: 0,
+      notes,
       jobListings,
       examsCount: 0,
       results: 0,
@@ -43,6 +45,12 @@ router.get("/overview", async (req, res) => {
  */
 router.get("/recent-uploads", async (req, res) => {
   try {
+    const notesRes = await pool.query(`
+      SELECT id, title, content_type AS "contentType", unit, file_url AS "fileUrl", uploaded_at AS "uploadedAt", branch, semester
+      FROM academic_materials
+      ORDER BY uploaded_at DESC
+    `);
+
     const jobsRes = await pool.query(`
       SELECT
         id, title, company, type, branch, apply_url AS "applyUrl",
@@ -59,7 +67,20 @@ router.get("/recent-uploads", async (req, res) => {
     `);
 
     res.json({
-      recentNotes: [],
+      recentNotes: notesRes.rows.map(n => ({
+        id: n.id,
+        title: n.title,
+        contentType: n.contentType,
+        unit: n.unit,
+        fileUrl: n.fileUrl,
+        uploadedAt: n.uploadedAt ? new Date(n.uploadedAt).toISOString() : new Date().toISOString(),
+        subject: {
+          name: n.title,
+          code: n.branch,
+          branch: n.branch,
+          semester: n.semester,
+        },
+      })),
       recentJobs: jobsRes.rows.map(j => ({
         ...j,
         postedAt: j.postedAt ? new Date(j.postedAt).toISOString() : new Date().toISOString()

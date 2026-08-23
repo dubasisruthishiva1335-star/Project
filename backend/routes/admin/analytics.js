@@ -69,6 +69,10 @@ router.get("/overview", async (req, res) => {
  * GET /admin/analytics/recent-uploads
  */
 router.get("/recent-uploads", async (req, res) => {
+  let recentNotes = [];
+  let recentJobs = [];
+  let allStudents = [];
+
   try {
     await pool.query(`
       CREATE TABLE IF NOT EXISTS academic_materials (
@@ -83,12 +87,32 @@ router.get("/recent-uploads", async (req, res) => {
         uploaded_at   TIMESTAMP NOT NULL DEFAULT NOW()
       );
     `);
+
     const notesRes = await pool.query(`
       SELECT id, title, content_type AS "contentType", unit, file_url AS "fileUrl", uploaded_at AS "uploadedAt", branch, semester
       FROM academic_materials
       ORDER BY uploaded_at DESC
     `);
 
+    recentNotes = notesRes.rows.map(n => ({
+      id: n.id,
+      title: n.title,
+      contentType: n.contentType,
+      unit: n.unit,
+      fileUrl: n.fileUrl,
+      uploadedAt: n.uploadedAt ? new Date(n.uploadedAt).toISOString() : new Date().toISOString(),
+      subject: {
+        name: n.title,
+        code: n.branch || "GEN",
+        branch: n.branch || "GEN",
+        semester: n.semester || 1,
+      },
+    }));
+  } catch (err) {
+    console.error("Notes query error:", err);
+  }
+
+  try {
     const jobsRes = await pool.query(`
       SELECT
         id, title, company, type, branch, apply_url AS "applyUrl",
@@ -96,50 +120,36 @@ router.get("/recent-uploads", async (req, res) => {
       FROM internships
       ORDER BY posted_at DESC
     `);
+    recentJobs = jobsRes.rows.map(j => ({
+      ...j,
+      postedAt: j.postedAt ? new Date(j.postedAt).toISOString() : new Date().toISOString()
+    }));
+  } catch (err) {
+    console.error("Jobs query error:", err);
+  }
 
+  try {
     const studentsRes = await pool.query(`
       SELECT DISTINCT student_id AS id, student_id AS "hallTicket", student_id AS "fullName",
       'All' AS branch, 1 AS semester, enrolled_at AS "createdAt"
       FROM internship_enrollments
       ORDER BY enrolled_at DESC
     `);
-
-    res.json({
-      recentNotes: notesRes.rows.map(n => ({
-        id: n.id,
-        title: n.title,
-        contentType: n.contentType,
-        unit: n.unit,
-        fileUrl: n.fileUrl,
-        uploadedAt: n.uploadedAt ? new Date(n.uploadedAt).toISOString() : new Date().toISOString(),
-        subject: {
-          name: n.title,
-          code: n.branch,
-          branch: n.branch,
-          semester: n.semester,
-        },
-      })),
-      recentJobs: jobsRes.rows.map(j => ({
-        ...j,
-        postedAt: j.postedAt ? new Date(j.postedAt).toISOString() : new Date().toISOString()
-      })),
-      recentExams: [],
-      recentResults: [],
-      allStudents: studentsRes.rows.map(s => ({
-        ...s,
-        createdAt: s.createdAt ? new Date(s.createdAt).toISOString() : new Date().toISOString()
-      })),
-    });
+    allStudents = studentsRes.rows.map(s => ({
+      ...s,
+      createdAt: s.createdAt ? new Date(s.createdAt).toISOString() : new Date().toISOString()
+    }));
   } catch (err) {
-    console.error("Recent uploads error:", err);
-    res.json({
-      recentNotes: [],
-      recentJobs: [],
-      recentExams: [],
-      recentResults: [],
-      allStudents: [],
-    });
+    console.error("Students query error:", err);
   }
+
+  res.json({
+    recentNotes,
+    recentJobs,
+    recentExams: [],
+    recentResults: [],
+    allStudents,
+  });
 });
 
 module.exports = router;

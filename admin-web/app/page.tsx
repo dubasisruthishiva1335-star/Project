@@ -121,8 +121,9 @@ export default function DashboardPage() {
       apiRequest<Overview>("/admin/analytics/overview").catch(() => ({ students: 0, notes: 0, jobListings: 0, examsCount: 0, results: 0 })),
       apiRequest<RecentUploads>("/admin/analytics/recent-uploads").catch(() => ({ recentNotes: [], recentJobs: [], recentExams: [], recentResults: [], allStudents: [] })),
       apiRequest<any[]>("/admin/internships").catch(() => []),
+      apiRequest<any[]>("/admin/notes").catch(() => []),
     ])
-      .then(([overviewData, recentData, internshipsData]) => {
+      .then(([overviewData, recentData, internshipsData, notesData]) => {
         const jobsList = (recentData.recentJobs && recentData.recentJobs.length > 0)
           ? recentData.recentJobs
           : (internshipsData || []).map((i: any) => ({
@@ -136,14 +137,33 @@ export default function DashboardPage() {
               postedAt: i.posted_at || i.postedAt || new Date().toISOString(),
             }));
 
+        const notesList = (recentData.recentNotes && recentData.recentNotes.length > 0)
+          ? recentData.recentNotes
+          : (notesData || []).map((n: any) => ({
+              id: n.id,
+              title: n.title,
+              contentType: n.content_type || n.contentType || "NOTES",
+              unit: n.unit || 1,
+              fileUrl: n.file_url || n.fileUrl,
+              uploadedAt: n.uploaded_at || n.uploadedAt || new Date().toISOString(),
+              subject: {
+                name: n.title,
+                code: n.branch || "GEN",
+                branch: n.branch || "GEN",
+                semester: n.semester || 1,
+              },
+            }));
+
         setData({
           ...overviewData,
           jobListings: jobsList.length,
+          notes: notesList.length,
         });
 
         setRecent({
           ...recentData,
           recentJobs: jobsList,
+          recentNotes: notesList,
           recentExams: recentData.recentExams && recentData.recentExams.length > 0 ? recentData.recentExams : DEFAULT_EXAMS,
         });
       })

@@ -16,13 +16,13 @@ function generateId(prefix) {
 }
 
 /**
- * GET /internships
- * Public listing — published courses/internships only.
+ * GET /internships (and /job-listings)
+ * Public listing — supports type and branch filtering with dual camelCase & snake_case formatting.
  */
 router.get("/", async (req, res) => {
+  const { type, branch, isLmsEnabled } = req.query;
   try {
-    const result = await pool.query(
-      `
+    let query = `
       SELECT
         i.*,
         COUNT(DISTINCT m.id)::int AS module_count,
@@ -30,12 +30,47 @@ router.get("/", async (req, res) => {
       FROM internships i
       LEFT JOIN internship_modules m ON m.internship_id = i.id
       LEFT JOIN internship_lessons l ON l.module_id = m.id
-      WHERE i.status = 'PUBLISHED' OR i.status IS NULL OR i.status = 'DRAFT'
-      GROUP BY i.id
-      ORDER BY i.posted_at DESC
-      `
-    );
-    res.json(result.rows);
+      WHERE (i.status = 'PUBLISHED' OR i.status IS NULL OR i.status = 'DRAFT')
+    `;
+    const params = [];
+
+    if (type) {
+      params.push(String(type).toUpperCase());
+      query += ` AND UPPER(i.type) = $${params.length}`;
+    }
+
+    if (branch && branch !== 'ALL' && branch !== 'All Branches') {
+      params.push(branch);
+      query += ` AND (i.branch = $${params.length} OR i.branch = 'All Branches')`;
+    }
+
+    query += ` GROUP BY i.id ORDER BY i.posted_at DESC`;
+    const result = await pool.query(query, params);
+
+    const formatted = result.rows.map((j) => ({
+      id: j.id,
+      title: j.title,
+      company: j.company,
+      type: j.type,
+      isLmsEnabled: Boolean(j.is_lms_enabled),
+      is_lms_enabled: Boolean(j.is_lms_enabled),
+      branch: j.branch,
+      stipend: j.stipend,
+      location: j.location,
+      deadline: j.deadline,
+      description: j.description,
+      applyUrl: j.apply_url,
+      apply_url: j.apply_url,
+      fileUrl: j.file_url,
+      file_url: j.file_url,
+      s3Key: j.s3_key,
+      postedAt: j.posted_at,
+      posted_at: j.posted_at,
+      moduleCount: j.module_count,
+      lessonCount: j.lesson_count,
+    }));
+
+    res.json(formatted);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Failed to load internships" });

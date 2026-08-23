@@ -13,6 +13,20 @@ const pool = new Pool({
  */
 router.get("/overview", async (req, res) => {
   try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS academic_materials (
+        id            VARCHAR(100) PRIMARY KEY,
+        title         VARCHAR(255) NOT NULL,
+        branch        VARCHAR(100) NOT NULL DEFAULT 'GENERAL',
+        semester      INTEGER NOT NULL DEFAULT 1,
+        unit          INTEGER NOT NULL DEFAULT 1,
+        content_type  VARCHAR(64) NOT NULL DEFAULT 'NOTES',
+        file_url      TEXT NOT NULL,
+        s3_key        TEXT,
+        uploaded_at   TIMESTAMP NOT NULL DEFAULT NOW()
+      );
+    `);
+
     const jobsRes = await pool.query(`SELECT COUNT(*)::int AS count FROM internships`);
     const enrollRes = await pool.query(`SELECT COUNT(DISTINCT student_id)::int AS count FROM internship_enrollments`);
     const notesRes = await pool.query(`SELECT COUNT(*)::int AS count FROM academic_materials`);
@@ -45,6 +59,19 @@ router.get("/overview", async (req, res) => {
  */
 router.get("/recent-uploads", async (req, res) => {
   try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS academic_materials (
+        id            VARCHAR(100) PRIMARY KEY,
+        title         VARCHAR(255) NOT NULL,
+        branch        VARCHAR(100) NOT NULL DEFAULT 'GENERAL',
+        semester      INTEGER NOT NULL DEFAULT 1,
+        unit          INTEGER NOT NULL DEFAULT 1,
+        content_type  VARCHAR(64) NOT NULL DEFAULT 'NOTES',
+        file_url      TEXT NOT NULL,
+        s3_key        TEXT,
+        uploaded_at   TIMESTAMP NOT NULL DEFAULT NOW()
+      );
+    `);
     const notesRes = await pool.query(`
       SELECT id, title, content_type AS "contentType", unit, file_url AS "fileUrl", uploaded_at AS "uploadedAt", branch, semester
       FROM academic_materials

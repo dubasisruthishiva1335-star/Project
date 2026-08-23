@@ -269,20 +269,19 @@ class _JobListingsScreenState extends State<JobListingsScreen> {
                     ),
                   ),
                 const Spacer(),
-                if (job['applyUrl'] != null && String.fromCharCodes((job['applyUrl'] as String).runes).isNotEmpty)
-                  ElevatedButton.icon(
-                    onPressed: () => _openUrl(job['applyUrl']),
-                    icon: const Icon(Icons.open_in_new_rounded, color: Colors.white, size: 14),
-                    label: const Text(
-                      'Apply via Portal ↗',
-                      style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: _accentColor,
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                    ),
+                ElevatedButton.icon(
+                  onPressed: () => _openUrl('https://myvault-project.vercel.app/lms/course/${job['id']}'),
+                  icon: const Icon(Icons.school_rounded, color: Colors.white, size: 14),
+                  label: const Text(
+                    'Enroll & Open LMS Portal ↗',
+                    style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
                   ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _accentColor,
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  ),
+                ),
               ],
             ),
           ],

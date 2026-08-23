@@ -43,36 +43,36 @@ router.get("/", async (req, res) => {
 
     const result = await pool.query(query, params);
 
-    const formatted = result.rows.map((row) => ({
-      id: row.id,
-      name: row.title,
-      code: row.branch,
-      title: row.title,
-      contentType: row.content_type,
-      unit: row.unit,
-      fileUrl: row.file_url,
-      s3Key: row.s3_key,
-      uploadedAt: row.uploaded_at,
-      contents: [
-        {
-          id: row.id,
-          title: row.title,
-          contentType: row.content_type,
-          unit: row.unit,
-          fileUrl: row.file_url,
-          s3Key: row.s3_key,
-          uploadedAt: row.uploaded_at,
-        }
-      ],
-      subject: {
-        name: row.title,
-        code: row.branch,
-        branch: row.branch,
-        semester: row.semester,
-      },
-    }));
+    // Group materials by subject (title or branch)
+    const groupedMap = new Map();
 
-    res.json(formatted);
+    result.rows.forEach((row) => {
+      const subjectName = row.title.split('—')[0].split('-')[0].trim() || "Academic Resources";
+      const groupKey = `${row.branch}_${row.semester}_${subjectName}`;
+
+      if (!groupedMap.has(groupKey)) {
+        groupedMap.set(groupKey, {
+          id: `subj_${row.id}`,
+          name: subjectName,
+          code: row.branch,
+          branch: row.branch,
+          semester: row.semester,
+          contents: [],
+        });
+      }
+
+      groupedMap.get(groupKey).contents.push({
+        id: row.id,
+        title: row.title,
+        contentType: row.content_type,
+        unit: row.unit,
+        fileUrl: row.file_url,
+        s3Key: row.s3_key,
+        uploadedAt: row.uploaded_at,
+      });
+    });
+
+    res.json(Array.from(groupedMap.values()));
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Failed to fetch academic materials" });

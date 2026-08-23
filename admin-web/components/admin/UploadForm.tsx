@@ -128,10 +128,7 @@ export function UploadForm({
           window.location.href = "/login";
         }
       }
-      // Even if background confirm fails, trigger onSuccess to display the item locally
-      onSuccess?.(values, file);
-      setSuccess(true);
-      resetForm();
+      setError(err instanceof Error ? err.message : "Failed to publish material.");
     } finally {
       setStage(null);
     }

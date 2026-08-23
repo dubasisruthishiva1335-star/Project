@@ -76,9 +76,24 @@ router.post("/confirm", async (req, res) => {
   } = req.body;
 
   const noteId = bodyId || generateId("note");
-  const finalFileUrl = publicUrl || fileUrl || "";
+  const finalKey = s3Key || key || `notes/${Date.now()}_resource.pdf`;
+  const finalFileUrl = publicUrl || fileUrl || `https://myvault-files-app.s3.eu-north-1.amazonaws.com/${finalKey}`;
 
   try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS academic_materials (
+        id            VARCHAR(100) PRIMARY KEY,
+        title         VARCHAR(255) NOT NULL,
+        branch        VARCHAR(100) NOT NULL DEFAULT 'GENERAL',
+        semester      INTEGER NOT NULL DEFAULT 1,
+        unit          INTEGER NOT NULL DEFAULT 1,
+        content_type  VARCHAR(64) NOT NULL DEFAULT 'NOTES',
+        file_url      TEXT NOT NULL,
+        s3_key        TEXT,
+        uploaded_at   TIMESTAMP NOT NULL DEFAULT NOW()
+      );
+    `);
+
     await pool.query(
       `
       INSERT INTO academic_materials (
@@ -102,7 +117,7 @@ router.post("/confirm", async (req, res) => {
         Number(unit) || 1,
         contentType || "NOTES",
         finalFileUrl,
-        s3Key || key || null,
+        finalKey,
       ]
     );
 

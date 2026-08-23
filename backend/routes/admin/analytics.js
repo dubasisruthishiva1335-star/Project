@@ -27,13 +27,24 @@ router.get("/overview", async (req, res) => {
       );
     `);
 
-    const jobsRes = await pool.query(`SELECT COUNT(*)::int AS count FROM internships`);
-    const enrollRes = await pool.query(`SELECT COUNT(DISTINCT student_id)::int AS count FROM internship_enrollments`);
-    const notesRes = await pool.query(`SELECT COUNT(*)::int AS count FROM academic_materials`);
+    let jobListings = 0;
+    let students = 0;
+    let notes = 0;
 
-    const jobListings = Number(jobsRes.rows[0]?.count) || 0;
-    const students = Number(enrollRes.rows[0]?.count) || 0;
-    const notes = Number(notesRes.rows[0]?.count) || 0;
+    try {
+      const jobsRes = await pool.query(`SELECT COUNT(*)::int AS count FROM internships`);
+      jobListings = Number(jobsRes.rows[0]?.count) || 0;
+    } catch (_) {}
+
+    try {
+      const enrollRes = await pool.query(`SELECT COUNT(DISTINCT student_id)::int AS count FROM internship_enrollments`);
+      students = Number(enrollRes.rows[0]?.count) || 0;
+    } catch (_) {}
+
+    try {
+      const notesRes = await pool.query(`SELECT COUNT(*)::int AS count FROM academic_materials`);
+      notes = Number(notesRes.rows[0]?.count) || 0;
+    } catch (_) {}
 
     res.json({
       students,

@@ -6,6 +6,7 @@ import '../features/academic_hub/academic_hub_screen.dart';
 import '../features/jobs/job_listings_screen.dart';
 import '../features/jobs/internship_detail_screen.dart';
 import '../features/jobs/lesson_player_screen.dart';
+import '../features/jobs/certificate_screen.dart';
 import '../features/results/results_screen.dart';
 import '../features/aptitude/aptitude_screen.dart';
 import '../features/documents_vault/documents_vault_screen.dart';
@@ -34,6 +35,16 @@ final GoRouter appRouter = GoRouter(
         title: 'Internship Opportunities',
         icon: Icons.work_outline_rounded,
       ),
+    ),
+    GoRoute(
+      path: '/certificate',
+      builder: (context, state) {
+        final extra = state.extra as Map<String, dynamic>? ?? {};
+        return CertificateScreen(
+          certificateUrl: extra['certificateUrl'] ?? '',
+          courseTitle: extra['courseTitle'] ?? 'Industrial Course',
+        );
+      },
     ),
     GoRoute(
       path: '/internships/:id/lessons/:lessonId',

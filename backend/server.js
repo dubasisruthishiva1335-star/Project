@@ -29,6 +29,7 @@ app.use(express.json({ limit: "50mb" }));
 try {
   app.use('/internships', require('./routes/internships'));
   app.use('/admin/internships', require('./routes/admin/internships'));
+  app.use('/certificates', require('./routes/certificates'));
 } catch (e) {
   console.warn('Routes mount notice:', e.message);
 }

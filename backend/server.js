@@ -14,6 +14,21 @@ const pool = new Pool({
   ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : false,
 });
 
+// Auto-initialize DB tables on startup
+pool.query(`
+  CREATE TABLE IF NOT EXISTS academic_materials (
+    id            VARCHAR(100) PRIMARY KEY,
+    title         VARCHAR(255) NOT NULL,
+    branch        VARCHAR(100) NOT NULL DEFAULT 'GENERAL',
+    semester      INTEGER NOT NULL DEFAULT 1,
+    unit          INTEGER NOT NULL DEFAULT 1,
+    content_type  VARCHAR(64) NOT NULL DEFAULT 'NOTES',
+    file_url      TEXT NOT NULL,
+    s3_key        TEXT,
+    uploaded_at   TIMESTAMP NOT NULL DEFAULT NOW()
+  );
+`).catch(console.error);
+
 app.get("/", (req, res) => {
   res.json({ success: true, service: "MyVault LMS Backend", status: "online" });
 });

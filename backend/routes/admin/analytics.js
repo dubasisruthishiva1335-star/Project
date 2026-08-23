@@ -31,9 +31,9 @@ router.get("/overview", async (req, res) => {
     const enrollRes = await pool.query(`SELECT COUNT(DISTINCT student_id)::int AS count FROM internship_enrollments`);
     const notesRes = await pool.query(`SELECT COUNT(*)::int AS count FROM academic_materials`);
 
-    const jobListings = jobsRes.rows[0]?.count || 0;
-    const students = enrollRes.rows[0]?.count || 0;
-    const notes = notesRes.rows[0]?.count || 0;
+    const jobListings = Number(jobsRes.rows[0]?.count) || 0;
+    const students = Number(enrollRes.rows[0]?.count) || 0;
+    const notes = Number(notesRes.rows[0]?.count) || 0;
 
     res.json({
       students,

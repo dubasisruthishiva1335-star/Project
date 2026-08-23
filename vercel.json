@@ -1,7 +1,7 @@
 {
   "framework": "nextjs",
-  "buildCommand": "cd admin-web && npm install && npm run build",
-  "outputDirectory": "admin-web/.next",
+  "buildCommand": "npm run build",
+  "outputDirectory": ".next",
   "env": {
     "NEXT_PUBLIC_API_BASE_URL": "https://romantic-serenity-production-3e5b.up.railway.app"
   },

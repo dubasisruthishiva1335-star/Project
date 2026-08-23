@@ -114,6 +114,7 @@ export default function DashboardPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [editingItem, setEditingItem] = useState<{ id: string; type: "notes" | "jobs" | "exams"; title: string; subtitle?: string } | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<"folders" | "table">("folders");
 
   const refreshData = () => {
     setError(null);
@@ -327,68 +328,117 @@ export default function DashboardPage() {
 
       {/* Itemized Management Table */}
       <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-6 backdrop-blur-xl">
+        {/* Tab Header & View Toggle (Folders View vs Table View) */}
         <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
           <div>
             <h2 className="text-lg font-bold text-white flex items-center gap-2">
               <span>
-                {activeTab === "notes" && "📚 Academic Materials Uploaded"}
+                {activeTab === "notes" && "📚 Academic Materials & Study Folders"}
                 {activeTab === "jobs" && "💼 Job & Internship Opportunities"}
                 {activeTab === "exams" && "🎓 Competitive Exam Video Lectures & Notes"}
                 {activeTab === "students" && "👤 Registered Students Directory"}
                 {activeTab === "results" && "📊 Exam Results Uploaded"}
               </span>
             </h2>
-            <p className="text-xs text-white/50">Everything uploaded here syncs to the Website and Mobile App in real-time</p>
+            <p className="text-xs text-white/50">Organized into folders by Branch, Semester, Subject, and Category — syncs to Website and Mobile App</p>
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
+            {/* View Mode Toggle: Folders vs Table */}
+            <div className="flex rounded-xl border border-white/10 bg-black/50 p-1">
+              <button
+                onClick={() => setViewMode("folders")}
+                className={`rounded-lg px-3 py-1 text-xs font-semibold transition ${
+                  viewMode === "folders" ? "bg-accentCyan text-black" : "text-white/60 hover:text-white"
+                }`}
+              >
+                📁 Folder View
+              </button>
+              <button
+                onClick={() => setViewMode("table")}
+                className={`rounded-lg px-3 py-1 text-xs font-semibold transition ${
+                  viewMode === "table" ? "bg-accentCyan text-black" : "text-white/60 hover:text-white"
+                }`}
+              >
+                📋 Table View
+              </button>
+            </div>
+
             <input
               type="text"
-              placeholder="Search uploaded items..."
+              placeholder="Search uploaded items or folders..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="rounded-xl border border-white/10 bg-black/50 px-3.5 py-1.5 text-xs text-white placeholder-white/40 focus:border-accentCyan focus:outline-none"
             />
-
-            <div className="flex flex-wrap rounded-xl border border-white/10 bg-black/40 p-1">
-              <button
-                onClick={() => setActiveTab("notes")}
-                className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition ${
-                  activeTab === "notes" ? "bg-accentBlue text-white" : "text-white/60 hover:text-white"
-                }`}
-              >
-                Academic ({recent?.recentNotes?.length ?? 0})
-              </button>
-              <button
-                onClick={() => setActiveTab("jobs")}
-                className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition ${
-                  activeTab === "jobs" ? "bg-accentBlue text-white" : "text-white/60 hover:text-white"
-                }`}
-              >
-                Jobs ({recent?.recentJobs?.length ?? 0})
-              </button>
-              <button
-                onClick={() => setActiveTab("students")}
-                className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition ${
-                  activeTab === "students" ? "bg-accentBlue text-white" : "text-white/60 hover:text-white"
-                }`}
-              >
-                Students ({recent?.allStudents?.length ?? 0})
-              </button>
-              <button
-                onClick={() => setActiveTab("results")}
-                className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition ${
-                  activeTab === "results" ? "bg-accentBlue text-white" : "text-white/60 hover:text-white"
-                }`}
-              >
-                Results ({recent?.recentResults?.length ?? 0})
-              </button>
-            </div>
           </div>
         </div>
 
-        {/* Tab 1: Academic Materials List */}
-        {activeTab === "notes" && (
+        {/* Folder Structure View Mode */}
+        {viewMode === "folders" && activeTab === "notes" && (
+          <div className="space-y-4">
+            {filteredNotes.length === 0 ? (
+              <div className="py-12 text-center text-white/40">
+                <p className="text-3xl mb-2">📂</p>
+                <p className="text-sm font-semibold">No uploaded folders or study materials found.</p>
+              </div>
+            ) : (
+              // Group notes into Branch & Semester Folders
+              Object.entries(
+                filteredNotes.reduce((acc: any, note) => {
+                  const branchKey = `${note.subject?.branch || "GENERAL"} — Sem ${note.subject?.semester || 1}`;
+                  (acc[branchKey] ||= []).push(note);
+                  return acc;
+                }, {})
+              ).map(([folderName, notesList]: [string, any]) => (
+                <div key={folderName} className="rounded-xl border border-white/10 bg-white/[0.02] overflow-hidden backdrop-blur-md">
+                  <div className="flex items-center justify-between border-b border-white/10 bg-white/5 px-4 py-3">
+                    <div className="flex items-center space-x-3">
+                      <span className="text-xl">📁</span>
+                      <div>
+                        <h3 className="text-sm font-bold text-white">{folderName}</h3>
+                        <p className="text-[10px] text-accentCyan">{notesList.length} Uploaded Material{notesList.length > 1 ? "s" : ""}</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="divide-y divide-white/5 p-2">
+                    {notesList.map((item: any) => (
+                      <div key={item.id} className="flex items-center justify-between p-3 rounded-lg hover:bg-white/5 transition-colors">
+                        <div className="flex items-center space-x-3">
+                          <span className="text-base">{item.contentType === "VIDEO_LECTURE" ? "🎬" : "📄"}</span>
+                          <div>
+                            <p className="text-xs font-bold text-white">{item.title}</p>
+                            <p className="text-[10px] text-white/50">Unit {item.unit || 1} • {formatCategory(item.contentType)} • {new Date(item.uploadedAt).toLocaleDateString()}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <a
+                            href={item.fileUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="rounded-lg bg-accentBlue/20 px-2.5 py-1 text-xs font-semibold text-accentCyan border border-accentBlue/40 hover:bg-accentBlue/30"
+                          >
+                            Open ↗
+                          </a>
+                          <button
+                            disabled={deletingId === item.id}
+                            onClick={() => handleDelete("notes", item.id)}
+                            className="rounded-lg bg-red-500/20 px-2.5 py-1 text-xs font-semibold text-red-300 border border-red-500/30 hover:bg-red-500/30"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        )}
+
+        {/* Tab 1: Academic Materials List (Table View) */}
+        {viewMode === "table" && activeTab === "notes" && (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead className="border-b border-white/10 bg-white/[0.02] text-white/50 uppercase">

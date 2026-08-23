@@ -1,233 +1,277 @@
-const express = require('express');
+const express = require("express");
+const crypto = require("crypto");
+const { Pool } = require("pg");
+const { studentAuth } = require("../middleware/adminAuth");
+const { generateCertificate } = require("../services/certificate.service");
+
 const router = express.Router();
-const { Pool } = require('pg');
 
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/myvault',
+  connectionString: process.env.DATABASE_URL,
   ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : false,
 });
 
-// GET /internships — List all listings (supports filter by type and is_lms_enabled)
-router.get('/', async (req, res) => {
-  const { type, isLmsEnabled, branch } = req.query;
+function generateId(prefix) {
+  return `${prefix}_${Date.now()}_${crypto.randomBytes(5).toString("hex")}`;
+}
+
+/**
+ * GET /internships
+ * Public listing — published courses/internships only.
+ */
+router.get("/", async (req, res) => {
   try {
-    let query = 'SELECT * FROM internships WHERE 1=1';
-    const params = [];
+    const result = await pool.query(
+      `
+      SELECT
+        i.*,
+        COUNT(DISTINCT m.id)::int AS module_count,
+        COUNT(DISTINCT l.id)::int AS lesson_count
+      FROM internships i
+      LEFT JOIN internship_modules m ON m.internship_id = i.id
+      LEFT JOIN internship_lessons l ON l.module_id = m.id
+      WHERE i.status = 'PUBLISHED' OR i.status IS NULL OR i.status = 'DRAFT'
+      GROUP BY i.id
+      ORDER BY i.posted_at DESC
+      `
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to load internships" });
+  }
+});
 
-    if (type) {
-      params.push(String(type).toUpperCase());
-      query += ` AND UPPER(type) = $${params.length}`;
-    }
-    if (isLmsEnabled !== undefined) {
-      params.push(isLmsEnabled === 'true' || isLmsEnabled === '1');
-      query += ` AND is_lms_enabled = $${params.length}`;
-    }
-    if (branch && branch !== 'ALL' && branch !== 'All Branches') {
-      params.push(branch);
-      query += ` AND (branch = $${params.length} OR branch = 'All Branches')`;
+/**
+ * GET /internships/:id
+ * Course detail + modules/lessons.
+ */
+router.get("/:id", async (req, res) => {
+  try {
+    const course = await pool.query(
+      `SELECT * FROM internships WHERE id = $1`,
+      [req.params.id]
+    );
+    if (!course.rows.length) return res.status(404).json({ error: "Course not found" });
+
+    const modules = await pool.query(
+      `SELECT * FROM internship_modules WHERE internship_id = $1 ORDER BY sort_order ASC, created_at ASC`,
+      [req.params.id]
+    );
+
+    const moduleIds = modules.rows.map((m) => m.id);
+    let lessonsByModule = {};
+    let completedLessonIds = new Set();
+
+    if (moduleIds.length) {
+      const lessons = await pool.query(
+        `SELECT * FROM internship_lessons WHERE module_id = ANY($1::text[]) ORDER BY sort_order ASC, created_at ASC`,
+        [moduleIds]
+      );
+      lessonsByModule = lessons.rows.reduce((acc, lesson) => {
+        (acc[lesson.module_id] ||= []).push(lesson);
+        return acc;
+      }, {});
+
+      const header = req.headers.authorization || "";
+      const [scheme, token] = header.split(" ");
+      if (scheme === "Bearer" && token) {
+        try {
+          const jwt = require("jsonwebtoken");
+          const payload = jwt.verify(token, process.env.JWT_SECRET);
+          const lessonIds = lessons.rows.map((l) => l.id);
+          if (lessonIds.length) {
+            const progress = await pool.query(
+              `SELECT lesson_id FROM internship_lesson_progress WHERE student_id = $1 AND lesson_id = ANY($2::text[])`,
+              [payload.id, lessonIds]
+            );
+            completedLessonIds = new Set(progress.rows.map((r) => r.lesson_id));
+          }
+        } catch {
+          // Invalid token on public route — ignore
+        }
+      }
     }
 
-    query += ' ORDER BY posted_at DESC';
-    const dbRes = await pool.query(query, params);
-
-    const items = dbRes.rows.map((j) => ({
-      id: j.id,
-      title: j.title,
-      company: j.company,
-      type: j.type,
-      isLmsEnabled: Boolean(j.is_lms_enabled),
-      branch: j.branch,
-      stipend: j.stipend,
-      location: j.location,
-      deadline: j.deadline,
-      description: j.description,
-      applyUrl: j.apply_url,
-      fileUrl: j.file_url,
-      s3Key: j.s3_key,
-      postedAt: j.posted_at,
+    const result = modules.rows.map((m) => ({
+      ...m,
+      lessons: (lessonsByModule[m.id] || []).map((l) => ({
+        ...l,
+        completed: completedLessonIds.has(l.id),
+      })),
     }));
 
-    res.json(items);
+    res.json({ ...course.rows[0], modules: result });
   } catch (err) {
-    res.json([]);
+    console.error(err);
+    res.status(500).json({ error: "Failed to load course" });
   }
 });
 
-// GET /internships/:id — Get full detail (with modules, lessons, and enrollment state)
-router.get('/:id', async (req, res) => {
-  const { id } = req.params;
-  const studentId = req.query.studentId || 'student_demo';
-
+/**
+ * POST /internships/:id/enroll
+ */
+router.post("/:id/enroll", studentAuth, async (req, res) => {
   try {
-    const itemRes = await pool.query('SELECT * FROM internships WHERE id = $1', [id]);
-    if (itemRes.rows.length === 0) {
-      return res.status(404).json({ error: 'Opportunity not found' });
-    }
-    const j = itemRes.rows[0];
+    const studentId = req.student.id;
 
-    const detail = {
-      id: j.id,
-      title: j.title,
-      company: j.company,
-      type: j.type,
-      isLmsEnabled: Boolean(j.is_lms_enabled),
-      branch: j.branch,
-      stipend: j.stipend,
-      location: j.location,
-      deadline: j.deadline,
-      description: j.description,
-      applyUrl: j.apply_url,
-      fileUrl: j.file_url,
-      s3Key: j.s3_key,
-      postedAt: j.posted_at,
-      isEnrolled: false,
-      progressPercentage: 0,
-      modules: [],
-      certificateUrl: null,
-    };
+    const course = await pool.query(
+      `SELECT id, max_students FROM internships WHERE id = $1`,
+      [req.params.id]
+    );
+    if (!course.rows.length) return res.status(404).json({ error: "Course not found" });
 
-    if (detail.isLmsEnabled) {
-      // Check enrollment
-      const enrollRes = await pool.query(
-        'SELECT * FROM internship_enrollments WHERE internship_id = $1 AND student_id = $2',
-        [id, studentId]
+    if (course.rows[0].max_students) {
+      const count = await pool.query(
+        `SELECT COUNT(*)::int AS n FROM internship_enrollments WHERE internship_id = $1`,
+        [req.params.id]
       );
-      detail.isEnrolled = enrollRes.rows.length > 0;
-
-      // Check certificate
-      const certRes = await pool.query(
-        'SELECT certificate_url FROM internship_certificates WHERE internship_id = $1 AND student_id = $2',
-        [id, studentId]
-      );
-      if (certRes.rows.length > 0) {
-        detail.certificateUrl = certRes.rows[0].certificate_url;
+      if (count.rows[0].n >= course.rows[0].max_students) {
+        return res.status(400).json({ error: "This course has reached its enrollment limit" });
       }
-
-      // Fetch modules & lessons
-      const modulesRes = await pool.query(
-        'SELECT * FROM internship_modules WHERE internship_id = $1 ORDER BY sort_order ASC',
-        [id]
-      );
-      const modules = modulesRes.rows;
-
-      let totalLessons = 0;
-      let completedLessonsCount = 0;
-
-      for (const m of modules) {
-        const lessonsRes = await pool.query(
-          `SELECT l.*, 
-                  (SELECT COUNT(*) FROM internship_lesson_progress lp WHERE lp.lesson_id = l.id AND lp.student_id = $1) > 0 AS is_completed
-           FROM internship_lessons l 
-           WHERE l.module_id = $2 
-           ORDER BY l.sort_order ASC`,
-          [studentId, m.id]
-        );
-
-        const lessons = lessonsRes.rows.map((l) => {
-          totalLessons++;
-          if (l.is_completed) completedLessonsCount++;
-          return {
-            id: l.id,
-            title: l.title,
-            contentType: l.content_type,
-            videoUrl: l.video_url,
-            pdfUrl: l.pdf_url,
-            description: l.description,
-            duration: l.duration,
-            isCompleted: Boolean(l.is_completed),
-          };
-        });
-
-        detail.modules.push({
-          id: m.id,
-          title: m.title,
-          sortOrder: m.sort_order,
-          lessons,
-        });
-      }
-
-      detail.progressPercentage =
-        totalLessons > 0 ? Math.round((completedLessonsCount / totalLessons) * 100) : 0;
     }
 
-    res.json(detail);
+    const enrollmentId = generateId("enroll");
+
+    await pool.query(
+      `
+      INSERT INTO internship_enrollments (id, internship_id, student_id, enrolled_at)
+      VALUES ($1,$2,$3,NOW())
+      ON CONFLICT (internship_id, student_id) DO NOTHING
+      `,
+      [enrollmentId, req.params.id, studentId]
+    );
+
+    res.status(201).json({ success: true });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: "Failed to enroll" });
   }
 });
 
-// POST /internships/:id/enroll — Student Enroll
-router.post('/:id/enroll', async (req, res) => {
-  const { id } = req.params;
-  const { studentId = 'student_demo' } = req.body;
+/**
+ * POST /internships/lessons/:lessonId/complete
+ */
+router.post("/lessons/:lessonId/complete", studentAuth, async (req, res) => {
+  const studentId = req.student.id;
+  const studentName = req.student.name || null;
+  const { watchPercent = 100 } = req.body;
+
+  const client = await pool.connect();
 
   try {
-    const enrollId = `enroll_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
-    await pool.query(
-      `INSERT INTO internship_enrollments (id, internship_id, student_id, enrolled_at)
-       VALUES ($1, $2, $3, NOW())
-       ON CONFLICT (internship_id, student_id) DO NOTHING`,
-      [enrollId, id, studentId]
-    );
-    res.json({ success: true, enrolled: true });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
+    await client.query("BEGIN");
 
-// POST /internships/lessons/:lessonId/complete — Complete Lesson & Auto-issue Certificate
-router.post('/lessons/:lessonId/complete', async (req, res) => {
-  const { lessonId } = req.params;
-  const { studentId = 'student_demo', internshipId } = req.body;
-
-  try {
-    const progressId = `prog_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
-    await pool.query(
-      `INSERT INTO internship_lesson_progress (id, lesson_id, student_id, completed_at)
-       VALUES ($1, $2, $3, NOW())
-       ON CONFLICT (lesson_id, student_id) DO NOTHING`,
-      [progressId, lessonId, studentId]
+    const lessonRow = await client.query(
+      `
+      SELECT l.id, m.internship_id
+      FROM internship_lessons l
+      JOIN internship_modules m ON m.id = l.module_id
+      WHERE l.id = $1
+      `,
+      [req.params.lessonId]
     );
 
-    // Check if all lessons are completed for this course
+    if (!lessonRow.rows.length) {
+      await client.query("ROLLBACK");
+      return res.status(404).json({ error: "Lesson not found" });
+    }
+
+    const internshipId = lessonRow.rows[0].internship_id;
+
+    const enrollment = await client.query(
+      `SELECT id FROM internship_enrollments WHERE internship_id = $1 AND student_id = $2`,
+      [internshipId, studentId]
+    );
+
+    if (!enrollment.rows.length) {
+      await client.query("ROLLBACK");
+      return res.status(403).json({ error: "You are not enrolled in this course" });
+    }
+
+    await client.query(
+      `
+      INSERT INTO internship_lesson_progress (id, lesson_id, student_id, watch_percent, completed_at)
+      VALUES ($1,$2,$3,$4,NOW())
+      ON CONFLICT (lesson_id, student_id) DO UPDATE SET watch_percent = EXCLUDED.watch_percent
+      `,
+      [generateId("progress"), req.params.lessonId, studentId, Number(watchPercent)]
+    );
+
+    await client.query("COMMIT");
+
+    const totalResult = await pool.query(
+      `
+      SELECT COUNT(*)::int AS total
+      FROM internship_lessons l
+      JOIN internship_modules m ON m.id = l.module_id
+      WHERE m.internship_id = $1 AND l.is_required = TRUE
+      `,
+      [internshipId]
+    );
+
+    const completedResult = await pool.query(
+      `
+      SELECT COUNT(DISTINCT lp.lesson_id)::int AS completed
+      FROM internship_lesson_progress lp
+      JOIN internship_lessons l ON l.id = lp.lesson_id
+      JOIN internship_modules m ON m.id = l.module_id
+      WHERE m.internship_id = $1 AND lp.student_id = $2 AND l.is_required = TRUE
+      `,
+      [internshipId, studentId]
+    );
+
+    const total = totalResult.rows[0].total;
+    const completed = completedResult.rows[0].completed;
+    const isComplete = total > 0 && completed >= total;
+
     let certificateIssued = false;
     let certUrl = null;
 
-    if (internshipId) {
-      const allLessonsRes = await pool.query(
-        `SELECT l.id FROM internship_lessons l 
-         JOIN internship_modules m ON l.module_id = m.id 
-         WHERE m.internship_id = $1`,
-        [internshipId]
-      );
-      const totalCount = allLessonsRes.rows.length;
-
-      const completedRes = await pool.query(
-        `SELECT COUNT(*) FROM internship_lesson_progress lp
-         JOIN internship_lessons l ON lp.lesson_id = l.id
-         JOIN internship_modules m ON l.module_id = m.id
-         WHERE m.internship_id = $1 AND lp.student_id = $2`,
-        [internshipId, studentId]
-      );
-      const completedCount = parseInt(completedRes.rows[0].count, 10);
-
-      if (totalCount > 0 && completedCount >= totalCount) {
-        // Issue Certificate
-        const certId = `cert_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
-        certUrl = `https://myvault-files-app.s3.eu-north-1.amazonaws.com/certificates/${certId}.pdf`;
-        await pool.query(
-          `INSERT INTO internship_certificates (id, internship_id, student_id, certificate_url, issued_at)
-           VALUES ($1, $2, $3, $4, NOW())
-           ON CONFLICT (internship_id, student_id) DO NOTHING`,
-          [certId, internshipId, studentId, certUrl]
-        );
+    if (isComplete) {
+      try {
+        const certificate = await generateCertificate({
+          internshipId,
+          studentId,
+          studentName,
+        });
         certificateIssued = true;
+        certUrl = certificate.certificate_url;
+      } catch (certErr) {
+        console.warn("Certificate not issued:", certErr.message);
       }
     }
 
-    res.json({ success: true, completed: true, certificateIssued, certUrl });
+    res.json({
+      success: true,
+      completed: isComplete,
+      progress: { completed, total },
+      certificateIssued,
+      certUrl,
+    });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    await client.query("ROLLBACK");
+    console.error(err);
+    res.status(500).json({ error: "Failed to mark lesson complete" });
+  } finally {
+    client.release();
+  }
+});
+
+/**
+ * GET /internships/:id/certificate
+ */
+router.get("/:id/certificate", studentAuth, async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT * FROM internship_certificates WHERE internship_id = $1 AND student_id = $2`,
+      [req.params.id, req.student.id]
+    );
+    if (!result.rows.length) return res.status(404).json({ error: "Certificate not yet issued" });
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to load certificate" });
   }
 });
 

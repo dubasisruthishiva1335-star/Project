@@ -139,7 +139,7 @@ model DeviceToken {
 }
 
 model AcademicMaterial {
-  id          String   @id @default(uuid())
+  id          String   @id
   title       String
   branch      String   @default("GENERAL")
   semester    Int      @default(1)
@@ -153,7 +153,7 @@ model AcademicMaterial {
 }
 
 model CompetitiveExam {
-  id          String   @id @default(uuid())
+  id          String   @id
   examId      String   @default("upsc-cse-2026") @map("exam_id")
   title       String
   subject     String   @default("General")

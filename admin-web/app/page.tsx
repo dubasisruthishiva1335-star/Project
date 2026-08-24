@@ -374,7 +374,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Folder Structure View Mode */}
+        {/* Folder Structure View Mode: Academic Notes */}
         {viewMode === "folders" && activeTab === "notes" && (
           <div className="space-y-4">
             {filteredNotes.length === 0 ? (
@@ -386,7 +386,7 @@ export default function DashboardPage() {
               // Group notes into Branch & Semester Folders
               Object.entries(
                 filteredNotes.reduce((acc: any, note) => {
-                  const branchKey = `${note.subject?.branch || "GENERAL"} — Sem ${note.subject?.semester || 1}`;
+                  const branchKey = `📂 Academic Folder: ${note.subject?.branch || "GENERAL"} — Sem ${note.subject?.semester || 1}`;
                   (acc[branchKey] ||= []).push(note);
                   return acc;
                 }, {})
@@ -397,7 +397,7 @@ export default function DashboardPage() {
                       <span className="text-xl">📁</span>
                       <div>
                         <h3 className="text-sm font-bold text-white">{folderName}</h3>
-                        <p className="text-[10px] text-accentCyan">{notesList.length} Uploaded Material{notesList.length > 1 ? "s" : ""}</p>
+                        <p className="text-[10px] text-accentCyan">{notesList.length} Uploaded Resource{notesList.length > 1 ? "s" : ""}</p>
                       </div>
                     </div>
                   </div>
@@ -423,6 +423,71 @@ export default function DashboardPage() {
                           <button
                             disabled={deletingId === item.id}
                             onClick={() => handleDelete("notes", item.id)}
+                            className="rounded-lg bg-red-500/20 px-2.5 py-1 text-xs font-semibold text-red-300 border border-red-500/30 hover:bg-red-500/30"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        )}
+
+        {/* Folder Structure View Mode: Jobs, Internships, Placements, Govt Jobs */}
+        {viewMode === "folders" && activeTab === "jobs" && (
+          <div className="space-y-4">
+            {filteredJobs.length === 0 ? (
+              <div className="py-12 text-center text-white/40">
+                <p className="text-3xl mb-2">📂</p>
+                <p className="text-sm font-semibold">No uploaded opportunity folders found.</p>
+              </div>
+            ) : (
+              // Group jobs by Hub Type
+              Object.entries(
+                filteredJobs.reduce((acc: any, job) => {
+                  const hubType = job.type === "PLACEMENT" ? "🏢 Campus Placement Drives Folder" : job.type === "GOVT_JOB" ? "🏛️ Govt Jobs & Exams Folder" : "💼 Internship & LMS Courses Folder";
+                  (acc[hubType] ||= []).push(job);
+                  return acc;
+                }, {})
+              ).map(([folderName, jobsList]: [string, any]) => (
+                <div key={folderName} className="rounded-xl border border-white/10 bg-white/[0.02] overflow-hidden backdrop-blur-md">
+                  <div className="flex items-center justify-between border-b border-white/10 bg-white/5 px-4 py-3">
+                    <div className="flex items-center space-x-3">
+                      <span className="text-xl">📁</span>
+                      <div>
+                        <h3 className="text-sm font-bold text-white">{folderName}</h3>
+                        <p className="text-[10px] text-accentCyan">{jobsList.length} Active Listing{jobsList.length > 1 ? "s" : ""}</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="divide-y divide-white/5 p-2">
+                    {jobsList.map((item: any) => (
+                      <div key={item.id} className="flex items-center justify-between p-3 rounded-lg hover:bg-white/5 transition-colors">
+                        <div className="flex items-center space-x-3">
+                          <span className="text-base">{item.type === "PLACEMENT" ? "🏢" : item.type === "GOVT_JOB" ? "🏛️" : "💼"}</span>
+                          <div>
+                            <p className="text-xs font-bold text-white">{item.title}</p>
+                            <p className="text-[10px] text-white/50">{item.company} • {item.branch} • {item.stipend || "Best in Industry"}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          {item.applyUrl && (
+                            <a
+                              href={item.applyUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="rounded-lg bg-accentBlue/20 px-2.5 py-1 text-xs font-semibold text-accentCyan border border-accentBlue/40 hover:bg-accentBlue/30"
+                            >
+                              Apply Link ↗
+                            </a>
+                          )}
+                          <button
+                            disabled={deletingId === item.id}
+                            onClick={() => handleDelete("jobs", item.id)}
                             className="rounded-lg bg-red-500/20 px-2.5 py-1 text-xs font-semibold text-red-300 border border-red-500/30 hover:bg-red-500/30"
                           >
                             Delete

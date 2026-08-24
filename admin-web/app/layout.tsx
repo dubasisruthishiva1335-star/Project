@@ -29,11 +29,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   MyVault Admin
                 </Link>
                 <nav className="space-y-1 text-sm text-white/60">
-                  <Link href="/" className={`block rounded-lg px-3 py-2 transition-colors ${pathname === "/" ? "bg-white/10 text-accentCyan font-medium" : "hover:bg-white/5 hover:text-white"}`}>Dashboard</Link>
-                  <Link href="/admin/notes" className={`block rounded-lg px-3 py-2 transition-colors ${pathname === "/admin/notes" ? "bg-white/10 text-accentCyan font-medium" : "hover:bg-white/5 hover:text-white"}`}>Notes & Materials</Link>
-                  <Link href="/admin/results" className={`block rounded-lg px-3 py-2 transition-colors ${pathname === "/admin/results" ? "bg-white/10 text-accentCyan font-medium" : "hover:bg-white/5 hover:text-white"}`}>Exam Results</Link>
-                  <Link href="/admin/internships" className={`block rounded-lg px-3 py-2 transition-colors ${pathname === "/admin/internships" ? "bg-white/10 text-accentCyan font-medium" : "hover:bg-white/5 hover:text-white"}`}>Internships & Jobs</Link>
-                  <Link href="/admin/exams" className={`block rounded-lg px-3 py-2 transition-colors ${pathname === "/admin/exams" ? "bg-white/10 text-accentCyan font-medium" : "hover:bg-white/5 hover:text-white"}`}>🎓 Preparation Hub ⭐</Link>
+                  <Link href="/" className={`block rounded-lg px-3 py-2 transition-colors ${pathname === "/" ? "bg-white/10 text-accentCyan font-medium" : "hover:bg-white/5 hover:text-white"}`}>📊 Dashboard</Link>
+                  <Link href="/admin/notes" className={`block rounded-lg px-3 py-2 transition-colors ${pathname === "/admin/notes" ? "bg-white/10 text-accentCyan font-medium" : "hover:bg-white/5 hover:text-white"}`}>📚 Academic Notes</Link>
+                  <Link href="/admin/internships" className={`block rounded-lg px-3 py-2 transition-colors ${pathname === "/admin/internships" ? "bg-white/10 text-accentCyan font-medium" : "hover:bg-white/5 hover:text-white"}`}>💼 Internships & LMS</Link>
+                  <Link href="/admin/placements" className={`block rounded-lg px-3 py-2 transition-colors ${pathname === "/admin/placements" ? "bg-white/10 text-accentCyan font-medium" : "hover:bg-white/5 hover:text-white"}`}>🏢 Campus Placements</Link>
+                  <Link href="/admin/govt-jobs" className={`block rounded-lg px-3 py-2 transition-colors ${pathname === "/admin/govt-jobs" ? "bg-white/10 text-accentCyan font-medium" : "hover:bg-white/5 hover:text-white"}`}>🏛️ Govt Jobs Hub</Link>
+                  <Link href="/admin/exams" className={`block rounded-lg px-3 py-2 transition-colors ${pathname === "/admin/exams" ? "bg-white/10 text-accentCyan font-medium" : "hover:bg-white/5 hover:text-white"}`}>🎓 Competitive Exams ⭐</Link>
+                  <Link href="/admin/results" className={`block rounded-lg px-3 py-2 transition-colors ${pathname === "/admin/results" ? "bg-white/10 text-accentCyan font-medium" : "hover:bg-white/5 hover:text-white"}`}>📊 Exam Results</Link>
                 </nav>
               </div>
 

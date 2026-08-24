@@ -110,7 +110,7 @@ export default function DashboardPage() {
   const [data, setData] = useState<Overview | null>(null);
   const [recent, setRecent] = useState<RecentUploads | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"notes" | "jobs" | "exams" | "students" | "results">("notes");
+  const [activeTab, setActiveTab] = useState<"notes" | "internships" | "placements" | "govtJobs" | "exams" | "students" | "results">("notes");
   const [searchQuery, setSearchQuery] = useState("");
   const [editingItem, setEditingItem] = useState<{ id: string; type: "notes" | "jobs" | "exams"; title: string; subtitle?: string } | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -231,18 +231,24 @@ export default function DashboardPage() {
     }
   };
 
+  const internshipCount = (recent?.recentJobs ?? []).filter(j => j.type === "INTERNSHIP" || !j.type).length;
+  const placementCount = (recent?.recentJobs ?? []).filter(j => j.type === "PLACEMENT").length;
+  const govtJobCount = (recent?.recentJobs ?? []).filter(j => j.type === "GOVT_JOB").length;
   const examsList = recent?.recentExams ?? DEFAULT_EXAMS;
+
   const cards: Array<{
-    id: "notes" | "jobs" | "students" | "results";
+    id: "notes" | "internships" | "placements" | "govtJobs" | "exams" | "students";
     label: string;
     value: number | undefined;
     icon: string;
     color: string;
   }> = [
-    { id: "notes", label: "Academic Materials Uploaded", value: recent?.recentNotes?.length ?? data?.notes, icon: "📚", color: "from-cyan-500/20 to-teal-500/20" },
-    { id: "jobs", label: "Job & Internship Listings", value: recent?.recentJobs?.length ?? data?.jobListings, icon: "💼", color: "from-purple-500/20 to-indigo-500/20" },
-    { id: "students", label: "Students Registered", value: recent?.allStudents?.length ?? data?.students, icon: "👤", color: "from-blue-500/20 to-cyan-500/20" },
-    { id: "results", label: "Exam Results Uploaded", value: recent?.recentResults?.length ?? data?.results, icon: "📊", color: "from-amber-500/20 to-yellow-500/20" },
+    { id: "notes", label: "Academic Notes", value: recent?.recentNotes?.length ?? data?.notes, icon: "📚", color: "from-cyan-500/20 to-teal-500/20" },
+    { id: "internships", label: "Internships & LMS", value: internshipCount, icon: "💼", color: "from-blue-500/20 to-indigo-500/20" },
+    { id: "placements", label: "Campus Placements", value: placementCount, icon: "🏢", color: "from-purple-500/20 to-violet-500/20" },
+    { id: "govtJobs", label: "Govt Jobs Hub", value: govtJobCount, icon: "🏛️", color: "from-emerald-500/20 to-green-500/20" },
+    { id: "exams", label: "Competitive Exams", value: data?.examsCount ?? examsList.length, icon: "🎓", color: "from-amber-500/20 to-yellow-500/20" },
+    { id: "students", label: "Students Registered", value: recent?.allStudents?.length ?? data?.students, icon: "👤", color: "from-sky-500/20 to-blue-500/20" },
   ];
 
   const formatCategory = (cat: string) => {

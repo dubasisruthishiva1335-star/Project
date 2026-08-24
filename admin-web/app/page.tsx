@@ -56,6 +56,7 @@ interface RecentUploads {
     company: string;
     type: string;
     branch?: string;
+    stipend?: string;
     applyUrl?: string;
     fileUrl?: string;
     postedAt: string;
@@ -133,6 +134,7 @@ export default function DashboardPage() {
               company: i.company,
               type: i.type,
               branch: i.branch,
+              stipend: i.stipend,
               applyUrl: i.apply_url || i.applyUrl,
               fileUrl: i.file_url || i.fileUrl,
               postedAt: i.posted_at || i.postedAt || new Date().toISOString(),
@@ -443,20 +445,19 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* Folder Structure View Mode: Jobs, Internships, Placements, Govt Jobs */}
-        {viewMode === "folders" && (activeTab === "internships" || activeTab === "placements" || activeTab === "govtJobs") && (
+        {/* Folder Structure View Mode: Internships & LMS */}
+        {viewMode === "folders" && activeTab === "internships" && (
           <div className="space-y-4">
-            {filteredJobs.length === 0 ? (
+            {filteredJobs.filter(j => j.type === "INTERNSHIP" || !j.type).length === 0 ? (
               <div className="py-12 text-center text-white/40">
                 <p className="text-3xl mb-2">📂</p>
-                <p className="text-sm font-semibold">No uploaded opportunity folders found.</p>
+                <p className="text-sm font-semibold">No uploaded Internship or LMS Course folders found.</p>
               </div>
             ) : (
-              // Group jobs by Hub Type
               Object.entries(
-                filteredJobs.reduce((acc: any, job) => {
-                  const hubType = job.type === "PLACEMENT" ? "🏢 Campus Placement Drives Folder" : job.type === "GOVT_JOB" ? "🏛️ Govt Jobs & Exams Folder" : "💼 Internship & LMS Courses Folder";
-                  (acc[hubType] ||= []).push(job);
+                filteredJobs.filter(j => j.type === "INTERNSHIP" || !j.type).reduce((acc: any, job) => {
+                  const folderKey = `💼 Internship Folder: ${job.company} — ${job.title}`;
+                  (acc[folderKey] ||= []).push(job);
                   return acc;
                 }, {})
               ).map(([folderName, jobsList]: [string, any]) => (
@@ -474,10 +475,10 @@ export default function DashboardPage() {
                     {jobsList.map((item: any) => (
                       <div key={item.id} className="flex items-center justify-between p-3 rounded-lg hover:bg-white/5 transition-colors">
                         <div className="flex items-center space-x-3">
-                          <span className="text-base">{item.type === "PLACEMENT" ? "🏢" : item.type === "GOVT_JOB" ? "🏛️" : "💼"}</span>
+                          <span className="text-base">💼</span>
                           <div>
                             <p className="text-xs font-bold text-white">{item.title}</p>
-                            <p className="text-[10px] text-white/50">{item.company} • {item.branch} • {item.stipend || "Best in Industry"}</p>
+                            <p className="text-[10px] text-white/50">{item.company} • {item.branch} • Stipend: {item.stipend || "Stipend Provided"}</p>
                           </div>
                         </div>
                         <div className="flex items-center space-x-2">
@@ -494,6 +495,222 @@ export default function DashboardPage() {
                           <button
                             disabled={deletingId === item.id}
                             onClick={() => handleDelete("jobs", item.id)}
+                            className="rounded-lg bg-red-500/20 px-2.5 py-1 text-xs font-semibold text-red-300 border border-red-500/30 hover:bg-red-500/30"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        )}
+
+        {/* Folder Structure View Mode: Campus Placements */}
+        {viewMode === "folders" && activeTab === "placements" && (
+          <div className="space-y-4">
+            {filteredJobs.filter(j => j.type === "PLACEMENT").length === 0 ? (
+              <div className="py-12 text-center text-white/40">
+                <p className="text-3xl mb-2">📂</p>
+                <p className="text-sm font-semibold">No uploaded Campus Placement Drive folders found.</p>
+              </div>
+            ) : (
+              Object.entries(
+                filteredJobs.filter(j => j.type === "PLACEMENT").reduce((acc: any, job) => {
+                  const folderKey = `🏢 Campus Placement Drive Folder: ${job.company} (${job.stipend || "CTC Available"})`;
+                  (acc[folderKey] ||= []).push(job);
+                  return acc;
+                }, {})
+              ).map(([folderName, jobsList]: [string, any]) => (
+                <div key={folderName} className="rounded-xl border border-white/10 bg-white/[0.02] overflow-hidden backdrop-blur-md">
+                  <div className="flex items-center justify-between border-b border-white/10 bg-purple-500/10 px-4 py-3">
+                    <div className="flex items-center space-x-3">
+                      <span className="text-xl">📁</span>
+                      <div>
+                        <h3 className="text-sm font-bold text-white">{folderName}</h3>
+                        <p className="text-[10px] text-purple-300">{jobsList.length} Placement Drive{jobsList.length > 1 ? "s" : ""}</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="divide-y divide-white/5 p-2">
+                    {jobsList.map((item: any) => (
+                      <div key={item.id} className="flex items-center justify-between p-3 rounded-lg hover:bg-white/5 transition-colors">
+                        <div className="flex items-center space-x-3">
+                          <span className="text-base">🏢</span>
+                          <div>
+                            <p className="text-xs font-bold text-white">{item.title}</p>
+                            <p className="text-[10px] text-white/50">{item.company} • {item.branch} • CTC Package: {item.stipend || "TBD"}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          {item.applyUrl && (
+                            <a
+                              href={item.applyUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="rounded-lg bg-purple-500/20 px-2.5 py-1 text-xs font-semibold text-purple-300 border border-purple-500/40 hover:bg-purple-500/30"
+                            >
+                              Drive Portal ↗
+                            </a>
+                          )}
+                          <button
+                            disabled={deletingId === item.id}
+                            onClick={() => handleDelete("jobs", item.id)}
+                            className="rounded-lg bg-red-500/20 px-2.5 py-1 text-xs font-semibold text-red-300 border border-red-500/30 hover:bg-red-500/30"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        )}
+
+        {/* Folder Structure View Mode: Govt Jobs */}
+        {viewMode === "folders" && activeTab === "govtJobs" && (
+          <div className="space-y-4">
+            {filteredJobs.filter(j => j.type === "GOVT_JOB").length === 0 ? (
+              <div className="py-12 text-center text-white/40">
+                <p className="text-3xl mb-2">📂</p>
+                <p className="text-sm font-semibold">No uploaded Govt Job Notification folders found.</p>
+              </div>
+            ) : (
+              Object.entries(
+                filteredJobs.filter(j => j.type === "GOVT_JOB").reduce((acc: any, job) => {
+                  const folderKey = `🏛️ Govt Recruitment Folder: ${job.company} — ${job.title}`;
+                  (acc[folderKey] ||= []).push(job);
+                  return acc;
+                }, {})
+              ).map(([folderName, jobsList]: [string, any]) => (
+                <div key={folderName} className="rounded-xl border border-white/10 bg-white/[0.02] overflow-hidden backdrop-blur-md">
+                  <div className="flex items-center justify-between border-b border-white/10 bg-emerald-500/10 px-4 py-3">
+                    <div className="flex items-center space-x-3">
+                      <span className="text-xl">📁</span>
+                      <div>
+                        <h3 className="text-sm font-bold text-white">{folderName}</h3>
+                        <p className="text-[10px] text-emerald-300">{jobsList.length} Official Notification{jobsList.length > 1 ? "s" : ""}</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="divide-y divide-white/5 p-2">
+                    {jobsList.map((item: any) => (
+                      <div key={item.id} className="flex items-center justify-between p-3 rounded-lg hover:bg-white/5 transition-colors">
+                        <div className="flex items-center space-x-3">
+                          <span className="text-base">🏛️</span>
+                          <div>
+                            <p className="text-xs font-bold text-white">{item.title}</p>
+                            <p className="text-[10px] text-white/50">{item.company} • Stream: {item.branch} • Pay Matrix: {item.stipend || "Govt Pay Level"}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          {item.applyUrl && (
+                            <a
+                              href={item.applyUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="rounded-lg bg-emerald-500/20 px-2.5 py-1 text-xs font-semibold text-emerald-300 border border-emerald-500/40 hover:bg-emerald-500/30"
+                            >
+                              Govt Portal ↗
+                            </a>
+                          )}
+                          <button
+                            disabled={deletingId === item.id}
+                            onClick={() => handleDelete("jobs", item.id)}
+                            className="rounded-lg bg-red-500/20 px-2.5 py-1 text-xs font-semibold text-red-300 border border-red-500/30 hover:bg-red-500/30"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        )}
+
+        {/* Folder Structure View Mode: Competitive Exams */}
+        {viewMode === "folders" && activeTab === "exams" && (
+          <div className="space-y-4">
+            {filteredExams.length === 0 ? (
+              <div className="py-12 text-center text-white/40">
+                <p className="text-3xl mb-2">📂</p>
+                <p className="text-sm font-semibold">No Competitive Exam folders found.</p>
+              </div>
+            ) : (
+              filteredExams.map((exam) => (
+                <div key={exam.id} className="rounded-xl border border-white/10 bg-white/[0.02] overflow-hidden backdrop-blur-md">
+                  <div className="flex items-center justify-between border-b border-white/10 bg-amber-500/10 px-4 py-3">
+                    <div className="flex items-center space-x-3">
+                      <span className="text-xl">📁</span>
+                      <div>
+                        <h3 className="text-sm font-bold text-white">🎓 Competitive Exam Folder: {exam.name} ({exam.cat})</h3>
+                        <p className="text-[10px] text-amber-300">{(exam.videos?.length || 0) + (exam.pdfNotes?.length || 0)} Learning Asset{(exam.videos?.length || 0) + (exam.pdfNotes?.length || 0) !== 1 ? "s" : ""}</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="divide-y divide-white/5 p-2">
+                    {(exam.videos ?? []).map((vid) => (
+                      <div key={vid.id} className="flex items-center justify-between p-3 rounded-lg hover:bg-white/5 transition-colors">
+                        <div className="flex items-center space-x-3">
+                          <span className="text-base">🎬</span>
+                          <div>
+                            <p className="text-xs font-bold text-white">{vid.title}</p>
+                            <p className="text-[10px] text-white/50">Subject: {vid.subject || "General"} • Video Lecture</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          {vid.s3Url && (
+                            <a
+                              href={vid.s3Url}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="rounded-lg bg-amber-500/20 px-2.5 py-1 text-xs font-semibold text-amber-300 border border-amber-500/40 hover:bg-amber-500/30"
+                            >
+                              Watch Video ↗
+                            </a>
+                          )}
+                          <button
+                            disabled={deletingId === vid.id}
+                            onClick={() => handleDelete("exams", vid.id)}
+                            className="rounded-lg bg-red-500/20 px-2.5 py-1 text-xs font-semibold text-red-300 border border-red-500/30 hover:bg-red-500/30"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                    {(exam.pdfNotes ?? []).map((pdf) => (
+                      <div key={pdf.id} className="flex items-center justify-between p-3 rounded-lg hover:bg-white/5 transition-colors">
+                        <div className="flex items-center space-x-3">
+                          <span className="text-base">📄</span>
+                          <div>
+                            <p className="text-xs font-bold text-white">{pdf.title}</p>
+                            <p className="text-[10px] text-white/50">Subject: {pdf.subject || "General"} • PDF Study Material</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          {pdf.fileUrl && (
+                            <a
+                              href={pdf.fileUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="rounded-lg bg-accentBlue/20 px-2.5 py-1 text-xs font-semibold text-accentCyan border border-accentBlue/40 hover:bg-accentBlue/30"
+                            >
+                              Open PDF ↗
+                            </a>
+                          )}
+                          <button
+                            disabled={deletingId === pdf.id}
+                            onClick={() => handleDelete("exams", pdf.id)}
                             className="rounded-lg bg-red-500/20 px-2.5 py-1 text-xs font-semibold text-red-300 border border-red-500/30 hover:bg-red-500/30"
                           >
                             Delete

@@ -137,3 +137,31 @@ model DeviceToken {
   platform  String   @default("android")
   createdAt DateTime @default(now())
 }
+
+model AcademicMaterial {
+  id          String   @id @default(uuid())
+  title       String
+  branch      String   @default("GENERAL")
+  semester    Int      @default(1)
+  unit        Int      @default(1)
+  contentType String   @default("NOTES") @map("content_type")
+  fileUrl     String   @map("file_url")
+  s3Key       String?  @map("s3_key")
+  uploadedAt  DateTime @default(now()) @map("uploaded_at")
+
+  @@map("academic_materials")
+}
+
+model CompetitiveExam {
+  id          String   @id @default(uuid())
+  examId      String   @default("upsc-cse-2026") @map("exam_id")
+  title       String
+  subject     String   @default("General")
+  unit        String   @default("1")
+  contentType String   @default("NOTES") @map("content_type")
+  fileUrl     String   @map("file_url")
+  s3Key       String?  @map("s3_key")
+  uploadedAt  DateTime @default(now()) @map("uploaded_at")
+
+  @@map("competitive_exams")
+}

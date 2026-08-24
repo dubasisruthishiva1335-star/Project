@@ -133,9 +133,9 @@ router.post("/confirm", async (req, res) => {
       INSERT INTO internships (
         id, title, company, type, is_lms_enabled, certificate_enabled,
         branch, stipend, location, deadline, description, apply_url,
-        file_url, s3_key, duration, max_students, posted_at
+        file_url, s3_key, duration, max_students, status, posted_at
       )
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,NOW())
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,'PUBLISHED',NOW())
       ON CONFLICT (id) DO UPDATE SET
         title = EXCLUDED.title,
         company = EXCLUDED.company,
@@ -151,7 +151,8 @@ router.post("/confirm", async (req, res) => {
         file_url = EXCLUDED.file_url,
         s3_key = EXCLUDED.s3_key,
         duration = EXCLUDED.duration,
-        max_students = EXCLUDED.max_students
+        max_students = EXCLUDED.max_students,
+        status = 'PUBLISHED'
       `,
       [
         courseId,

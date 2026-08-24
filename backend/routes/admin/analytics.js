@@ -30,6 +30,7 @@ router.get("/overview", async (req, res) => {
     let jobListings = 0;
     let students = 0;
     let notes = 0;
+    let examsCount = 0;
 
     try {
       const jobsRes = await pool.query(`SELECT COUNT(*)::int AS count FROM internships`);
@@ -46,11 +47,16 @@ router.get("/overview", async (req, res) => {
       notes = Number(notesRes.rows[0]?.count) || 0;
     } catch (_) {}
 
+    try {
+      const examsRes = await pool.query(`SELECT COUNT(*)::int AS count FROM competitive_exams`);
+      examsCount = Number(examsRes.rows[0]?.count) || 0;
+    } catch (_) {}
+
     res.json({
       students,
       notes,
       jobListings,
-      examsCount: 0,
+      examsCount,
       results: 0,
     });
   } catch (err) {
@@ -71,29 +77,15 @@ router.get("/overview", async (req, res) => {
 router.get("/recent-uploads", async (req, res) => {
   let recentNotes = [];
   let recentJobs = [];
+  let recentExams = [];
   let allStudents = [];
 
   try {
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS academic_materials (
-        id            VARCHAR(100) PRIMARY KEY,
-        title         VARCHAR(255) NOT NULL,
-        branch        VARCHAR(100) NOT NULL DEFAULT 'GENERAL',
-        semester      INTEGER NOT NULL DEFAULT 1,
-        unit          INTEGER NOT NULL DEFAULT 1,
-        content_type  VARCHAR(64) NOT NULL DEFAULT 'NOTES',
-        file_url      TEXT NOT NULL,
-        s3_key        TEXT,
-        uploaded_at   TIMESTAMP NOT NULL DEFAULT NOW()
-      );
-    `);
-
     const notesRes = await pool.query(`
       SELECT id, title, content_type AS "contentType", unit, file_url AS "fileUrl", uploaded_at AS "uploadedAt", branch, semester
       FROM academic_materials
       ORDER BY uploaded_at DESC
     `);
-
     recentNotes = notesRes.rows.map(n => ({
       id: n.id,
       title: n.title,
@@ -108,9 +100,7 @@ router.get("/recent-uploads", async (req, res) => {
         semester: n.semester || 1,
       },
     }));
-  } catch (err) {
-    console.error("Notes query error:", err);
-  }
+  } catch (err) {}
 
   try {
     const jobsRes = await pool.query(`
@@ -124,9 +114,24 @@ router.get("/recent-uploads", async (req, res) => {
       ...j,
       postedAt: j.postedAt ? new Date(j.postedAt).toISOString() : new Date().toISOString()
     }));
-  } catch (err) {
-    console.error("Jobs query error:", err);
-  }
+  } catch (err) {}
+
+  try {
+    const examsRes = await pool.query(`
+      SELECT id, exam_id AS "examId", title, subject, unit, content_type AS "contentType", file_url AS "fileUrl", uploaded_at AS "uploadedAt"
+      FROM competitive_exams
+      ORDER BY uploaded_at DESC
+    `);
+    recentExams = examsRes.rows.map(e => ({
+      id: e.id,
+      name: e.title,
+      cat: e.examId,
+      subject: e.subject,
+      unit: e.unit,
+      videos: e.contentType === "VIDEO_LECTURE" ? [{ id: e.id, title: e.title, subject: e.subject, s3Url: e.fileUrl }] : [],
+      pdfNotes: e.contentType !== "VIDEO_LECTURE" ? [{ id: e.id, title: e.title, subject: e.subject, fileUrl: e.fileUrl }] : [],
+    }));
+  } catch (err) {}
 
   try {
     const studentsRes = await pool.query(`
@@ -139,14 +144,12 @@ router.get("/recent-uploads", async (req, res) => {
       ...s,
       createdAt: s.createdAt ? new Date(s.createdAt).toISOString() : new Date().toISOString()
     }));
-  } catch (err) {
-    console.error("Students query error:", err);
-  }
+  } catch (err) {}
 
   res.json({
     recentNotes,
     recentJobs,
-    recentExams: [],
+    recentExams,
     recentResults: [],
     allStudents,
   });

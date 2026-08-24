@@ -22,6 +22,47 @@ function generateId(prefix) {
 router.get("/", async (req, res) => {
   const { type, branch, isLmsEnabled } = req.query;
   try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS internships (
+        id                   VARCHAR(100) PRIMARY KEY,
+        title                VARCHAR(255) NOT NULL,
+        company              VARCHAR(255) NOT NULL DEFAULT 'Organization',
+        type                 VARCHAR(64) NOT NULL DEFAULT 'INTERNSHIP',
+        is_lms_enabled       BOOLEAN NOT NULL DEFAULT false,
+        certificate_enabled BOOLEAN NOT NULL DEFAULT false,
+        branch               VARCHAR(100) NOT NULL DEFAULT 'All Branches',
+        stipend              VARCHAR(100),
+        location             VARCHAR(255),
+        deadline             TIMESTAMP,
+        description          TEXT,
+        apply_url            TEXT,
+        file_url             TEXT,
+        s3_key               TEXT,
+        duration             VARCHAR(100),
+        max_students         INTEGER,
+        status               VARCHAR(64) NOT NULL DEFAULT 'PUBLISHED',
+        posted_at            TIMESTAMP NOT NULL DEFAULT NOW()
+      );
+      CREATE TABLE IF NOT EXISTS internship_modules (
+        id            VARCHAR(100) PRIMARY KEY,
+        internship_id VARCHAR(100) NOT NULL REFERENCES internships(id) ON DELETE CASCADE,
+        title         VARCHAR(255) NOT NULL,
+        order_index   INTEGER NOT NULL DEFAULT 1,
+        created_at    TIMESTAMP NOT NULL DEFAULT NOW()
+      );
+      CREATE TABLE IF NOT EXISTS internship_lessons (
+        id            VARCHAR(100) PRIMARY KEY,
+        module_id     VARCHAR(100) NOT NULL REFERENCES internship_modules(id) ON DELETE CASCADE,
+        title         VARCHAR(255) NOT NULL,
+        duration      VARCHAR(50),
+        video_url     TEXT,
+        pdf_url       TEXT,
+        is_preview    BOOLEAN NOT NULL DEFAULT false,
+        order_index   INTEGER NOT NULL DEFAULT 1,
+        created_at    TIMESTAMP NOT NULL DEFAULT NOW()
+      );
+    `);
+
     let query = `
       SELECT
         i.*,
@@ -30,7 +71,7 @@ router.get("/", async (req, res) => {
       FROM internships i
       LEFT JOIN internship_modules m ON m.internship_id = i.id
       LEFT JOIN internship_lessons l ON l.module_id = m.id
-      WHERE (i.status = 'PUBLISHED' OR i.status IS NULL OR i.status = 'DRAFT')
+      WHERE 1=1
     `;
     const params = [];
 

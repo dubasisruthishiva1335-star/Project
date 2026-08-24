@@ -23,6 +23,54 @@ function generateId(prefix) {
  */
 router.get("/", async (req, res) => {
   try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS internships (
+        id                   VARCHAR(100) PRIMARY KEY,
+        title                VARCHAR(255) NOT NULL,
+        company              VARCHAR(255) NOT NULL DEFAULT 'Organization',
+        type                 VARCHAR(64) NOT NULL DEFAULT 'INTERNSHIP',
+        is_lms_enabled       BOOLEAN NOT NULL DEFAULT false,
+        certificate_enabled BOOLEAN NOT NULL DEFAULT false,
+        branch               VARCHAR(100) NOT NULL DEFAULT 'All Branches',
+        stipend              VARCHAR(100),
+        location             VARCHAR(255),
+        deadline             TIMESTAMP,
+        description          TEXT,
+        apply_url            TEXT,
+        file_url             TEXT,
+        s3_key               TEXT,
+        duration             VARCHAR(100),
+        max_students         INTEGER,
+        status               VARCHAR(64) NOT NULL DEFAULT 'PUBLISHED',
+        posted_at            TIMESTAMP NOT NULL DEFAULT NOW()
+      );
+      CREATE TABLE IF NOT EXISTS internship_modules (
+        id            VARCHAR(100) PRIMARY KEY,
+        internship_id VARCHAR(100) NOT NULL REFERENCES internships(id) ON DELETE CASCADE,
+        title         VARCHAR(255) NOT NULL,
+        order_index   INTEGER NOT NULL DEFAULT 1,
+        created_at    TIMESTAMP NOT NULL DEFAULT NOW()
+      );
+      CREATE TABLE IF NOT EXISTS internship_lessons (
+        id            VARCHAR(100) PRIMARY KEY,
+        module_id     VARCHAR(100) NOT NULL REFERENCES internship_modules(id) ON DELETE CASCADE,
+        title         VARCHAR(255) NOT NULL,
+        duration      VARCHAR(50),
+        video_url     TEXT,
+        pdf_url       TEXT,
+        is_preview    BOOLEAN NOT NULL DEFAULT false,
+        order_index   INTEGER NOT NULL DEFAULT 1,
+        created_at    TIMESTAMP NOT NULL DEFAULT NOW()
+      );
+      CREATE TABLE IF NOT EXISTS internship_enrollments (
+        id            VARCHAR(100) PRIMARY KEY,
+        student_id    VARCHAR(100) NOT NULL,
+        internship_id VARCHAR(100) NOT NULL REFERENCES internships(id) ON DELETE CASCADE,
+        enrolled_at   TIMESTAMP NOT NULL DEFAULT NOW(),
+        UNIQUE (student_id, internship_id)
+      );
+    `);
+
     const result = await pool.query(`
       SELECT
         i.*,
@@ -126,8 +174,32 @@ router.post("/confirm", async (req, res) => {
   } = req.body;
 
   const courseId = bodyId || generateId("course");
+  const finalDeadline = (deadline && String(deadline).trim() !== "") ? new Date(deadline) : null;
 
   try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS internships (
+        id                   VARCHAR(100) PRIMARY KEY,
+        title                VARCHAR(255) NOT NULL,
+        company              VARCHAR(255) NOT NULL DEFAULT 'Organization',
+        type                 VARCHAR(64) NOT NULL DEFAULT 'INTERNSHIP',
+        is_lms_enabled       BOOLEAN NOT NULL DEFAULT false,
+        certificate_enabled BOOLEAN NOT NULL DEFAULT false,
+        branch               VARCHAR(100) NOT NULL DEFAULT 'All Branches',
+        stipend              VARCHAR(100),
+        location             VARCHAR(255),
+        deadline             TIMESTAMP,
+        description          TEXT,
+        apply_url            TEXT,
+        file_url             TEXT,
+        s3_key               TEXT,
+        duration             VARCHAR(100),
+        max_students         INTEGER,
+        status               VARCHAR(64) NOT NULL DEFAULT 'PUBLISHED',
+        posted_at            TIMESTAMP NOT NULL DEFAULT NOW()
+      );
+    `);
+
     await pool.query(
       `
       INSERT INTO internships (
@@ -156,15 +228,15 @@ router.post("/confirm", async (req, res) => {
       `,
       [
         courseId,
-        title || "New Internship Course",
+        title || "New Internship Opportunity",
         company || "Organization",
-        type,
-        Boolean(isLmsEnabled),
-        Boolean(certificateEnabled),
+        type || "INTERNSHIP",
+        Boolean(isLmsEnabled === true || isLmsEnabled === "true"),
+        Boolean(certificateEnabled === true || certificateEnabled === "true"),
         branch || "All Branches",
         stipend || null,
         location || null,
-        deadline || null,
+        finalDeadline,
         description || null,
         applyUrl || null,
         publicUrl || fileUrl || null,

@@ -14,6 +14,8 @@ export interface UploadFormField {
   required?: boolean;
   options?: { value: string; label: string }[];
   placeholder?: string;
+  defaultValue?: string;
+  hidden?: boolean;
 }
 
 export interface UploadFormConfig {
@@ -54,7 +56,13 @@ export function UploadForm({
     successMessage = "Uploaded successfully.",
   } = config;
 
-  const [values, setValues] = useState<Record<string, string>>({});
+  const [values, setValues] = useState<Record<string, string>>(() => {
+    const initial: Record<string, string> = {};
+    fields.forEach((f) => {
+      if (f.defaultValue) initial[f.name] = f.defaultValue;
+    });
+    return initial;
+  });
   const [file, setFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [stage, setStage] = useState<UploadProgressStage | null>(null);
@@ -140,35 +148,38 @@ export function UploadForm({
       className="space-y-6 rounded-2xl border border-white/10 bg-white/[0.03] p-6 backdrop-blur-xl"
     >
       <div className="grid gap-4 sm:grid-cols-2">
-        {fields.map((field) => (
-          <div key={field.name} className={field.type === "select" ? "" : "sm:col-span-1"}>
-            <label className="mb-1.5 block text-sm font-medium text-white/80">
-              {field.label}
-            </label>
-            {field.type === "select" ? (
-              <select
-                value={values[field.name] ?? ""}
-                onChange={(e) => handleFieldChange(field.name, e.target.value)}
-                className="w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-sm text-white outline-none focus:border-cyan-400/60 focus:ring-1 focus:ring-cyan-400/60"
-              >
-                <option value="">Select {field.label.replace(" *", "").toLowerCase()}</option>
-                {field.options?.map((opt) => (
-                  <option key={opt.value} value={opt.value} className="bg-neutral-900 text-white">
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
-            ) : (
-              <input
-                type={field.type}
-                placeholder={field.placeholder}
-                value={values[field.name] ?? ""}
-                onChange={(e) => handleFieldChange(field.name, e.target.value)}
-                className="w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-sm text-white placeholder-white/30 outline-none focus:border-cyan-400/60 focus:ring-1 focus:ring-cyan-400/60"
-              />
-            )}
-          </div>
-        ))}
+        {fields.map((field) => {
+          if (field.hidden) return null;
+          return (
+            <div key={field.name} className={field.type === "select" ? "" : "sm:col-span-1"}>
+              <label className="mb-1.5 block text-sm font-medium text-white/80">
+                {field.label}
+              </label>
+              {field.type === "select" ? (
+                <select
+                  value={values[field.name] ?? field.defaultValue ?? ""}
+                  onChange={(e) => handleFieldChange(field.name, e.target.value)}
+                  className="w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-sm text-white outline-none focus:border-cyan-400/60 focus:ring-1 focus:ring-cyan-400/60"
+                >
+                  <option value="">Select {field.label.replace(" *", "").toLowerCase()}</option>
+                  {field.options?.map((opt) => (
+                    <option key={opt.value} value={opt.value} className="bg-neutral-900 text-white">
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  type={field.type}
+                  placeholder={field.placeholder}
+                  value={values[field.name] ?? field.defaultValue ?? ""}
+                  onChange={(e) => handleFieldChange(field.name, e.target.value)}
+                  className="w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-sm text-white placeholder-white/30 outline-none focus:border-cyan-400/60 focus:ring-1 focus:ring-cyan-400/60"
+                />
+              )}
+            </div>
+          );
+        })}
       </div>
 
       {requireFile && (

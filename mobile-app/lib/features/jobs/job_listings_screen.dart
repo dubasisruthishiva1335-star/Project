@@ -37,15 +37,9 @@ class _JobListingsScreenState extends State<JobListingsScreen> {
       _error = null;
     });
     try {
-      var res = await ApiClient.instance.dio
+      final res = await ApiClient.instance.dio
           .get('/internships', queryParameters: {'type': widget.type});
-      var fetched = res.data as List<dynamic>;
-
-      // Fallback: if filtered query returned empty, fetch all listings so student is never stuck on empty screen
-      if (fetched.isEmpty) {
-        res = await ApiClient.instance.dio.get('/internships');
-        fetched = res.data as List<dynamic>;
-      }
+      final fetched = res.data as List<dynamic>;
 
       setState(() {
         _jobs = fetched;

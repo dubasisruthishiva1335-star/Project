@@ -340,7 +340,7 @@ export default function DashboardPage() {
             <h2 className="text-lg font-bold text-white flex items-center gap-2">
               <span>
                 {activeTab === "notes" && "📚 Academic Materials & Study Folders"}
-                {activeTab === "jobs" && "💼 Job & Internship Opportunities"}
+                {(activeTab === "internships" || activeTab === "placements" || activeTab === "govtJobs") && "💼 Opportunities & Drives Folders"}
                 {activeTab === "exams" && "🎓 Competitive Exam Video Lectures & Notes"}
                 {activeTab === "students" && "👤 Registered Students Directory"}
                 {activeTab === "results" && "📊 Exam Results Uploaded"}
@@ -444,7 +444,7 @@ export default function DashboardPage() {
         )}
 
         {/* Folder Structure View Mode: Jobs, Internships, Placements, Govt Jobs */}
-        {viewMode === "folders" && activeTab === "jobs" && (
+        {viewMode === "folders" && (activeTab === "internships" || activeTab === "placements" || activeTab === "govtJobs") && (
           <div className="space-y-4">
             {filteredJobs.length === 0 ? (
               <div className="py-12 text-center text-white/40">
@@ -578,7 +578,7 @@ export default function DashboardPage() {
         )}
 
         {/* Tab 2: Job & Internship Listings */}
-        {activeTab === "jobs" && (
+        {(activeTab === "internships" || activeTab === "placements" || activeTab === "govtJobs") && (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead className="border-b border-white/10 bg-white/[0.02] text-white/50 uppercase">

@@ -39,7 +39,7 @@ const internshipConfig: UploadFormConfig = {
     { name: "location", label: "Work Location / Mode", type: "text", required: false, placeholder: "e.g. Remote / Hybrid / Hyderabad" },
     { name: "deadline", label: "Application Deadline Date", type: "date", required: false },
     { name: "description", label: "Internship Description & Key Eligibility", type: "text", required: false, placeholder: "Skills required, responsibilities, selection process..." },
-    { name: "applyUrl", label: "Application Portal Link / Registration Form URL", type: "text", required: false, placeholder: "https://careers.google.com/jobs" },
+    { name: "applyUrl", label: "Application Portal Link / Registration Form URL", type: "text", required: false, placeholder: "https://careers.google.com/internships" },
   ],
 };
 

@@ -805,14 +805,23 @@ export default function DashboardPage() {
                   <th className="px-4 py-3">Category</th>
                   <th className="px-4 py-3">Target Branch</th>
                   <th className="px-4 py-3">Attachment File</th>
-                  <th className="px-4 py-3">Portal Link URL</th>
                   <th className="px-4 py-3">Posted Date</th>
                   <th className="px-4 py-3 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5 text-white/80">
-                {filteredJobs.length > 0 ? (
-                  filteredJobs.map((job) => (
+                {filteredJobs.filter(j => {
+                  if (activeTab === "internships") return j.type === "INTERNSHIP" || !j.type;
+                  if (activeTab === "placements") return j.type === "PLACEMENT";
+                  if (activeTab === "govtJobs") return j.type === "GOVT_JOB";
+                  return true;
+                }).length > 0 ? (
+                  filteredJobs.filter(j => {
+                    if (activeTab === "internships") return j.type === "INTERNSHIP" || !j.type;
+                    if (activeTab === "placements") return j.type === "PLACEMENT";
+                    if (activeTab === "govtJobs") return j.type === "GOVT_JOB";
+                    return true;
+                  }).map((job) => (
                     <tr key={job.id} className="hover:bg-white/[0.02]">
                       <td className="px-4 py-3 font-semibold text-white">{job.title}</td>
                       <td className="px-4 py-3 text-accentCyan font-medium">{job.company}</td>

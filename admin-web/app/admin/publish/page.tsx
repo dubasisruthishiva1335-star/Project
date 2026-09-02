@@ -4,6 +4,16 @@ import Link from "next/link";
 
 const PUBLISH_FOLDERS = [
   {
+    key: "internships",
+    icon: "💼",
+    label: "Internships & LMS Courses",
+    desc: "Post internships and full LMS industrial training courses with video lessons & certificates",
+    color: "from-blue-500/20 to-indigo-500/20",
+    border: "border-blue-500/30",
+    text: "text-blue-300",
+    path: "/admin/publish/internships",
+  },
+  {
     key: "placements",
     icon: "🏢",
     label: "Campus Placement Drives",

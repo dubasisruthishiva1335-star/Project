@@ -1,44 +1,45 @@
-// lib/exam-store.ts
-// Shared in-memory store for Competitive Exam materials uploaded via Admin Web
-
-export interface ExamResource {
+export interface UploadedExamResource {
   id: string;
-  examId: string;
+  examId?: string;
+  examName?: string;
+  cat?: string;
+  title: string;
+  subject: string;
+  contentType: string;
+  fileUrl: string;
+  duration?: string;
+  uploadedAt: string;
+  unit?: string;
+  s3Key?: string;
+}
+
+export const uploadedExamResources: UploadedExamResource[] = [];
+
+export function addExamResource(data: {
+  examId?: string;
   examName?: string;
   subject: string;
-  unit: string;
+  unit?: string;
   contentType: string;
   title: string;
   duration?: string;
   fileUrl: string;
   s3Key?: string;
-  createdAt: string;
-}
-
-export let uploadedExamResources: ExamResource[] = [
-  {
-    id: "sample_upsc_1",
-    examId: "upsc-cse-2026",
-    examName: "UPSC Civil Services (IAS / IPS / IFS)",
-    subject: "Quantitative Aptitude",
-    unit: "1",
-    contentType: "NOTES",
-    title: "cv",
-    fileUrl: "https://myvault-files-app.s3.eu-north-1.amazonaws.com/exams/upsc-cse-2026/1787398331254_ilovepdf_merged.pdf",
-    createdAt: new Date().toISOString(),
-  },
-];
-
-export function addExamResource(resource: Omit<ExamResource, "id" | "createdAt">) {
-  const newResource: ExamResource = {
-    ...resource,
-    id: `res_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
-    createdAt: new Date().toISOString(),
+}): UploadedExamResource {
+  const newRes: UploadedExamResource = {
+    id: `exam_res_${Date.now()}`,
+    examId: data.examId,
+    examName: data.examName,
+    subject: data.subject,
+    unit: data.unit,
+    contentType: data.contentType,
+    title: data.title,
+    duration: data.duration,
+    fileUrl: data.fileUrl,
+    s3Key: data.s3Key,
+    uploadedAt: new Date().toISOString(),
   };
-  uploadedExamResources.unshift(newResource);
-  return newResource;
-}
 
-export function clearExamResources() {
-  uploadedExamResources = [];
+  uploadedExamResources.unshift(newRes);
+  return newRes;
 }

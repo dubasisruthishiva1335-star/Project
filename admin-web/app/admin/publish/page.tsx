@@ -4,8 +4,18 @@ import Link from "next/link";
 
 const PUBLISH_FOLDERS = [
   {
-    key: "internships",
+    key: "jobs",
     icon: "💼",
+    label: "Full-Time Job Listings",
+    desc: "Post full-time software engineering and corporate job openings with CTC packages",
+    color: "from-sky-500/20 to-blue-500/20",
+    border: "border-sky-500/30",
+    text: "text-sky-300",
+    path: "/admin/publish/jobs",
+  },
+  {
+    key: "internships",
+    icon: "🎓",
     label: "Internships & LMS Courses",
     desc: "Post internships and full LMS industrial training courses with video lessons & certificates",
     color: "from-blue-500/20 to-indigo-500/20",

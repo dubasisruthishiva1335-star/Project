@@ -111,7 +111,7 @@ export default function DashboardPage() {
   const [data, setData] = useState<Overview | null>(null);
   const [recent, setRecent] = useState<RecentUploads | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"notes" | "internships" | "placements" | "govtJobs" | "exams" | "students" | "results">("notes");
+  const [activeTab, setActiveTab] = useState<"notes" | "jobs" | "internships" | "placements" | "govtJobs" | "exams" | "students" | "results">("notes");
   const [searchQuery, setSearchQuery] = useState("");
   const [editingItem, setEditingItem] = useState<{ id: string; type: "notes" | "jobs" | "exams"; title: string; subtitle?: string } | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -233,23 +233,25 @@ export default function DashboardPage() {
     }
   };
 
-  const internshipCount = (recent?.recentJobs ?? []).filter(j => j.type === "INTERNSHIP" || !j.type).length;
+  const jobCount = (recent?.recentJobs ?? []).filter(j => j.type === "JOB").length;
+  const internshipCount = (recent?.recentJobs ?? []).filter(j => j.type === "INTERNSHIP").length;
   const placementCount = (recent?.recentJobs ?? []).filter(j => j.type === "PLACEMENT").length;
   const govtJobCount = (recent?.recentJobs ?? []).filter(j => j.type === "GOVT_JOB").length;
   const examsList = recent?.recentExams ?? DEFAULT_EXAMS;
 
   const cards: Array<{
-    id: "notes" | "internships" | "placements" | "govtJobs" | "exams" | "students";
+    id: "notes" | "jobs" | "internships" | "placements" | "govtJobs" | "exams" | "students";
     label: string;
     value: number | undefined;
     icon: string;
     color: string;
   }> = [
     { id: "notes", label: "Academic Notes", value: recent?.recentNotes?.length ?? data?.notes, icon: "📚", color: "from-cyan-500/20 to-teal-500/20" },
-    { id: "internships", label: "Internships & LMS", value: internshipCount, icon: "💼", color: "from-blue-500/20 to-indigo-500/20" },
+    { id: "jobs", label: "Job Listings", value: jobCount, icon: "💼", color: "from-sky-500/20 to-blue-500/20" },
+    { id: "internships", label: "Internships & LMS", value: internshipCount, icon: "🎓", color: "from-blue-500/20 to-indigo-500/20" },
     { id: "placements", label: "Campus Placements", value: placementCount, icon: "🏢", color: "from-purple-500/20 to-violet-500/20" },
     { id: "govtJobs", label: "Govt Jobs Hub", value: govtJobCount, icon: "🏛️", color: "from-emerald-500/20 to-green-500/20" },
-    { id: "exams", label: "Competitive Exams", value: data?.examsCount ?? examsList.length, icon: "🎓", color: "from-amber-500/20 to-yellow-500/20" },
+    { id: "exams", label: "Competitive Exams", value: data?.examsCount ?? examsList.length, icon: "⭐", color: "from-amber-500/20 to-yellow-500/20" },
     { id: "students", label: "Students Registered", value: recent?.allStudents?.length ?? data?.students, icon: "👤", color: "from-indigo-500/20 to-cyan-500/20" },
   ];
 
@@ -432,6 +434,70 @@ export default function DashboardPage() {
                           <button
                             disabled={deletingId === item.id}
                             onClick={() => handleDelete("notes", item.id)}
+                            className="rounded-lg bg-red-500/20 px-2.5 py-1 text-xs font-semibold text-red-300 border border-red-500/30 hover:bg-red-500/30"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        )}
+
+        {/* Folder Structure View Mode: Full-Time Job Listings */}
+        {viewMode === "folders" && activeTab === "jobs" && (
+          <div className="space-y-4">
+            {filteredJobs.filter(j => j.type === "JOB").length === 0 ? (
+              <div className="py-12 text-center text-white/40">
+                <p className="text-3xl mb-2">📂</p>
+                <p className="text-sm font-semibold">No uploaded Full-Time Job Listing folders found.</p>
+              </div>
+            ) : (
+              Object.entries(
+                filteredJobs.filter(j => j.type === "JOB").reduce((acc: any, job) => {
+                  const folderKey = `💼 Job Listing Folder: ${job.company} — ${job.title}`;
+                  (acc[folderKey] ||= []).push(job);
+                  return acc;
+                }, {})
+              ).map(([folderName, jobsList]: [string, any]) => (
+                <div key={folderName} className="rounded-xl border border-white/10 bg-white/[0.02] overflow-hidden backdrop-blur-md">
+                  <div className="flex items-center justify-between border-b border-white/10 bg-sky-500/10 px-4 py-3">
+                    <div className="flex items-center space-x-3">
+                      <span className="text-xl">📁</span>
+                      <div>
+                        <h3 className="text-sm font-bold text-white">{folderName}</h3>
+                        <p className="text-[10px] text-sky-300">{jobsList.length} Job Opening{jobsList.length > 1 ? "s" : ""}</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="divide-y divide-white/5 p-2">
+                    {jobsList.map((item: any) => (
+                      <div key={item.id} className="flex items-center justify-between p-3 rounded-lg hover:bg-white/5 transition-colors">
+                        <div className="flex items-center space-x-3">
+                          <span className="text-base">💼</span>
+                          <div>
+                            <p className="text-xs font-bold text-white">{item.title}</p>
+                            <p className="text-[10px] text-white/50">{item.company} • {item.branch} • CTC: {item.stipend || "Best in Industry"}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          {item.applyUrl && (
+                            <a
+                              href={item.applyUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="rounded-lg bg-sky-500/20 px-2.5 py-1 text-xs font-semibold text-sky-300 border border-sky-500/40 hover:bg-sky-500/30"
+                            >
+                              Apply Link ↗
+                            </a>
+                          )}
+                          <button
+                            disabled={deletingId === item.id}
+                            onClick={() => handleDelete("jobs", item.id)}
                             className="rounded-lg bg-red-500/20 px-2.5 py-1 text-xs font-semibold text-red-300 border border-red-500/30 hover:bg-red-500/30"
                           >
                             Delete
@@ -795,8 +861,8 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* Tab 2: Opportunities & Drives */}
-        {(activeTab === "internships" || activeTab === "placements" || activeTab === "govtJobs") && (
+        {/* Tab 2: Opportunities & Jobs */}
+        {(activeTab === "jobs" || activeTab === "internships" || activeTab === "placements" || activeTab === "govtJobs") && (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead className="border-b border-white/10 bg-white/[0.02] text-white/50 uppercase">
@@ -812,13 +878,15 @@ export default function DashboardPage() {
               </thead>
               <tbody className="divide-y divide-white/5 text-white/80">
                 {filteredJobs.filter(j => {
-                  if (activeTab === "internships") return j.type === "INTERNSHIP" || !j.type;
+                  if (activeTab === "jobs") return j.type === "JOB";
+                  if (activeTab === "internships") return j.type === "INTERNSHIP";
                   if (activeTab === "placements") return j.type === "PLACEMENT";
                   if (activeTab === "govtJobs") return j.type === "GOVT_JOB";
                   return true;
                 }).length > 0 ? (
                   filteredJobs.filter(j => {
-                    if (activeTab === "internships") return j.type === "INTERNSHIP" || !j.type;
+                    if (activeTab === "jobs") return j.type === "JOB";
+                    if (activeTab === "internships") return j.type === "INTERNSHIP";
                     if (activeTab === "placements") return j.type === "PLACEMENT";
                     if (activeTab === "govtJobs") return j.type === "GOVT_JOB";
                     return true;

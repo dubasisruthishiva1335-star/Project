@@ -1,0 +1,30 @@
+services:
+  # 1. MyVault Express Backend API
+  - type: web
+    name: myvault-backend
+    runtime: node
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: PORT
+        value: 4000
+      - key: NODE_ENV
+        value: production
+      - key: AWS_REGION
+        value: eu-north-1
+      - key: AWS_S3_BUCKET
+        value: myvault-files-app
+
+  # 2. MyVault Next.js Admin Web Portal
+  - type: web
+    name: myvault-admin-web
+    runtime: node
+    rootDir: admin-web
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NEXT_PUBLIC_API_BASE_URL
+        value: https://romantic-serenity-production-3e5b.up.railway.app

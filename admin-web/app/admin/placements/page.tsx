@@ -1,7 +1,7 @@
 import { UploadForm, type UploadFormConfig } from "@/components/admin/UploadForm";
 
 const placementConfig: UploadFormConfig = {
-  domain: "internships",
+  domain: "placements",
   confirmPath: "/admin/job-listings/confirm",
   acceptedFileTypes: "application/pdf,video/mp4",
   requireFile: false,

@@ -1,13 +1,8 @@
 const express = require("express");
 const crypto = require("crypto");
-const { Pool } = require("pg");
+const { pool } = require("../../services/db");
 
 const router = express.Router();
-
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : false,
-});
 
 function generateId(prefix) {
   return `${prefix}_${Date.now()}_${crypto.randomBytes(5).toString("hex")}`;

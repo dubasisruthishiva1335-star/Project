@@ -9,15 +9,10 @@ const app = express();
 app.use(cors());
 app.use(express.json({ limit: "2mb" }));
 
-const isRemoteDb = process.env.DATABASE_URL && !process.env.DATABASE_URL.includes("localhost") && !process.env.DATABASE_URL.includes("127.0.0.1");
-
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL || "postgresql://postgres:postgres@localhost:5432/myvault_scaffold?schema=public",
-  ssl: isRemoteDb ? { rejectUnauthorized: false } : false,
-});
+const { pool, isRemote } = require("./services/db");
 
 // Auto-initialize DB tables on startup (non-blocking)
-if (process.env.DATABASE_URL && !process.env.DATABASE_URL.includes("localhost")) {
+if (isRemote) {
   pool.query(`
     CREATE TABLE IF NOT EXISTS academic_materials (
       id            VARCHAR(100) PRIMARY KEY,
@@ -42,7 +37,7 @@ app.get("/", (req, res) => {
 app.get("/health", async (req, res) => {
   let dbStatus = "disconnected";
   try {
-    if (process.env.DATABASE_URL && !process.env.DATABASE_URL.includes("localhost")) {
+    if (isRemote) {
       await pool.query("SELECT 1");
       dbStatus = "connected";
     }

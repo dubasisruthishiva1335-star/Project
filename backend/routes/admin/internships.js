@@ -1,15 +1,10 @@
 const express = require("express");
 const crypto = require("crypto");
-const { Pool } = require("pg");
+const { pool } = require("../../services/db");
 const { adminAuth } = require("../../middleware/adminAuth");
 const { createPresignedUploadUrl } = require("../../services/s3.service");
 
 const router = express.Router();
-
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : false,
-});
 
 // Admin authentication middleware (disabled by default for developer ease, optionally enabled)
 // router.use(adminAuth);

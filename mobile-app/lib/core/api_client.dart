@@ -9,7 +9,7 @@ class ApiClient {
   static const _storage = FlutterSecureStorage();
   static const _tokenKey = 'myvault_jwt';
   static const _baseUrlKey = 'myvault_base_url';
-  static const defaultBaseUrl = 'https://romantic-serenity-production-3e5b.up.railway.app';
+  static const defaultBaseUrl = 'https://project-9zrh.onrender.com';
 
   late final Dio dio = _buildDio();
 

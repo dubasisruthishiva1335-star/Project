@@ -57,7 +57,7 @@ app.use("/admin/notes", require("./routes/admin/notes"));
 app.use("/admin/exams", require("./routes/admin/exams"));
 app.use("/admin/preparation", require("./routes/admin/exams"));
 app.use("/admin/internships", require("./routes/admin/internships"));
-app.use("/admin/job-listings", require("./routes/admin/internships"));
+app.use("/admin/uploads", require("./routes/admin/uploads"));
 app.use("/admin/analytics", require("./routes/admin/analytics"));
 app.use("/certificates", require("./routes/certificates"));
 

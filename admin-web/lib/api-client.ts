@@ -52,20 +52,15 @@ export async function apiRequest<T>(
       const message =
         body && typeof body === "object" && "message" in body
           ? (body as { message: string }).message
-          : `Request failed with status ${res.status}`;
-
-      if (options.method === "POST") {
-        return { success: true, message: "Published successfully" } as T;
-      }
+          : (body && typeof body === "object" && "error" in body
+          ? (body as { error: string }).error
+          : `Request failed with status ${res.status}`);
 
       throw new ApiError(message, res.status, body);
     }
 
     return res.json();
   } catch (err) {
-    if (options.method === "POST") {
-      return { success: true, message: "Published successfully" } as T;
-    }
     throw err;
   }
 }
@@ -96,9 +91,9 @@ export async function uploadFileToS3(
 
   onProgress?.("presigning");
 
-  let presign: PresignResponse;
+  let presign: PresignResponse | null = null;
   try {
-    // Call Vercel local presign route first
+    // 1. Try Vercel local API route
     const presignRes = await fetch("/api/admin/uploads/presign", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -111,7 +106,12 @@ export async function uploadFileToS3(
     });
     if (presignRes.ok) {
       presign = await presignRes.json();
-    } else {
+    }
+  } catch (_) {}
+
+  if (!presign || !presign.uploadUrl) {
+    // 2. Try backend /admin/uploads/presign
+    try {
       presign = await apiRequest<PresignResponse>("/admin/uploads/presign", {
         method: "POST",
         body: JSON.stringify({
@@ -121,27 +121,28 @@ export async function uploadFileToS3(
           ...presignMeta,
         }),
       });
+    } catch (err) {
+      console.error("Presign request failed:", err);
+      throw new ApiError("Failed to get upload authorization from server.", 500, err);
     }
-  } catch (_) {
-    const s3Key = `${domain}/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
-    presign = {
-      uploadUrl: `https://myvault-files-app.s3.eu-north-1.amazonaws.com/${s3Key}`,
-      s3Key,
-      publicUrl: `https://myvault-files-app.s3.eu-north-1.amazonaws.com/${s3Key}`,
-    };
+  }
+
+  if (!presign?.uploadUrl) {
+    throw new ApiError("Invalid upload URL returned from server.", 500, null);
   }
 
   onProgress?.("uploading");
-  try {
-    const putRes = await fetch(presign.uploadUrl, {
-      method: "PUT",
-      headers: { "Content-Type": file.type || "application/octet-stream" },
-      body: file,
-    });
-    if (!putRes.ok) {
-      throw new ApiError("File upload to storage failed", putRes.status, null);
-    }
-  } catch (_) {}
+  const putRes = await fetch(presign.uploadUrl, {
+    method: "PUT",
+    headers: { "Content-Type": file.type || "application/octet-stream" },
+    body: file,
+  });
+
+  if (!putRes.ok) {
+    const errText = await putRes.text().catch(() => "");
+    console.error("S3 upload failed:", putRes.status, errText);
+    throw new ApiError(`S3 Upload failed with status ${putRes.status}`, putRes.status, errText);
+  }
 
   onProgress?.("confirming");
   return { s3Key: presign.s3Key, publicUrl: presign.publicUrl };

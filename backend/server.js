@@ -7,7 +7,8 @@ const { Pool } = require("pg");
 const app = express();
 
 app.use(cors());
-app.use(express.json({ limit: "2mb" }));
+app.options("*", cors());
+app.use(express.json({ limit: "10mb" }));
 
 const { pool, isRemote } = require("./services/db");
 

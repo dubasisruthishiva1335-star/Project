@@ -164,17 +164,21 @@ export async function uploadAndConfirm<TResponse>(
 
   const payload = { ...metadata, s3Key, publicUrl };
 
-  // 1. Post directly to local Vercel serverless API route
+  // 1. Post to local Vercel serverless API route if available
   try {
     const localPath = confirmPath.startsWith("/api") ? confirmPath : `/api${confirmPath}`;
-    await fetch(localPath, {
+    const localRes = await fetch(localPath, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
+    if (localRes.ok) {
+      options.onProgress?.("done");
+      return await localRes.json();
+    }
   } catch (_) {}
 
-  // 2. Post to external Railway API as fallback
+  // 2. Fallback to direct backend API (Render)
   const result = await apiRequest<TResponse>(confirmPath, {
     method: "POST",
     body: JSON.stringify(payload),

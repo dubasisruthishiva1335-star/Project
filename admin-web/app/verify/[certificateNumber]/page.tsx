@@ -15,7 +15,7 @@ export default function CertificateVerificationPage() {
     if (!certificateNumber) return;
     async function verify() {
       try {
-        const res = await fetch(`https://romantic-serenity-production-3e5b.up.railway.app/certificates/${encodeURIComponent(certificateNumber)}`);
+        const res = await fetch(`https://project-9zrh.onrender.com/certificates/${encodeURIComponent(certificateNumber)}`);
         const json = await res.json();
         if (json.valid) {
           setData(json.certificate);

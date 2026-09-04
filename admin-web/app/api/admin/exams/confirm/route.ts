@@ -33,9 +33,9 @@ export async function POST(request: Request) {
       s3Key,
     });
 
-    // 2. Forward to Railway backend in background
+    // 2. Forward to Render backend in background
     try {
-      await fetch("https://romantic-serenity-production-3e5b.up.railway.app/admin/exams/confirm", {
+      await fetch("https://project-9zrh.onrender.com/admin/exams/confirm", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),

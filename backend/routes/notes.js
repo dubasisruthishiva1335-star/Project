@@ -3,121 +3,47 @@ const { pool } = require("../services/db");
 
 const router = express.Router();
 
-// Standard Engineering Subjects Catalog by Branch
-const BRANCH_SUBJECTS = {
-  CSE: [
-    "Data Structures & Algorithms",
-    "Database Management Systems (DBMS)",
-    "Operating Systems & Linux",
-    "Computer Networks (CN)",
-    "Theory of Computation & Automata",
-  ],
-  ECE: [
-    "Electronic Devices & Circuits (EDC)",
-    "Signals & Systems (SS)",
-    "Digital Logic Design (DLD)",
-    "Linear Integrated Circuits (LIC)",
-    "Analog & Digital Communications",
-  ],
-  AI_ML: [
-    "Machine Learning Fundamentals",
-    "Deep Learning & Neural Networks",
-    "Natural Language Processing (NLP)",
-    "Computer Vision & Pattern Recognition",
-    "Python for Artificial Intelligence",
-  ],
-  EEE: [
-    "Circuit Theory & Analysis",
-    "Electrical Machines (AC & DC)",
-    "Power Systems & Transmission",
-    "Control Systems Engineering",
-    "Power Electronics & Drives",
-  ],
-  MECH: [
-    "Engineering Thermodynamics",
-    "Fluid Mechanics & Hydraulics",
-    "Strength of Materials (SOM)",
-    "Manufacturing Technology & CAM",
-    "Kinematics & Theory of Machines",
-  ],
-  CIVIL: [
-    "Surveying & Geomatics",
-    "Structural Analysis & Mechanics",
-    "Building Materials & Construction",
-    "Geotechnical & Soil Engineering",
-    "Hydrology & Water Resources",
-  ],
-  GENERAL: [
-    "Engineering Mathematics (M-1 & M-2)",
-    "Engineering Physics & Semiconductor Physics",
-    "Engineering Chemistry & Environmental Science",
-    "Basic Electrical & Electronics (BEEE)",
-    "Programming for Problem Solving (C / Python)",
-  ],
-};
-
-function getDefaultSubjects(branch, semester) {
-  const normBranch = (branch || "CSE").toUpperCase();
-  const subNames = BRANCH_SUBJECTS[normBranch] || BRANCH_SUBJECTS["CSE"];
-
-  return subNames.map((name, index) => ({
-    id: `default_${normBranch}_${semester}_${index + 1}`,
-    name,
-    code: `${normBranch}-${100 * (Number(semester) || 1) + index + 1}`,
-    branch: normBranch,
-    semester: Number(semester) || 1,
-    contents: [1, 2, 3, 4, 5].map((u) => ({
-      id: `content_${normBranch}_${semester}_${index + 1}_u${u}`,
-      title: `${name} — Unit ${u} Lecture Notes & PYQs`,
-      contentType: u % 2 === 0 ? "VIDEO_LECTURE" : "NOTES",
-      unit: u,
-      fileUrl: "https://myvault-files-app.s3.eu-north-1.amazonaws.com/app-arm64-v8a-release.apk",
-      s3Key: `academic/${normBranch.toLowerCase()}/sem${semester}/unit${u}.pdf`,
-      uploadedAt: new Date().toISOString(),
-    })),
-  }));
-}
-
 /**
  * GET /notes (and /academic/content and /subjects)
  * Query parameters: branch, semester, unit, contentType
+ * STRICTLY returns only uploaded materials from the website admin portal.
  */
 router.get("/", async (req, res) => {
-  const { branch = "ECE", semester = 1, unit, contentType } = req.query;
+  const { branch, semester, unit, contentType } = req.query;
 
   try {
-    let query = `SELECT * FROM academic_materials WHERE 1=1`;
-    const params = [];
+    const result = await pool.query(`SELECT * FROM academic_materials ORDER BY uploaded_at DESC`);
+    let rows = result.rows || [];
 
-    if (branch && branch !== "ALL" && branch !== "General") {
-      params.push(branch);
-      query += ` AND (branch = $${params.length} OR branch = 'GENERAL')`;
+    // Filter by branch
+    if (branch && branch !== "ALL" && branch !== "General" && branch !== "GENERAL") {
+      const bNorm = branch.toUpperCase().replace(/\s+/g, "");
+      rows = rows.filter((r) => {
+        const rowBNorm = (r.branch || "GENERAL").toUpperCase().replace(/\s+/g, "");
+        return rowBNorm === bNorm || rowBNorm === "GENERAL" || (bNorm.includes("CSE") && rowBNorm.includes("CSE")) || (bNorm.includes("ECE") && rowBNorm.includes("ECE"));
+      });
     }
 
+    // Filter by semester
     if (semester) {
-      params.push(Number(semester));
-      query += ` AND semester = $${params.length}`;
+      rows = rows.filter((r) => Number(r.semester) === Number(semester));
     }
 
-    if (unit) {
-      params.push(Number(unit));
-      query += ` AND unit = $${params.length}`;
+    // Filter by unit
+    if (unit && Number(unit) > 0) {
+      rows = rows.filter((r) => Number(r.unit) === Number(unit));
     }
 
-    if (contentType) {
-      params.push(String(contentType).toUpperCase());
-      query += ` AND UPPER(content_type) = $${params.length}`;
+    // Filter by contentType
+    if (contentType && contentType !== "ALL") {
+      rows = rows.filter((r) => String(r.content_type).toUpperCase() === String(contentType).toUpperCase());
     }
 
-    query += ` ORDER BY uploaded_at DESC`;
-
-    const result = await pool.query(query, params);
-
-    // Group materials by subject
+    // Group uploaded materials by subject name
     const groupedMap = new Map();
 
-    (result.rows || []).forEach((row) => {
-      const subjectName = row.title.split('—')[0].split('-')[0].trim() || "Academic Resources";
+    rows.forEach((row) => {
+      const subjectName = (row.title || "").split('—')[0].split('-')[0].trim() || "Academic Materials";
       const groupKey = `${row.branch}_${row.semester}_${subjectName}`;
 
       if (!groupedMap.has(groupKey)) {
@@ -142,17 +68,10 @@ router.get("/", async (req, res) => {
       });
     });
 
-    let outputList = Array.from(groupedMap.values());
-
-    // If no custom uploaded subjects found for this branch/sem, fallback to standard catalog
-    if (outputList.length === 0) {
-      outputList = getDefaultSubjects(branch, semester);
-    }
-
-    res.json(outputList);
+    res.json(Array.from(groupedMap.values()));
   } catch (err) {
-    console.error("Notes fetch error, serving default catalog:", err.message);
-    res.json(getDefaultSubjects(branch, semester));
+    console.error("Notes fetch error:", err.message);
+    res.json([]);
   }
 });
 

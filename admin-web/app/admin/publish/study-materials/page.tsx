@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { apiRequest } from "@/lib/api-client";
+import { apiRequest, uploadAndConfirm } from "@/lib/api-client";
 
 const BRANCHES = ["GENERAL", "CSE & IT", "ECE", "AI & ML", "EEE", "MECH & CIVIL"];
 const SEMESTERS = [1, 2, 3, 4, 5, 6, 7, 8];
@@ -33,19 +33,41 @@ export default function StudyMaterialsPublish() {
     setSubmitting(true);
     setMessage(null);
     try {
-      let fileUrl = null;
-      let s3Key = null;
-
-      const res = await apiRequest<{ success: boolean }>("/admin/notes/confirm", {
-        method: "POST",
-        body: JSON.stringify({ ...form, fileUrl, s3Key }),
-      });
-
-      if (res.success) {
-        setMessage({ type: "success", text: "📚 Study Material published successfully — visible in Academic Repository instantly." });
-        setForm({ title: "", branch: "CSE & IT", semester: 1, unit: 1, subject: "", contentType: "NOTES", description: "" });
-        setFile(null);
+      if (file) {
+        await uploadAndConfirm(
+          "/admin/notes/confirm",
+          {
+            file,
+            domain: "notes",
+            presignMeta: {
+              title: form.title,
+              branch: form.branch,
+              semester: String(form.semester),
+              unit: String(form.unit),
+              contentType: form.contentType,
+              subject: form.subject,
+            },
+          },
+          {
+            title: form.title,
+            branch: form.branch,
+            semester: String(form.semester),
+            unit: String(form.unit),
+            contentType: form.contentType,
+            subject: form.subject,
+            description: form.description,
+          }
+        );
+      } else {
+        await apiRequest("/admin/notes/confirm", {
+          method: "POST",
+          body: JSON.stringify(form),
+        });
       }
+
+      setMessage({ type: "success", text: "📚 Study Material published successfully — visible in Academic Repository instantly." });
+      setForm({ title: "", branch: "CSE & IT", semester: 1, unit: 1, subject: "", contentType: "NOTES", description: "" });
+      setFile(null);
     } catch (err: any) {
       setMessage({ type: "error", text: err instanceof Error ? err.message : "Upload failed. Try again." });
     } finally {

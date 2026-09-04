@@ -41,73 +41,6 @@ class _AcademicHubScreenState extends State<AcademicHubScreen> {
     _load();
   }
 
-  List<dynamic> _getFallbackSubjects(String branch, int sem) {
-    final Map<String, List<String>> branchMap = {
-      'ECE': [
-        'Electronic Devices & Circuits (EDC)',
-        'Signals & Systems (SS)',
-        'Digital Logic Design (DLD)',
-        'Linear Integrated Circuits (LIC)',
-        'Analog & Digital Communications',
-      ],
-      'CSE': [
-        'Data Structures & Algorithms',
-        'Database Management Systems (DBMS)',
-        'Operating Systems & Linux',
-        'Computer Networks (CN)',
-        'Theory of Computation & Automata',
-      ],
-      'AI_ML': [
-        'Machine Learning Fundamentals',
-        'Deep Learning & Neural Networks',
-        'Natural Language Processing (NLP)',
-        'Computer Vision & Pattern Recognition',
-        'Python for Artificial Intelligence',
-      ],
-      'EEE': [
-        'Circuit Theory & Analysis',
-        'Electrical Machines (AC & DC)',
-        'Power Systems & Transmission',
-        'Control Systems Engineering',
-        'Power Electronics & Drives',
-      ],
-      'MECH': [
-        'Engineering Thermodynamics',
-        'Fluid Mechanics & Hydraulics',
-        'Strength of Materials (SOM)',
-        'Manufacturing Technology & CAM',
-        'Kinematics & Theory of Machines',
-      ],
-      'CIVIL': [
-        'Surveying & Geomatics',
-        'Structural Analysis & Mechanics',
-        'Building Materials & Construction',
-        'Geotechnical & Soil Engineering',
-        'Hydrology & Water Resources',
-      ],
-    };
-
-    final list = branchMap[branch] ?? branchMap['ECE']!;
-    return list.asMap().entries.map((entry) {
-      final idx = entry.key + 1;
-      final name = entry.value;
-      return {
-        'id': 'fallback_${branch}_${sem}_$idx',
-        'name': name,
-        'code': '$branch-${100 * sem + idx}',
-        'branch': branch,
-        'semester': sem,
-        'contents': [1, 2, 3, 4, 5].map((u) => {
-          'id': 'content_${branch}_${sem}_${idx}_u$u',
-          'title': '$name — Unit $u Lecture Notes & PYQs',
-          'contentType': u % 2 == 0 ? 'VIDEO_LECTURE' : 'NOTES',
-          'unit': u,
-          'fileUrl': 'https://myvault-files-app.s3.eu-north-1.amazonaws.com/app-arm64-v8a-release.apk',
-        }).toList(),
-      };
-    }).toList();
-  }
-
   Future<void> _load() async {
     setState(() {
       _loading = true;
@@ -120,11 +53,11 @@ class _AcademicHubScreenState extends State<AcademicHubScreen> {
       });
       final data = res.data as List<dynamic>;
       setState(() {
-        _subjects = data.isNotEmpty ? data : _getFallbackSubjects(_branch, _semester);
+        _subjects = data;
       });
     } catch (e) {
       setState(() {
-        _subjects = _getFallbackSubjects(_branch, _semester);
+        _error = "Could not connect to live backend.";
       });
     } finally {
       setState(() => _loading = false);

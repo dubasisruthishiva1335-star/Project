@@ -299,7 +299,18 @@ class _AcademicHubScreenState extends State<AcademicHubScreen> {
               if (_error != null)
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                  child: Text(_error!, style: const TextStyle(color: Colors.orangeAccent, fontSize: 12)),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(_error!, style: const TextStyle(color: Colors.orangeAccent, fontSize: 12)),
+                      ),
+                      TextButton.icon(
+                        onPressed: _load,
+                        icon: const Icon(Icons.refresh_rounded, size: 14, color: MyVaultColors.accentCyan),
+                        label: const Text('Retry', style: TextStyle(color: MyVaultColors.accentCyan, fontSize: 12)),
+                      ),
+                    ],
+                  ),
                 ),
 
               const SizedBox(height: 6),
@@ -308,24 +319,44 @@ class _AcademicHubScreenState extends State<AcademicHubScreen> {
               Expanded(
                 child: _loading
                     ? const Center(child: CircularProgressIndicator(color: MyVaultColors.accentCyan))
-                    : _subjects.isEmpty
-                        ? Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                const Icon(Icons.folder_open_rounded, color: Colors.white12, size: 64),
-                                const SizedBox(height: 16),
-                                Text(
-                                  'No subjects found for $_branch (Sem $_semester)',
-                                  style: const TextStyle(color: Colors.white38, fontSize: 14),
+                    : RefreshIndicator(
+                        onRefresh: _load,
+                        color: MyVaultColors.accentCyan,
+                        child: _subjects.isEmpty
+                            ? LayoutBuilder(
+                                builder: (context, constraints) => SingleChildScrollView(
+                                  physics: const AlwaysScrollableScrollPhysics(),
+                                  child: ConstrainedBox(
+                                    constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                                    child: Center(
+                                      child: Column(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          const Icon(Icons.folder_open_rounded, color: Colors.white12, size: 64),
+                                          const SizedBox(height: 16),
+                                          Text(
+                                            'No subjects found for $_branch (Sem $_semester)',
+                                            style: const TextStyle(color: Colors.white38, fontSize: 14),
+                                          ),
+                                          const SizedBox(height: 12),
+                                          ElevatedButton.icon(
+                                            onPressed: _load,
+                                            icon: const Icon(Icons.refresh_rounded, size: 16),
+                                            label: const Text('Refresh', style: TextStyle(fontSize: 12)),
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor: MyVaultColors.glassFill,
+                                              foregroundColor: MyVaultColors.accentCyan,
+                                              side: const BorderSide(color: MyVaultColors.glassBorder),
+                                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
                                 ),
-                              ],
-                            ),
-                          )
-                        : RefreshIndicator(
-                            onRefresh: _load,
-                            color: MyVaultColors.accentCyan,
-                            child: ListView.builder(
+                              )
+                            : ListView.builder(
                               padding: const EdgeInsets.all(16),
                               itemCount: _subjects.length,
                               itemBuilder: (context, i) {

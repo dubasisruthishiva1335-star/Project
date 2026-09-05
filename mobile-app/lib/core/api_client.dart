@@ -15,8 +15,8 @@ class ApiClient {
 
   Dio _buildDio() {
     final d = Dio(BaseOptions(
-      connectTimeout: const Duration(seconds: 5),
-      receiveTimeout: const Duration(seconds: 5),
+      connectTimeout: const Duration(seconds: 45),
+      receiveTimeout: const Duration(seconds: 45),
     ));
     d.interceptors.add(InterceptorsWrapper(
       onRequest: (options, handler) async {
@@ -32,7 +32,11 @@ class ApiClient {
   }
 
   Future<String> getBaseUrl() async {
-    return await _storage.read(key: _baseUrlKey) ?? defaultBaseUrl;
+    final stored = await _storage.read(key: _baseUrlKey);
+    if (stored == null || stored.isEmpty || stored.contains('railway.app') || stored.contains('romantic-serenity')) {
+      return defaultBaseUrl;
+    }
+    return stored;
   }
 
   Future<void> setBaseUrl(String url) => _storage.write(key: _baseUrlKey, value: url);

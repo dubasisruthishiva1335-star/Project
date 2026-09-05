@@ -109,7 +109,7 @@ export async function uploadFileToS3(
     }
   } catch (_) {}
 
-  if (!presign || !presign.uploadUrl) {
+  if (!presign || !presign.uploadUrl || !presign.uploadUrl.includes("X-Amz-")) {
     // 2. Try backend /admin/uploads/presign
     try {
       presign = await apiRequest<PresignResponse>("/admin/uploads/presign", {

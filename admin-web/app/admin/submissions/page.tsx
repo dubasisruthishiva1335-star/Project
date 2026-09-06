@@ -7,7 +7,7 @@ export default function AdminSubmissionsReviewPage() {
     <div className="mx-auto max-w-2xl px-4 py-16 text-center">
       <h1 className="text-xl font-bold text-white mb-2">Publishing & Management Hub</h1>
       <p className="text-sm text-white/60 mb-6">
-        All campus placement drives, study materials, exam prep, and official circulars are managed directly from the Control Center.
+        All study materials, exam prep, student records, and official circulars are managed directly from the Control Center.
       </p>
       <Link
         href="/admin/publish"

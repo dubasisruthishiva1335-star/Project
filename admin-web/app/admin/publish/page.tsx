@@ -4,26 +4,6 @@ import Link from "next/link";
 
 const PUBLISH_FOLDERS = [
   {
-    key: "placements",
-    icon: "🏢",
-    label: "Campus Placement Drives",
-    desc: "Post corporate hiring drives with CTC salary packages & eligibility cutoffs",
-    color: "from-purple-500/20 to-violet-500/20",
-    border: "border-purple-500/30",
-    text: "text-purple-300",
-    path: "/admin/publish/placements",
-  },
-  {
-    key: "govtjobs",
-    icon: "🏛️",
-    label: "Govt Jobs",
-    desc: "Post government job notifications (banking, railways, defence, UPSC, etc.)",
-    color: "from-amber-500/20 to-yellow-500/20",
-    border: "border-amber-500/30",
-    text: "text-amber-300",
-    path: "/admin/publish/govt-jobs",
-  },
-  {
     key: "study",
     icon: "📚",
     label: "Study Materials",

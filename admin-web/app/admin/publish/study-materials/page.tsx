@@ -3,13 +3,21 @@
 import { useState } from "react";
 import { apiRequest, uploadAndConfirm } from "@/lib/api-client";
 
-const BRANCHES = ["GENERAL", "CSE & IT", "ECE", "AI & ML", "EEE", "MECH & CIVIL"];
+const BRANCHES = [
+  { value: "CSE", label: "CSE (Computer Science & IT)" },
+  { value: "ECE", label: "ECE (Electronics & Communication)" },
+  { value: "AI_ML", label: "AI & ML (Artificial Intelligence)" },
+  { value: "EEE", label: "EEE (Electrical & Electronics)" },
+  { value: "MECH", label: "MECH (Mechanical Engineering)" },
+  { value: "CIVIL", label: "CIVIL (Civil Engineering)" },
+  { value: "GENERAL", label: "GENERAL (First Year / Common)" },
+];
 const SEMESTERS = [1, 2, 3, 4, 5, 6, 7, 8];
 
 export default function StudyMaterialsPublish() {
   const [form, setForm] = useState({
     title: "",
-    branch: "CSE & IT",
+    branch: "CSE",
     semester: 1,
     unit: 1,
     subject: "",
@@ -135,8 +143,8 @@ export default function StudyMaterialsPublish() {
               className="w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-sm text-white focus:border-emerald-400/50 focus:outline-none"
             >
               {BRANCHES.map((b) => (
-                <option key={b} value={b} className="bg-neutral-900 text-white">
-                  {b}
+                <option key={b.value} value={b.value} className="bg-neutral-900 text-white">
+                  {b.label}
                 </option>
               ))}
             </select>

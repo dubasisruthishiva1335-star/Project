@@ -188,6 +188,10 @@ export default function DashboardPage() {
     { id: "students", label: "Students Registered", value: recent?.allStudents?.length ?? data?.students, icon: "👤", color: "from-indigo-500/20 to-cyan-500/20" },
   ];
 
+  const latestUploads = [...(recent?.recentNotes ?? [])]
+    .sort((a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime())
+    .slice(0, 4);
+
   return (
     <div className="mx-auto max-w-7xl px-6 py-10">
       <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
@@ -215,7 +219,7 @@ export default function DashboardPage() {
       )}
 
       {/* Analytics Grid */}
-      <div className="mb-10 grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
         {cards.map((c) => {
           const isSelected = activeTab === c.id;
           return (
@@ -237,6 +241,87 @@ export default function DashboardPage() {
             </button>
           );
         })}
+      </div>
+
+      {/* ⚡ Recent Uploads Live Feed */}
+      <div className="mb-10 rounded-2xl border border-white/10 bg-white/[0.02] p-6 backdrop-blur-xl">
+        <div className="mb-4 flex items-center justify-between">
+          <div>
+            <h2 className="text-base font-bold text-white flex items-center gap-2">
+              <span>⚡</span> Recent Uploads
+              {recent?.recentNotes && recent.recentNotes.length > 0 && (
+                <span className="rounded-full bg-accentCyan/20 px-2.5 py-0.5 text-xs font-semibold text-accentCyan border border-accentCyan/30">
+                  {recent.recentNotes.length} Total Uploaded
+                </span>
+              )}
+            </h2>
+            <p className="text-xs text-white/50">Latest materials published directly to cloud storage and mobile app</p>
+          </div>
+
+          <Link
+            href="/admin/publish/study-materials"
+            className="text-xs font-semibold text-accentCyan hover:text-cyan-300 transition"
+          >
+            + New Upload ↗
+          </Link>
+        </div>
+
+        {latestUploads.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-white/10 p-8 text-center text-white/40">
+            <p className="text-2xl mb-1">📤</p>
+            <p className="text-xs font-medium">No files uploaded yet. Publish your first academic notes or lab manual.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {latestUploads.map((item) => (
+              <div
+                key={item.id}
+                className="flex flex-col justify-between rounded-xl border border-white/10 bg-white/[0.03] p-4 hover:border-white/20 transition-all shadow-sm"
+              >
+                <div>
+                  <div className="flex items-center justify-between gap-2 mb-2">
+                    <span className="rounded bg-accentBlue/20 px-2 py-0.5 text-[10px] font-bold font-mono text-accentCyan border border-accentBlue/30">
+                      {item.subject?.branch || "GENERAL"} • Sem {item.subject?.semester || 1}
+                    </span>
+                    <span className="text-[10px] text-white/40">
+                      Unit {item.unit || 1}
+                    </span>
+                  </div>
+
+                  <h3 className="text-xs font-bold text-white line-clamp-2 mb-1" title={item.title}>
+                    {item.title}
+                  </h3>
+                  <p className="text-[11px] text-white/50 mb-3">
+                    {formatCategory(item.contentType)}
+                  </p>
+                </div>
+
+                <div className="flex items-center justify-between pt-2 border-t border-white/5">
+                  <span className="text-[10px] text-white/40">
+                    {new Date(item.uploadedAt).toLocaleDateString()}
+                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <a
+                      href={item.fileUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="rounded bg-accentBlue/20 px-2 py-0.5 text-[10px] font-bold text-accentCyan border border-accentBlue/30 hover:bg-accentBlue/30"
+                    >
+                      View ↗
+                    </a>
+                    <button
+                      disabled={deletingId === item.id}
+                      onClick={() => handleDelete(item.id)}
+                      className="rounded bg-red-500/20 px-1.5 py-0.5 text-[10px] font-semibold text-red-300 border border-red-500/30 hover:bg-red-500/30"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Itemized Management Table */}

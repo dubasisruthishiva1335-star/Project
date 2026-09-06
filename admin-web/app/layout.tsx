@@ -30,11 +30,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 </Link>
                 <nav className="space-y-1 text-sm text-white/60">
                   <Link href="/" className={`block rounded-lg px-3 py-2 transition-colors ${pathname === "/" ? "bg-white/10 text-accentCyan font-medium" : "hover:bg-white/5 hover:text-white"}`}>📊 Dashboard</Link>
-                  <Link href="/admin/publish" className={`block rounded-lg px-3 py-2 transition-colors ${pathname === "/admin/publish" ? "bg-accentCyan/20 text-accentCyan font-bold border border-accentCyan/40" : "hover:bg-white/5 hover:text-white"}`}>📁 Publish Folders Grid ↗</Link>
                   <Link href="/admin/publish/study-materials" className={`block rounded-lg px-3 py-2 transition-colors ${pathname.includes("/study-materials") || pathname.includes("/notes") ? "bg-white/10 text-accentCyan font-medium" : "hover:bg-white/5 hover:text-white"}`}>📚 Study Materials</Link>
-                  <Link href="/admin/publish/courses" className={`block rounded-lg px-3 py-2 transition-colors ${pathname.includes("/courses") || pathname.includes("/exams") ? "bg-white/10 text-accentCyan font-medium" : "hover:bg-white/5 hover:text-white"}`}>🎓 Courses & Exam Prep</Link>
-                  <Link href="/admin/publish/notices" className={`block rounded-lg px-3 py-2 transition-colors ${pathname.includes("/notices") ? "bg-white/10 text-accentCyan font-medium" : "hover:bg-white/5 hover:text-white"}`}>📢 Notices & Circulars</Link>
-                  <Link href="/admin/results" className={`block rounded-lg px-3 py-2 transition-colors ${pathname === "/admin/results" ? "bg-white/10 text-accentCyan font-medium" : "hover:bg-white/5 hover:text-white"}`}>📊 Exam Results</Link>
                 </nav>
               </div>
 

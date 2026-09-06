@@ -15,14 +15,19 @@ class ApiClient {
 
   Dio _buildDio() {
     final d = Dio(BaseOptions(
+      baseUrl: defaultBaseUrl,
       connectTimeout: const Duration(seconds: 45),
       receiveTimeout: const Duration(seconds: 45),
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
     ));
     d.interceptors.add(InterceptorsWrapper(
       onRequest: (options, handler) async {
-        options.baseUrl = await getBaseUrl();
+        options.baseUrl = defaultBaseUrl;
         final token = await _storage.read(key: _tokenKey);
-        if (token != null) {
+        if (token != null && token.isNotEmpty) {
           options.headers['Authorization'] = 'Bearer $token';
         }
         handler.next(options);
@@ -31,15 +36,8 @@ class ApiClient {
     return d;
   }
 
-  Future<String> getBaseUrl() async {
-    final stored = await _storage.read(key: _baseUrlKey);
-    if (stored == null || stored.isEmpty || stored.contains('railway.app') || stored.contains('romantic-serenity')) {
-      return defaultBaseUrl;
-    }
-    return stored;
-  }
-
-  Future<void> setBaseUrl(String url) => _storage.write(key: _baseUrlKey, value: url);
+  Future<String> getBaseUrl() async => defaultBaseUrl;
+  Future<void> setBaseUrl(String url) async {}
 
   Future<void> saveToken(String token) => _storage.write(key: _tokenKey, value: token);
   Future<String?> readToken() => _storage.read(key: _tokenKey);

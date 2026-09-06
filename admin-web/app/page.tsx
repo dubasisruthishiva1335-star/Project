@@ -56,25 +56,49 @@ export default function DashboardPage() {
       apiRequest<Overview>("/admin/analytics/overview").catch(() => ({ students: 0, notes: 0 })),
       apiRequest<RecentUploads>("/admin/analytics/recent-uploads").catch(() => ({ recentNotes: [], allStudents: [] })),
       apiRequest<any[]>("/admin/notes").catch(() => []),
+      apiRequest<any[]>("/subjects").catch(() => []),
     ])
-      .then(([overviewData, recentData, notesData]) => {
-        const notesList: NoteItem[] =
-          recentData.recentNotes && recentData.recentNotes.length > 0
-            ? recentData.recentNotes
-            : (notesData || []).map((n: any) => ({
-                id: n.id,
-                title: n.title,
-                contentType: n.content_type || n.contentType || "NOTES",
-                unit: n.unit || 1,
-                fileUrl: n.file_url || n.fileUrl,
-                uploadedAt: n.uploaded_at || n.uploadedAt || new Date().toISOString(),
-                subject: {
-                  name: n.title,
-                  code: n.branch || "GEN",
-                  branch: n.branch || "GEN",
-                  semester: n.semester || 1,
-                },
-              }));
+      .then(([overviewData, recentData, notesData, subjectsData]) => {
+        const subjectsNotes: NoteItem[] = (subjectsData || []).flatMap((s: any) =>
+          (s.contents || []).map((c: any) => ({
+            id: c.id,
+            title: c.title || s.name,
+            contentType: c.contentType || "NOTES",
+            unit: c.unit || 1,
+            fileUrl: c.fileUrl,
+            uploadedAt: c.uploadedAt || new Date().toISOString(),
+            subject: {
+              name: s.name,
+              code: s.code || s.branch || "GEN",
+              branch: s.branch || "GEN",
+              semester: s.semester || 1,
+            },
+          }))
+        );
+
+        const rawNotes = (notesData || []).map((n: any) => ({
+          id: n.id,
+          title: n.title,
+          contentType: n.content_type || n.contentType || "NOTES",
+          unit: n.unit || 1,
+          fileUrl: n.file_url || n.fileUrl,
+          uploadedAt: n.uploaded_at || n.uploadedAt || new Date().toISOString(),
+          subject: {
+            name: n.title,
+            code: n.branch || "GEN",
+            branch: n.branch || "GEN",
+            semester: n.semester || 1,
+          },
+        }));
+
+        const combinedNotesMap = new Map<string, NoteItem>();
+        [...subjectsNotes, ...rawNotes, ...(recentData.recentNotes || [])].forEach((item) => {
+          if (item && item.id) {
+            combinedNotesMap.set(item.id, item);
+          }
+        });
+
+        const notesList = Array.from(combinedNotesMap.values());
 
         setData({
           students: overviewData.students || (recentData.allStudents?.length ?? 0),

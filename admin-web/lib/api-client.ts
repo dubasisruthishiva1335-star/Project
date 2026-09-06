@@ -78,18 +78,20 @@ export interface UploadFileOptions {
   domain: string;
   presignMeta?: Record<string, string | number | undefined>;
   onProgress?: (stage: UploadProgressStage) => void;
+  onPercent?: (percent: number) => void;
 }
 
 export async function uploadFileToS3(
   options: UploadFileOptions
 ): Promise<{ s3Key: string; publicUrl?: string }> {
-  const { file, domain, presignMeta, onProgress } = options;
+  const { file, domain, presignMeta, onProgress, onPercent } = options;
 
   if (!file) {
     return { s3Key: "", publicUrl: "" };
   }
 
   onProgress?.("presigning");
+  onPercent?.(10);
 
   let presign: PresignResponse | null = null;
   try {
@@ -132,19 +134,38 @@ export async function uploadFileToS3(
   }
 
   onProgress?.("uploading");
-  const putRes = await fetch(presign.uploadUrl, {
-    method: "PUT",
-    headers: { "Content-Type": file.type || "application/octet-stream" },
-    body: file,
+  onPercent?.(25);
+
+  // Fast direct XHR streaming with progress tracking
+  await new Promise<void>((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("PUT", presign!.uploadUrl);
+    xhr.setRequestHeader("Content-Type", file.type || "application/octet-stream");
+
+    xhr.upload.onprogress = (event) => {
+      if (event.lengthComputable) {
+        const percent = Math.round(25 + (event.loaded / event.total) * 65);
+        onPercent?.(percent);
+      }
+    };
+
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        onPercent?.(90);
+        resolve();
+      } else {
+        reject(new ApiError(`S3 Upload failed with status ${xhr.status}`, xhr.status, xhr.responseText));
+      }
+    };
+
+    xhr.onerror = () => reject(new ApiError("Network error during S3 upload", 0, null));
+    xhr.ontimeout = () => reject(new ApiError("S3 upload timed out", 408, null));
+
+    xhr.send(file);
   });
 
-  if (!putRes.ok) {
-    const errText = await putRes.text().catch(() => "");
-    console.error("S3 upload failed:", putRes.status, errText);
-    throw new ApiError(`S3 Upload failed with status ${putRes.status}`, putRes.status, errText);
-  }
-
   onProgress?.("confirming");
+  onPercent?.(95);
   return { s3Key: presign.s3Key, publicUrl: presign.publicUrl };
 }
 

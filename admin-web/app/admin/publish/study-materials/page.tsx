@@ -18,6 +18,8 @@ export default function StudyMaterialsPublish() {
   });
   const [file, setFile] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [stageText, setStageText] = useState("");
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -31,6 +33,8 @@ export default function StudyMaterialsPublish() {
       return;
     }
     setSubmitting(true);
+    setProgress(5);
+    setStageText("Connecting to storage…");
     setMessage(null);
     try {
       if (file) {
@@ -39,6 +43,13 @@ export default function StudyMaterialsPublish() {
           {
             file,
             domain: "notes",
+            onProgress: (stg) => {
+              if (stg === "presigning") setStageText("Getting upload slot…");
+              if (stg === "uploading") setStageText("Uploading file to AWS S3…");
+              if (stg === "confirming") setStageText("Saving & syncing across apps…");
+              if (stg === "done") setStageText("Published!");
+            },
+            onPercent: (pct) => setProgress(pct),
             presignMeta: {
               title: form.title,
               branch: form.branch,
@@ -59,12 +70,15 @@ export default function StudyMaterialsPublish() {
           }
         );
       } else {
+        setStageText("Saving material details…");
         await apiRequest("/admin/notes/confirm", {
           method: "POST",
           body: JSON.stringify(form),
         });
       }
 
+      setProgress(100);
+      setStageText("Done!");
       setMessage({ type: "success", text: "📚 Study Material published successfully — visible in Academic Repository instantly." });
       setForm({ title: "", branch: "CSE & IT", semester: 1, unit: 1, subject: "", contentType: "NOTES", description: "" });
       setFile(null);
@@ -72,6 +86,8 @@ export default function StudyMaterialsPublish() {
       setMessage({ type: "error", text: err instanceof Error ? err.message : "Upload failed. Try again." });
     } finally {
       setSubmitting(false);
+      setProgress(0);
+      setStageText("");
     }
   };
 
@@ -210,12 +226,27 @@ export default function StudyMaterialsPublish() {
           />
         </div>
 
+        {submitting && (
+          <div className="space-y-1.5 rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-3.5">
+            <div className="flex justify-between text-xs font-semibold text-emerald-400">
+              <span>{stageText || "Processing upload…"}</span>
+              <span>{progress}%</span>
+            </div>
+            <div className="h-2 w-full overflow-hidden rounded-full bg-white/10">
+              <div
+                className="h-full bg-gradient-to-r from-emerald-500 to-cyan-400 transition-all duration-300 ease-out"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+          </div>
+        )}
+
         <button
           type="submit"
           disabled={submitting}
           className="w-full rounded-xl bg-emerald-500/20 border border-emerald-500/40 px-4 py-3 text-sm font-extrabold text-emerald-300 hover:bg-emerald-500/30 disabled:opacity-50 transition-colors"
         >
-          {submitting ? "Publishing Study Material..." : "Publish Study Material 📚"}
+          {submitting ? `Publishing… ${progress}%` : "Publish Study Material 📚"}
         </button>
       </form>
     </div>

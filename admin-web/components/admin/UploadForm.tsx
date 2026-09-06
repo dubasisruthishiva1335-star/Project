@@ -66,6 +66,7 @@ export function UploadForm({
   const [file, setFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [stage, setStage] = useState<UploadProgressStage | null>(null);
+  const [percent, setPercent] = useState<number>(0);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -86,6 +87,7 @@ export function UploadForm({
   const resetForm = () => {
     setValues({});
     setFile(null);
+    setPercent(0);
     if (inputRef.current) inputRef.current.value = "";
   };
 
@@ -93,6 +95,7 @@ export function UploadForm({
     e.preventDefault();
     setError(null);
     setSuccess(false);
+    setPercent(5);
 
     const missingField = fields.find((f) => f.required && !values[f.name]?.trim());
     if (missingField) {
@@ -113,16 +116,19 @@ export function UploadForm({
             domain,
             presignMeta: values,
             onProgress: setStage,
+            onPercent: setPercent,
           },
           values
         );
       } else {
         setStage("confirming");
+        setPercent(50);
         const { apiRequest } = await import("@/lib/api-client");
         await apiRequest(confirmPath, {
           method: "POST",
           body: JSON.stringify(values),
         });
+        setPercent(100);
         setStage("done");
       }
 
@@ -139,6 +145,7 @@ export function UploadForm({
       setError(err instanceof Error ? err.message : "Failed to publish material.");
     } finally {
       setStage(null);
+      setPercent(0);
     }
   };
 
@@ -239,9 +246,20 @@ export function UploadForm({
       )}
 
       {isSubmitting && stage && (
-        <div className="flex items-center gap-3 rounded-lg border border-cyan-400/20 bg-cyan-400/5 px-3 py-2 text-sm text-cyan-200">
-          <span className="h-4 w-4 animate-spin rounded-full border-2 border-cyan-400 border-t-transparent" />
-          <span>{STAGE_LABEL[stage]}</span>
+        <div className="space-y-1.5 rounded-lg border border-cyan-400/20 bg-cyan-400/5 p-3 text-sm text-cyan-200">
+          <div className="flex justify-between items-center text-xs font-semibold">
+            <div className="flex items-center gap-2">
+              <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-cyan-400 border-t-transparent" />
+              <span>{STAGE_LABEL[stage]}</span>
+            </div>
+            <span>{percent}%</span>
+          </div>
+          <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/10">
+            <div
+              className="h-full bg-cyan-400 transition-all duration-300 ease-out"
+              style={{ width: `${percent}%` }}
+            />
+          </div>
         </div>
       )}
 
@@ -250,7 +268,7 @@ export function UploadForm({
         disabled={isSubmitting}
         className="w-full rounded-xl bg-cyan-500 py-3 text-sm font-semibold text-black transition-colors hover:bg-cyan-400 disabled:opacity-50"
       >
-        {isSubmitting ? "Publishing…" : "Publish"}
+        {isSubmitting ? `Publishing… ${percent}%` : "Publish"}
       </button>
     </form>
   );

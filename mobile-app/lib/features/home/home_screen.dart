@@ -67,6 +67,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final tiles = [
+      _HomeTile('Internship Hub', 'Explore & Apply to Tech Roles', Icons.business_center_rounded, const Color(0xFF9C27B0), () => context.go('/internships')),
       _HomeTile('Academic Hub', 'Notes, Syllabus, Papers', Icons.menu_book_rounded, const Color(0xFF3E7BFF), () => context.go('/academic-hub')),
       _HomeTile('Documents Vault', 'Certificates & Resume', Icons.folder_special_rounded, const Color(0xFF00E676), () => context.go('/documents-vault')),
       _HomeTile('Results & AI', 'SGPA & AI Analyzer', Icons.grade_outlined, const Color(0xFFFFB800), () => context.go('/results')),

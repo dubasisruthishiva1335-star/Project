@@ -31,6 +31,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <nav className="space-y-1 text-sm text-white/60">
                   <Link href="/" className={`block rounded-lg px-3 py-2 transition-colors ${pathname === "/" ? "bg-white/10 text-accentCyan font-medium" : "hover:bg-white/5 hover:text-white"}`}>📊 Dashboard</Link>
                   <Link href="/admin/publish/study-materials" className={`block rounded-lg px-3 py-2 transition-colors ${pathname.includes("/study-materials") || pathname.includes("/notes") ? "bg-white/10 text-accentCyan font-medium" : "hover:bg-white/5 hover:text-white"}`}>📚 Study Materials</Link>
+                  <Link href="/admin/internships" className={`block rounded-lg px-3 py-2 transition-colors ${pathname.includes("/internships") ? "bg-white/10 text-accentCyan font-medium" : "hover:bg-white/5 hover:text-white"}`}>💼 Internship Hub</Link>
                 </nav>
               </div>
 

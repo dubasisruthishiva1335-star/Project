@@ -19,6 +19,10 @@ interface InternshipItem {
   isPaid: boolean;
   currency: string;
   description: string;
+  contactPhone?: string;
+  contactEmail?: string;
+  companyWebsite?: string;
+  applyUrl?: string;
   responsibilities: string[];
   requirements: string[];
   skills: string[];
@@ -89,6 +93,10 @@ export default function AdminInternshipsPage() {
     stipend: "40,000",
     isPaid: true,
     currency: "INR",
+    contactPhone: "+91 98765 43210",
+    contactEmail: "recruitment@company.com",
+    companyWebsite: "https://www.company.com",
+    applyUrl: "https://www.company.com/careers/apply",
     description: "",
     responsibilitiesRaw: "Design and implement scalable RESTful APIs.\nCollaborate with senior engineers on core product features.\nWrite unit tests and optimize database performance.",
     requirementsRaw: "Proficiency in Python, Java, or TypeScript.\nSolid foundation in Data Structures and Algorithms.\nUnderstanding of databases (PostgreSQL/MongoDB) and Git.",
@@ -172,6 +180,10 @@ export default function AdminInternshipsPage() {
         stipend: wizardForm.stipend,
         isPaid: wizardForm.isPaid,
         currency: wizardForm.currency,
+        contactPhone: wizardForm.contactPhone,
+        contactEmail: wizardForm.contactEmail,
+        companyWebsite: wizardForm.companyWebsite,
+        applyUrl: wizardForm.applyUrl,
         description: wizardForm.description || ("Join " + wizardForm.company + " as a " + wizardForm.title + "."),
         responsibilities: wizardForm.responsibilitiesRaw.split("\n").filter(Boolean),
         requirements: wizardForm.requirementsRaw.split("\n").filter(Boolean),
@@ -208,7 +220,8 @@ export default function AdminInternshipsPage() {
   const filteredInternships = internships.filter(i =>
     i.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     i.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    i.location.toLowerCase().includes(searchQuery.toLowerCase())
+    i.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (i.contactEmail && i.contactEmail.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
   const filteredApps = applications.filter(a => {
@@ -234,7 +247,7 @@ export default function AdminInternshipsPage() {
             <span>💼</span> Advanced Internship Hub & Recruitment Platform
           </h1>
           <p className="mt-1 text-sm text-white/50">
-            Create, configure, publish opportunities, and manage candidate recruitment pipelines.
+            Create, configure, publish opportunities, manage contact channels, and track candidate recruitment pipelines.
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -312,7 +325,7 @@ export default function AdminInternshipsPage() {
         </div>
         <input
           type="text"
-          placeholder="Search roles, companies, candidates..."
+          placeholder="Search roles, companies, candidates, emails..."
           value={searchQuery}
           onChange={e => setSearchQuery(e.target.value)}
           className="rounded-xl border border-white/10 bg-black/50 px-3.5 py-1.5 text-xs text-white placeholder-white/40 focus:border-accentCyan focus:outline-none w-64"
@@ -344,6 +357,43 @@ export default function AdminInternshipsPage() {
                     <span className="rounded-md bg-accentBlue/20 px-2 py-0.5 text-accentCyan font-bold">💰 ₹{item.stipend}/mo</span>
                     <span className="rounded-md bg-white/5 px-2 py-0.5">⏱ {item.duration}</span>
                   </div>
+
+                  {/* Company Contact & Official Links */}
+                  <div className="mb-3 rounded-xl bg-black/40 p-2.5 border border-white/5 space-y-1.5 text-[11px]">
+                    {item.companyWebsite && (
+                      <div className="flex items-center justify-between text-white/80">
+                        <span className="text-white/40 flex items-center gap-1">🌐 Website:</span>
+                        <a href={item.companyWebsite} target="_blank" rel="noreferrer" className="text-accentCyan hover:underline font-mono truncate max-w-[180px]">
+                          {item.companyWebsite.replace("https://", "").replace("http://", "")} ↗
+                        </a>
+                      </div>
+                    )}
+                    {item.applyUrl && (
+                      <div className="flex items-center justify-between text-white/80">
+                        <span className="text-white/40 flex items-center gap-1">🔗 Apply Link:</span>
+                        <a href={item.applyUrl} target="_blank" rel="noreferrer" className="text-emerald-300 hover:underline font-bold truncate max-w-[180px]">
+                          Official Apply Portal ↗
+                        </a>
+                      </div>
+                    )}
+                    {item.contactEmail && (
+                      <div className="flex items-center justify-between text-white/80">
+                        <span className="text-white/40 flex items-center gap-1">✉️ Email:</span>
+                        <a href={`mailto:${item.contactEmail}`} className="text-white/90 hover:text-accentCyan truncate max-w-[180px]">
+                          {item.contactEmail}
+                        </a>
+                      </div>
+                    )}
+                    {item.contactPhone && (
+                      <div className="flex items-center justify-between text-white/80">
+                        <span className="text-white/40 flex items-center gap-1">📞 Contact:</span>
+                        <a href={`tel:${item.contactPhone}`} className="text-white/90 hover:text-accentCyan">
+                          {item.contactPhone}
+                        </a>
+                      </div>
+                    )}
+                  </div>
+
                   <p className="text-xs text-white/60 line-clamp-2 mb-3">{item.description}</p>
                   <div className="flex flex-wrap gap-1.5 mb-4">
                     {item.skills.slice(0, 4).map(s => (
@@ -358,6 +408,16 @@ export default function AdminInternshipsPage() {
                     📥 <strong className="text-white">{item.applicantCount}</strong> applicants
                   </span>
                   <div className="flex items-center gap-2">
+                    {item.applyUrl && (
+                      <a
+                        href={item.applyUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="rounded-lg bg-emerald-500/20 px-2.5 py-1 text-xs font-semibold text-emerald-300 border border-emerald-500/40 hover:bg-emerald-500/30 flex items-center gap-1"
+                      >
+                        Apply ↗
+                      </a>
+                    )}
                     <button
                       onClick={() => { setPipelineFilter("ALL"); setSearchQuery(item.company); setActiveTab("pipeline"); }}
                       className="rounded-lg bg-accentBlue/20 px-2.5 py-1 text-xs font-semibold text-accentCyan border border-accentBlue/40 hover:bg-accentBlue/30"
@@ -478,10 +538,10 @@ export default function AdminInternshipsPage() {
         <div className="mx-auto max-w-3xl rounded-2xl border border-white/10 bg-white/[0.02] p-8 backdrop-blur-xl">
           <div className="mb-8 flex items-center justify-between border-b border-white/10 pb-4">
             {[
-              { num: 1, label: "Role Info" },
+              { num: 1, label: "Role & Company" },
               { num: 2, label: "JD & Skills" },
               { num: 3, label: "Eligibility" },
-              { num: 4, label: "Perks" },
+              { num: 4, label: "Perks & Contact" },
               { num: 5, label: "Preview & Publish" },
             ].map(s => (
               <button
@@ -558,6 +618,53 @@ export default function AdminInternshipsPage() {
                       onChange={e => setWizardForm({ ...wizardForm, openings: Number(e.target.value) })}
                       className="w-full rounded-xl border border-white/10 bg-black/50 px-3.5 py-2 text-sm text-white focus:border-accentCyan focus:outline-none"
                     />
+                  </div>
+                </div>
+
+                {/* Direct Contact & Application Links */}
+                <div className="pt-2 border-t border-white/10">
+                  <h4 className="text-xs font-bold text-accentCyan mb-3">🏢 Company Links & Contact Channels</h4>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-white/80">🌐 Official Company Website URL</label>
+                      <input
+                        type="url"
+                        placeholder="https://careers.company.com"
+                        value={wizardForm.companyWebsite}
+                        onChange={e => setWizardForm({ ...wizardForm, companyWebsite: e.target.value })}
+                        className="w-full rounded-xl border border-white/10 bg-black/50 px-3.5 py-2 text-sm text-white focus:border-accentCyan focus:outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-white/80">🔗 Direct Job Application Link</label>
+                      <input
+                        type="url"
+                        placeholder="https://careers.company.com/apply/12345"
+                        value={wizardForm.applyUrl}
+                        onChange={e => setWizardForm({ ...wizardForm, applyUrl: e.target.value })}
+                        className="w-full rounded-xl border border-white/10 bg-black/50 px-3.5 py-2 text-sm text-white focus:border-accentCyan focus:outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-white/80">✉️ HR / Recruiter Email Address</label>
+                      <input
+                        type="email"
+                        placeholder="university-recruiting@company.com"
+                        value={wizardForm.contactEmail}
+                        onChange={e => setWizardForm({ ...wizardForm, contactEmail: e.target.value })}
+                        className="w-full rounded-xl border border-white/10 bg-black/50 px-3.5 py-2 text-sm text-white focus:border-accentCyan focus:outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-white/80">📞 HR Phone / WhatsApp Number</label>
+                      <input
+                        type="text"
+                        placeholder="+91 80 1234 5678"
+                        value={wizardForm.contactPhone}
+                        onChange={e => setWizardForm({ ...wizardForm, contactPhone: e.target.value })}
+                        className="w-full rounded-xl border border-white/10 bg-black/50 px-3.5 py-2 text-sm text-white focus:border-accentCyan focus:outline-none"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -699,6 +806,15 @@ export default function AdminInternshipsPage() {
                       ₹{wizardForm.stipend}/mo
                     </span>
                   </div>
+
+                  {/* Contact Preview in card */}
+                  <div className="mb-4 rounded-xl bg-black/40 p-3 border border-white/10 grid grid-cols-2 gap-2 text-xs">
+                    <div><span className="text-white/40">🌐 Website:</span> <span className="text-accentCyan font-mono truncate">{wizardForm.companyWebsite || "N/A"}</span></div>
+                    <div><span className="text-white/40">🔗 Direct Apply:</span> <span className="text-emerald-400 font-mono truncate">{wizardForm.applyUrl || "N/A"}</span></div>
+                    <div><span className="text-white/40">✉️ Email:</span> <span className="text-white">{wizardForm.contactEmail || "N/A"}</span></div>
+                    <div><span className="text-white/40">📞 Contact:</span> <span className="text-white">{wizardForm.contactPhone || "N/A"}</span></div>
+                  </div>
+
                   <p className="text-xs text-white/70 mb-4">{wizardForm.description || "Exciting opportunity to build real-world software solutions."}</p>
                   <div className="flex flex-wrap gap-1.5 mb-4">
                     {wizardForm.skillsRaw.split(",").map(s => (

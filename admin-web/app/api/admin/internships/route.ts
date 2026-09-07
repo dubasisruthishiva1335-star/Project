@@ -23,6 +23,10 @@ export interface InternshipItem {
   minCgpa: number;
   eligibleGradYears: number[];
   perks: string[];
+  contactPhone?: string;
+  contactEmail?: string;
+  companyWebsite?: string;
+  applyUrl?: string;
   questions: Array<{ id: string; question: string; type: string; required: boolean }>;
   status: "DRAFT" | "PUBLISHED" | "CLOSED";
   postedAt: string;
@@ -43,6 +47,10 @@ let mockInternships: InternshipItem[] = [
     stipend: "80,000",
     isPaid: true,
     currency: "INR",
+    contactPhone: "+91 80 6721 8000",
+    contactEmail: "university-recruiting-in@google.com",
+    companyWebsite: "https://careers.google.com",
+    applyUrl: "https://careers.google.com/jobs/results/?q=intern",
     description: "Join Google core engineering teams to build scalable distributed systems, search features, and AI-driven cloud infrastructure.",
     responsibilities: [
       "Design, develop, test, and deploy robust software solutions in Python, C++, or Go.",
@@ -80,6 +88,10 @@ let mockInternships: InternshipItem[] = [
     stipend: "65,000",
     isPaid: true,
     currency: "INR",
+    contactPhone: "+91 40 6694 0000",
+    contactEmail: "ur-india@microsoft.com",
+    companyWebsite: "https://careers.microsoft.com",
+    applyUrl: "https://careers.microsoft.com/students/us/en/ind-internship",
     description: "Work with Microsoft Azure AI & Cognitive Services teams building enterprise LLM workflows, fine-tuning models, and cloud solutions.",
     responsibilities: [
       "Train, fine-tune, and evaluate deep learning and generative AI models on Azure AI Studio.",
@@ -108,50 +120,58 @@ let mockInternships: InternshipItem[] = [
     title: "SDE Cloud Intern (AWS)",
     company: "Amazon Web Services",
     logo: "https://upload.wikimedia.org/wikipedia/commons/9/93/Amazon_Web_Services_Logo.svg",
-    workMode: "ONSITE",
-    location: "Hyderabad / Bengaluru",
-    category: "Cloud Computing",
-    openings: 12,
+    workMode: "HYBRID",
+    location: "Bengaluru, Karnataka",
+    category: "Cloud Infrastructure",
+    openings: 6,
     duration: "6 Months",
-    stipend: "60,000",
+    stipend: "75,000",
     isPaid: true,
     currency: "INR",
-    description: "Build microservices and serverless workflows on AWS Lambda, DynamoDB, and ECS supporting millions of global transactions.",
+    contactPhone: "+91 80 4151 5000",
+    contactEmail: "india-campus-hiring@amazon.com",
+    companyWebsite: "https://amazon.jobs",
+    applyUrl: "https://amazon.jobs/en/teams/internships-for-students",
+    description: "Build robust distributed cloud services powering AWS S3, DynamoDB, and Serverless event brokers with high uptime guarantees.",
     responsibilities: [
-      "Develop RESTful APIs and serverless microservices using Java / Node.js and AWS SDK.",
-      "Implement automated CI/CD deployment pipelines using AWS CDK and GitHub Actions.",
-      "Participate in design reviews and on-call operational excellence."
+      "Architect and implement REST / gRPC microservices in Java or Rust.",
+      "Design zero-downtime database migrations and automated scaling policies.",
+      "Work with AWS security champions to maintain strict compliance."
     ],
     requirements: [
-      "Strong coding proficiency in Java, TypeScript, or Python.",
-      "Familiarity with cloud architectures (AWS, Docker, Linux).",
-      "Good understanding of relational and NoSQL databases."
+      "Proficiency in Java, C++, or Go with strong OOP and concurrency principles.",
+      "Experience with Docker, Linux CLI, and CI/CD pipelines.",
+      "Strong analytical and root-cause debugging skills."
     ],
-    skills: ["Java", "AWS", "Node.js", "Docker", "DynamoDB", "REST APIs"],
-    eligibleBranches: ["CSE", "ECE", "EEE", "AI_ML"],
+    skills: ["Java", "AWS", "Distributed Systems", "Docker", "Microservices"],
+    eligibleBranches: ["CSE", "ECE", "AI_ML"],
     minCgpa: 7.0,
     eligibleGradYears: [2026, 2027],
-    perks: ["PPO / Conversion", "AWS Certifications Voucher", "Health Insurance", "Relocation Support"],
+    perks: ["PPO Conversion", "Relocation Allowance", "Certificate", "AWS Certifications Voucher"],
     questions: [
-      { id: "q1", question: "Share a link to your GitHub or portfolio showcasing backend/cloud projects.", type: "text", required: true }
+      { id: "q1", question: "Describe a project where you solved high concurrency or scale bottlenecks.", type: "textarea", required: true }
     ],
     status: "PUBLISHED",
     postedAt: new Date(Date.now() - 6 * 86400000).toISOString(),
-    applicantCount: 215,
+    applicantCount: 115,
   },
   {
     id: "int_adobe_frontend",
-    title: "Frontend Engineering Intern (Creative Cloud)",
+    title: "Frontend Engineering Intern",
     company: "Adobe",
-    logo: "https://upload.wikimedia.org/wikipedia/commons/5/5f/Adobe_Corporate_horizontal_logo.svg",
+    logo: "https://upload.wikimedia.org/wikipedia/commons/5/51/Adobe_Inc._logo.svg",
     workMode: "REMOTE",
-    location: "Noida / Remote India",
-    category: "Web & UI/UX",
+    location: "Noida / Remote, India",
+    category: "Frontend & UI/UX",
     openings: 4,
     duration: "3-6 Months",
     stipend: "55,000",
     isPaid: true,
     currency: "INR",
+    contactPhone: "+91 120 244 4555",
+    contactEmail: "india-careers@adobe.com",
+    companyWebsite: "https://adobe.com/careers",
+    applyUrl: "https://adobe.com/careers/university.html",
     description: "Create pixel-perfect, high-performance web components for Adobe Creative Cloud Web, leveraging React, WebAssembly, and Canvas.",
     responsibilities: [
       "Build modular and accessible React / TypeScript components.",
@@ -207,6 +227,10 @@ export async function GET(request: Request) {
             isPaid: true,
             currency: "INR",
             description: r.description || "",
+            contactPhone: r.contactPhone || r.contact_phone || "",
+            contactEmail: r.contactEmail || r.contact_email || "",
+            companyWebsite: r.companyWebsite || r.company_website || "",
+            applyUrl: r.applyUrl || r.apply_url || "",
             responsibilities: Array.isArray(r.responsibilities) ? r.responsibilities : (r.responsibilities ? String(r.responsibilities).split("\n") : []),
             requirements: Array.isArray(r.requirements) ? r.requirements : (r.requirements ? String(r.requirements).split("\n") : []),
             skills: Array.isArray(r.skills) ? r.skills : (r.skills ? String(r.skills).split(",") : ["Full Stack", "Problem Solving"]),
@@ -263,6 +287,10 @@ export async function POST(request: Request) {
       isPaid: body.isPaid !== false,
       currency: body.currency || "INR",
       description: body.description || "",
+      contactPhone: body.contactPhone || body.contact_phone || "",
+      contactEmail: body.contactEmail || body.contact_email || "",
+      companyWebsite: body.companyWebsite || body.company_website || "",
+      applyUrl: body.applyUrl || body.apply_url || "",
       responsibilities: Array.isArray(body.responsibilities) ? body.responsibilities : (body.responsibilities || "").split("\n").filter(Boolean),
       requirements: Array.isArray(body.requirements) ? body.requirements : (body.requirements || "").split("\n").filter(Boolean),
       skills: Array.isArray(body.skills) ? body.skills : (body.skills || "").split(",").map((s: string) => s.trim()).filter(Boolean),
@@ -298,6 +326,10 @@ export async function POST(request: Request) {
           duration: newInternship.duration,
           maxStudents: newInternship.openings,
           description: newInternship.description,
+          applyUrl: newInternship.applyUrl,
+          contactPhone: newInternship.contactPhone,
+          contactEmail: newInternship.contactEmail,
+          companyWebsite: newInternship.companyWebsite,
           responsibilities: newInternship.responsibilities,
           requirements: newInternship.requirements,
           skills: newInternship.skills,

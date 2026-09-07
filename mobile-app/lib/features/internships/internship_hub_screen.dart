@@ -59,7 +59,11 @@ class _InternshipHubScreenState extends State<InternshipHubScreen> with SingleTi
         'Direct 1:1 mentorship from senior full-stack architects',
         'Experience Certificate & Letter of Recommendation',
         'Flexible working hours & hybrid schedule'
-      ]
+      ],
+      'contactPhone': '+91 98765 43210',
+      'contactEmail': 'careers@myvault.in',
+      'companyWebsite': 'https://myvault.in',
+      'applyUrl': 'https://myvault.in/careers/fullstack'
     },
     {
       'id': 'google-swe-2026',
@@ -95,7 +99,11 @@ class _InternshipHubScreenState extends State<InternshipHubScreen> with SingleTi
         'Direct 1:1 mentorship with Principal Staff Engineers',
         'State-of-the-art hardware (MacBook Pro / Linux workstation)',
         'Free gourmet cafeteria, wellness stipend, and transit allowance'
-      ]
+      ],
+      'contactPhone': '+91 80 6721 8000',
+      'contactEmail': 'university-recruiting-in@google.com',
+      'companyWebsite': 'https://careers.google.com',
+      'applyUrl': 'https://careers.google.com/jobs/results/?q=intern'
     },
     {
       'id': 'microsoft-swe-2026',
@@ -131,7 +139,11 @@ class _InternshipHubScreenState extends State<InternshipHubScreen> with SingleTi
         'Full PPO eligibility for 2026 full-time positions',
         'Free Microsoft certifications & Azure cloud credits',
         'Home office setup allowance of ₹50,000'
-      ]
+      ],
+      'contactPhone': '+91 40 6694 0000',
+      'contactEmail': 'ur-india@microsoft.com',
+      'companyWebsite': 'https://careers.microsoft.com',
+      'applyUrl': 'https://careers.microsoft.com/students/us/en/ind-internship'
     },
     {
       'id': 'amazon-sde-2026',
@@ -167,7 +179,11 @@ class _InternshipHubScreenState extends State<InternshipHubScreen> with SingleTi
         'High PPO conversion track for AWS teams',
         'Dedicated senior mentor and weekly 1:1 career guidance',
         'Amazon employee discount and equipment bundle'
-      ]
+      ],
+      'contactPhone': '+91 80 4151 5000',
+      'contactEmail': 'india-campus-hiring@amazon.com',
+      'companyWebsite': 'https://amazon.jobs',
+      'applyUrl': 'https://amazon.jobs/en/teams/internships-for-students'
     },
     {
       'id': 'adobe-ml-2026',
@@ -203,7 +219,11 @@ class _InternshipHubScreenState extends State<InternshipHubScreen> with SingleTi
         'Publication mentorship & patent filing bonuses',
         'Flexible working hours & complete work-from-home setup',
         'Pre-Placement Offer (PPO) for Adobe Research Labs'
-      ]
+      ],
+      'contactPhone': '+91 120 244 4555',
+      'contactEmail': 'india-careers@adobe.com',
+      'companyWebsite': 'https://adobe.com/careers',
+      'applyUrl': 'https://adobe.com/careers/university.html'
     }
   ];
 
@@ -318,6 +338,10 @@ class _InternshipHubScreenState extends State<InternshipHubScreen> with SingleTi
       'responsibilities': responsibilities,
       'requirements': requirements,
       'perks': perks,
+      'contactPhone': (raw['contactPhone'] ?? raw['contact_phone'] ?? '').toString(),
+      'contactEmail': (raw['contactEmail'] ?? raw['contact_email'] ?? '').toString(),
+      'companyWebsite': (raw['companyWebsite'] ?? raw['company_website'] ?? '').toString(),
+      'applyUrl': (raw['applyUrl'] ?? raw['apply_url'] ?? '').toString(),
     };
   }
 
@@ -838,6 +862,116 @@ class _InternshipHubScreenState extends State<InternshipHubScreen> with SingleTi
                   ],
                 ),
 
+                // Quick Company Portals & Links
+                if ((item['companyWebsite'] != null && item['companyWebsite'].toString().isNotEmpty) ||
+                    (item['applyUrl'] != null && item['applyUrl'].toString().isNotEmpty) ||
+                    (item['contactEmail'] != null && item['contactEmail'].toString().isNotEmpty) ||
+                    (item['contactPhone'] != null && item['contactPhone'].toString().isNotEmpty)) ...[
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 6,
+                    children: [
+                      if (item['companyWebsite'] != null && item['companyWebsite'].toString().isNotEmpty)
+                        InkWell(
+                          onTap: () async {
+                            final uri = Uri.parse(item['companyWebsite'].toString());
+                            if (await canLaunchUrl(uri)) launchUrl(uri, mode: LaunchMode.externalApplication);
+                          },
+                          borderRadius: BorderRadius.circular(6),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: MyVaultColors.accentCyan.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(color: MyVaultColors.accentCyan.withValues(alpha: 0.3)),
+                            ),
+                            child: const Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.language_rounded, color: MyVaultColors.accentCyan, size: 12),
+                                SizedBox(width: 4),
+                                Text('Website ↗', style: TextStyle(color: MyVaultColors.accentCyan, fontSize: 10, fontWeight: FontWeight.bold)),
+                              ],
+                            ),
+                          ),
+                        ),
+                      if (item['applyUrl'] != null && item['applyUrl'].toString().isNotEmpty)
+                        InkWell(
+                          onTap: () async {
+                            final uri = Uri.parse(item['applyUrl'].toString());
+                            if (await canLaunchUrl(uri)) launchUrl(uri, mode: LaunchMode.externalApplication);
+                          },
+                          borderRadius: BorderRadius.circular(6),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF00E676).withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(color: const Color(0xFF00E676).withValues(alpha: 0.3)),
+                            ),
+                            child: const Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.link_rounded, color: Color(0xFF00E676), size: 12),
+                                SizedBox(width: 4),
+                                Text('Apply Link ↗', style: TextStyle(color: Color(0xFF00E676), fontSize: 10, fontWeight: FontWeight.bold)),
+                              ],
+                            ),
+                          ),
+                        ),
+                      if (item['contactEmail'] != null && item['contactEmail'].toString().isNotEmpty)
+                        InkWell(
+                          onTap: () async {
+                            final uri = Uri.parse('mailto:${item['contactEmail']}');
+                            if (await canLaunchUrl(uri)) launchUrl(uri);
+                          },
+                          borderRadius: BorderRadius.circular(6),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.05),
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(color: Colors.white24),
+                            ),
+                            child: const Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.email_outlined, color: Colors.white70, size: 12),
+                                SizedBox(width: 4),
+                                Text('Email', style: TextStyle(color: Colors.white70, fontSize: 10)),
+                              ],
+                            ),
+                          ),
+                        ),
+                      if (item['contactPhone'] != null && item['contactPhone'].toString().isNotEmpty)
+                        InkWell(
+                          onTap: () async {
+                            final uri = Uri.parse('tel:${item['contactPhone']}');
+                            if (await canLaunchUrl(uri)) launchUrl(uri);
+                          },
+                          borderRadius: BorderRadius.circular(6),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.05),
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(color: Colors.white24),
+                            ),
+                            child: const Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.phone_outlined, color: Colors.white70, size: 12),
+                                SizedBox(width: 4),
+                                Text('Call HR', style: TextStyle(color: Colors.white70, fontSize: 10)),
+                              ],
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ],
+
                 const SizedBox(height: 16),
                 const Divider(color: Colors.white10, height: 1),
                 const SizedBox(height: 14),
@@ -1147,6 +1281,10 @@ class _InternshipDetailsSheet extends StatelessWidget {
     final requirements = (item['requirements'] as List<dynamic>?) ?? [];
     final perks = (item['perks'] as List<dynamic>?) ?? [];
     final skills = (item['skills'] as List<dynamic>?) ?? [];
+    final contactPhone = (item['contactPhone'] ?? '').toString();
+    final contactEmail = (item['contactEmail'] ?? '').toString();
+    final companyWebsite = (item['companyWebsite'] ?? '').toString();
+    final applyUrl = (item['applyUrl'] ?? '').toString();
 
     return DraggableScrollableSheet(
       initialChildSize: 0.88,
@@ -1307,6 +1445,101 @@ class _InternshipDetailsSheet extends StatelessWidget {
                       ...perks.map((p) => _buildPerkItem(p.toString())),
                     ],
 
+                    // Company Portals & Recruitment Contacts Card
+                    const SizedBox(height: 24),
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF131826),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: MyVaultColors.accentCyan.withValues(alpha: 0.3)),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Row(
+                            children: [
+                              Icon(Icons.business_rounded, color: MyVaultColors.accentCyan, size: 18),
+                              SizedBox(width: 8),
+                              Text(
+                                'Company Portals & Direct Contacts',
+                                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 14),
+                          if (companyWebsite.isNotEmpty)
+                            ListTile(
+                              dense: true,
+                              contentPadding: EdgeInsets.zero,
+                              leading: const CircleAvatar(
+                                radius: 16,
+                                backgroundColor: Color(0xFF1E2638),
+                                child: Icon(Icons.language_rounded, color: MyVaultColors.accentCyan, size: 16),
+                              ),
+                              title: const Text('Official Company Website', style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold)),
+                              subtitle: Text(companyWebsite, style: const TextStyle(color: MyVaultColors.accentCyan, fontSize: 11)),
+                              trailing: const Icon(Icons.open_in_new_rounded, color: Colors.white38, size: 16),
+                              onTap: () async {
+                                final uri = Uri.parse(companyWebsite);
+                                if (await canLaunchUrl(uri)) launchUrl(uri, mode: LaunchMode.externalApplication);
+                              },
+                            ),
+                          if (applyUrl.isNotEmpty)
+                            ListTile(
+                              dense: true,
+                              contentPadding: EdgeInsets.zero,
+                              leading: const CircleAvatar(
+                                radius: 16,
+                                backgroundColor: Color(0xFF1E2638),
+                                child: Icon(Icons.link_rounded, color: Color(0xFF00E676), size: 16),
+                              ),
+                              title: const Text('Direct Job Application Portal', style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold)),
+                              subtitle: Text(applyUrl, style: const TextStyle(color: Color(0xFF00E676), fontSize: 11), overflow: TextOverflow.ellipsis),
+                              trailing: const Icon(Icons.open_in_new_rounded, color: Color(0xFF00E676), size: 16),
+                              onTap: () async {
+                                final uri = Uri.parse(applyUrl);
+                                if (await canLaunchUrl(uri)) launchUrl(uri, mode: LaunchMode.externalApplication);
+                              },
+                            ),
+                          if (contactEmail.isNotEmpty)
+                            ListTile(
+                              dense: true,
+                              contentPadding: EdgeInsets.zero,
+                              leading: const CircleAvatar(
+                                radius: 16,
+                                backgroundColor: Color(0xFF1E2638),
+                                child: Icon(Icons.mail_outline_rounded, color: Colors.white70, size: 16),
+                              ),
+                              title: const Text('Recruiter Contact Email', style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold)),
+                              subtitle: Text(contactEmail, style: const TextStyle(color: Colors.white70, fontSize: 11)),
+                              trailing: const Icon(Icons.send_rounded, color: Colors.white38, size: 16),
+                              onTap: () async {
+                                final uri = Uri.parse('mailto:$contactEmail');
+                                if (await canLaunchUrl(uri)) launchUrl(uri);
+                              },
+                            ),
+                          if (contactPhone.isNotEmpty)
+                            ListTile(
+                              dense: true,
+                              contentPadding: EdgeInsets.zero,
+                              leading: const CircleAvatar(
+                                radius: 16,
+                                backgroundColor: Color(0xFF1E2638),
+                                child: Icon(Icons.phone_in_talk_rounded, color: Color(0xFFFFB800), size: 16),
+                              ),
+                              title: const Text('HR / Campus Support Line', style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold)),
+                              subtitle: Text(contactPhone, style: const TextStyle(color: Color(0xFFFFB800), fontSize: 11)),
+                              trailing: const Icon(Icons.call_rounded, color: Color(0xFFFFB800), size: 16),
+                              onTap: () async {
+                                final uri = Uri.parse('tel:$contactPhone');
+                                if (await canLaunchUrl(uri)) launchUrl(uri);
+                              },
+                            ),
+                        ],
+                      ),
+                    ),
+
                     const SizedBox(height: 30),
                   ],
                 ),
@@ -1330,16 +1563,37 @@ class _InternshipDetailsSheet extends StatelessWidget {
                         ],
                       ),
                     ),
-                    ElevatedButton.icon(
-                      onPressed: onApply,
-                      icon: const Icon(Icons.send_rounded, size: 16),
-                      label: const Text('Apply Now', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: MyVaultColors.accentBlue,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                      ),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (applyUrl.isNotEmpty) ...[
+                          OutlinedButton.icon(
+                            onPressed: () async {
+                              final uri = Uri.parse(applyUrl);
+                              if (await canLaunchUrl(uri)) launchUrl(uri, mode: LaunchMode.externalApplication);
+                            },
+                            icon: const Icon(Icons.open_in_new_rounded, size: 14, color: MyVaultColors.accentCyan),
+                            label: const Text('Company Portal', style: TextStyle(color: MyVaultColors.accentCyan, fontSize: 12, fontWeight: FontWeight.bold)),
+                            style: OutlinedButton.styleFrom(
+                              side: const BorderSide(color: MyVaultColors.accentCyan),
+                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                        ],
+                        ElevatedButton.icon(
+                          onPressed: onApply,
+                          icon: const Icon(Icons.send_rounded, size: 14),
+                          label: const Text('1-Click Apply', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: MyVaultColors.accentBlue,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),

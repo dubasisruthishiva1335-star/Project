@@ -46,6 +46,9 @@ router.get("/", async (req, res) => {
       ALTER TABLE internships ADD COLUMN IF NOT EXISTS skills TEXT;
       ALTER TABLE internships ADD COLUMN IF NOT EXISTS min_cgpa NUMERIC(4,2) DEFAULT 6.5;
       ALTER TABLE internships ADD COLUMN IF NOT EXISTS perks TEXT;
+      ALTER TABLE internships ADD COLUMN IF NOT EXISTS contact_phone VARCHAR(100);
+      ALTER TABLE internships ADD COLUMN IF NOT EXISTS contact_email VARCHAR(255);
+      ALTER TABLE internships ADD COLUMN IF NOT EXISTS company_website TEXT;
     `);
 
     const result = await pool.query(`
@@ -96,6 +99,10 @@ router.get("/", async (req, res) => {
         openings: row.max_students || 5,
         eligibleBranches: branchList,
         minCgpa: row.min_cgpa ? Number(row.min_cgpa) : 6.5,
+        contactPhone: row.contact_phone || row.contactPhone || '',
+        contactEmail: row.contact_email || row.contactEmail || '',
+        companyWebsite: row.company_website || row.companyWebsite || '',
+        applyUrl: row.apply_url || row.applyUrl || '',
         responsibilities: respList.length > 0 ? respList : [
           'Design and implement core modules and frontend/backend components.',
           'Collaborate directly with senior engineering mentors.',
@@ -201,6 +208,9 @@ router.post("/confirm", async (req, res) => {
     deadline,
     description,
     applyUrl,
+    contactPhone,
+    contactEmail,
+    companyWebsite,
     fileUrl,
     s3Key,
     publicUrl,
@@ -210,6 +220,10 @@ router.post("/confirm", async (req, res) => {
 
   const courseId = bodyId || generateId("course");
   const finalDeadline = (deadline && String(deadline).trim() !== "") ? new Date(deadline) : null;
+  const finalApplyUrl = applyUrl || req.body.apply_url || null;
+  const finalContactPhone = contactPhone || req.body.contact_phone || null;
+  const finalContactEmail = contactEmail || req.body.contact_email || null;
+  const finalCompanyWebsite = companyWebsite || req.body.company_website || null;
 
   try {
     await pool.query(`
@@ -240,6 +254,9 @@ router.post("/confirm", async (req, res) => {
       ALTER TABLE internships ADD COLUMN IF NOT EXISTS skills TEXT;
       ALTER TABLE internships ADD COLUMN IF NOT EXISTS min_cgpa NUMERIC(4,2) DEFAULT 6.5;
       ALTER TABLE internships ADD COLUMN IF NOT EXISTS perks TEXT;
+      ALTER TABLE internships ADD COLUMN IF NOT EXISTS contact_phone VARCHAR(100);
+      ALTER TABLE internships ADD COLUMN IF NOT EXISTS contact_email VARCHAR(255);
+      ALTER TABLE internships ADD COLUMN IF NOT EXISTS company_website TEXT;
     `);
 
     const respStr = Array.isArray(responsibilities) ? JSON.stringify(responsibilities) : (responsibilities ? String(responsibilities) : null);
@@ -254,9 +271,10 @@ router.post("/confirm", async (req, res) => {
         id, title, company, type, is_lms_enabled, certificate_enabled,
         branch, stipend, location, deadline, description, apply_url,
         file_url, s3_key, duration, max_students, status, work_mode,
-        category, responsibilities, requirements, skills, min_cgpa, perks, posted_at
+        category, responsibilities, requirements, skills, min_cgpa, perks,
+        contact_phone, contact_email, company_website, posted_at
       )
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,'PUBLISHED',$17,$18,$19,$20,$21,$22,$23,NOW())
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,'PUBLISHED',$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,NOW())
       ON CONFLICT (id) DO UPDATE SET
         title = EXCLUDED.title,
         company = EXCLUDED.company,
@@ -280,6 +298,9 @@ router.post("/confirm", async (req, res) => {
         skills = EXCLUDED.skills,
         min_cgpa = EXCLUDED.min_cgpa,
         perks = EXCLUDED.perks,
+        contact_phone = EXCLUDED.contact_phone,
+        contact_email = EXCLUDED.contact_email,
+        company_website = EXCLUDED.company_website,
         status = 'PUBLISHED'
       `,
       [
@@ -294,7 +315,7 @@ router.post("/confirm", async (req, res) => {
         location || null,
         finalDeadline,
         description || null,
-        applyUrl || null,
+        finalApplyUrl,
         publicUrl || fileUrl || null,
         s3Key || null,
         duration || null,
@@ -306,6 +327,9 @@ router.post("/confirm", async (req, res) => {
         skillStr,
         minCgpa ? Number(minCgpa) : 6.5,
         perksStr,
+        finalContactPhone,
+        finalContactEmail,
+        finalCompanyWebsite,
       ]
     );
 

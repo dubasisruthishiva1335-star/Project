@@ -19,6 +19,14 @@ class _CoursesLearningScreenState extends State<CoursesLearningScreen> with Sing
   String _selectedCategory = 'ALL';
   bool _isLoading = true;
 
+  // Stored Student Details for Certificate Registration
+  String _studentName = "Rahul Kumar";
+  String _studentCollege = "RV College of Engineering";
+  String _studentRollNo = "1RV21CS102";
+  String _studentEmail = "rahul.k@rvce.edu.in";
+  String _studentPhone = "+91 9876543210";
+  final Set<String> _enrolledCourseIds = {'course_fullstack_2026', 'course_python_ai_2026'};
+
   List<Map<String, dynamic>> _courses = [];
   final List<Map<String, dynamic>> _myEnrolledCourses = [];
   final List<Map<String, dynamic>> _myCertificates = [];
@@ -36,8 +44,8 @@ class _CoursesLearningScreenState extends State<CoursesLearningScreen> with Sing
       'logoColor': 0xFF3E7BFF,
       'description': 'Master modern full-stack engineering: HTML/CSS, React, Node.js, Express, PostgreSQL, Docker, Microservices, and Cloud Deployment.',
       'skills': ['React', 'Node.js', 'PostgreSQL', 'Express', 'Docker', 'REST APIs', 'TypeScript'],
-      'progress': 78,
-      'completedLessons': 24,
+      'progress': 100,
+      'completedLessons': 31,
       'totalLessons': 31,
       'modules': [
         {
@@ -123,7 +131,7 @@ class _CoursesLearningScreenState extends State<CoursesLearningScreen> with Sing
               'topic': 'useEffect, useMemo, useCallback, Custom Hooks',
               'videoUrl': 'https://www.w3schools.com/html/mov_bbb.mp4',
               'duration': '35:20',
-              'isCompleted': false,
+              'isCompleted': true,
               'pdf': 'Hooks_DeepDive.pdf',
               'quiz': [
                 {
@@ -217,11 +225,27 @@ class _CoursesLearningScreenState extends State<CoursesLearningScreen> with Sing
       _myEnrolledCourses.add(_seedCourses[1]);
 
       _myCertificates.clear();
+      // 1. Pending 24-Hour Review Certificate
+      _myCertificates.add({
+        'certificateId': 'MYV-CERT-2026-482910',
+        'courseTitle': 'Full Stack Web & Cloud Engineering',
+        'studentName': _studentName,
+        'college': _studentCollege,
+        'score': 88,
+        'status': 'PENDING_24H_REVIEW',
+        'submittedAt': '2 Hours ago',
+        'readyIn': '22 Hours Remaining',
+        'verificationUrl': 'https://project-chi-six-62.vercel.app/verify/MYV-CERT-2026-482910',
+      });
+
+      // 2. Fully Earned & Minted Certificate
       _myCertificates.add({
         'certificateId': 'MYV-CERT-2026-773129',
         'courseTitle': 'Python Programming & AI/ML Mastery',
-        'studentName': 'Rahul Kumar',
-        'score': 92,
+        'studentName': _studentName,
+        'college': _studentCollege,
+        'score': 94,
+        'status': 'EARNED',
         'issuedDate': 'September 7, 2026',
         'verificationUrl': 'https://project-chi-six-62.vercel.app/verify/MYV-CERT-2026-773129',
       });
@@ -265,10 +289,29 @@ class _CoursesLearningScreenState extends State<CoursesLearningScreen> with Sing
           labelColor: Colors.white,
           unselectedLabelColor: Colors.white54,
           labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-          tabs: const [
-            Tab(text: 'Explore Courses'),
-            Tab(text: 'My Learning'),
-            Tab(text: 'Certificates'),
+          tabs: [
+            const Tab(text: 'Explore Courses'),
+            const Tab(text: 'My Learning'),
+            Tab(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text('Certificates'),
+                  const SizedBox(width: 6),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFB800).withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      '${_myCertificates.length}',
+                      style: const TextStyle(color: Color(0xFFFFB800), fontSize: 10, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
       ),
@@ -377,6 +420,7 @@ class _CoursesLearningScreenState extends State<CoursesLearningScreen> with Sing
   }
 
   Widget _buildCourseCard(Map<String, dynamic> course) {
+    final courseId = course['id'] ?? '';
     final title = course['title'] ?? 'Course Title';
     final instructor = course['instructor'] ?? 'MyVault Faculty';
     final category = course['category'] ?? 'Engineering';
@@ -384,6 +428,7 @@ class _CoursesLearningScreenState extends State<CoursesLearningScreen> with Sing
     final rating = (course['rating'] is num) ? course['rating'] : 4.9;
     final enrolled = course['enrolled'] ?? 1200;
     final colorVal = (course['logoColor'] is int) ? course['logoColor'] : 0xFF3E7BFF;
+    final isEnrolled = _enrolledCourseIds.contains(courseId);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -395,7 +440,7 @@ class _CoursesLearningScreenState extends State<CoursesLearningScreen> with Sing
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: () => _openCourseDetails(course),
+          onTap: () => _handleCourseClick(course),
           borderRadius: BorderRadius.circular(20),
           child: Padding(
             padding: const EdgeInsets.all(18),
@@ -450,7 +495,7 @@ class _CoursesLearningScreenState extends State<CoursesLearningScreen> with Sing
                     _buildTag(category, Icons.category_outlined, const Color(0xFF00D9F5)),
                     _buildTag(duration, Icons.schedule_rounded, const Color(0xFFFFB800)),
                     _buildTag('$enrolled Learners', Icons.people_outline_rounded, const Color(0xFF7C3AFF)),
-                    _buildTag('🏆 Certificate Included', Icons.verified_rounded, const Color(0xFF00E676)),
+                    _buildTag('🏆 24h Verified Certificate', Icons.verified_rounded, const Color(0xFF00E676)),
                   ],
                 ),
 
@@ -469,14 +514,17 @@ class _CoursesLearningScreenState extends State<CoursesLearningScreen> with Sing
                       ],
                     ),
                     ElevatedButton(
-                      onPressed: () => _openCourseDetails(course),
+                      onPressed: () => _handleCourseClick(course),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: MyVaultColors.accentBlue,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+                        backgroundColor: isEnrolled ? MyVaultColors.accentBlue : const Color(0xFF00E676),
+                        foregroundColor: isEnrolled ? Colors.white : Colors.black,
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                       ),
-                      child: const Text('Start Learning ➔', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                      child: Text(
+                        isEnrolled ? 'Continue Learning ➔' : 'Register & Start 🎓',
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                      ),
                     ),
                   ],
                 ),
@@ -537,7 +585,9 @@ class _CoursesLearningScreenState extends State<CoursesLearningScreen> with Sing
                 const SizedBox(height: 8),
                 Text(c['title'] ?? 'Course Title', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
                 const SizedBox(height: 4),
-                Text('Completed $completed of $total video lessons', style: const TextStyle(color: Colors.white54, fontSize: 12)),
+                Text('Registered to: $_studentName • $_studentCollege', style: const TextStyle(color: Colors.white54, fontSize: 11)),
+                const SizedBox(height: 4),
+                Text('Completed $completed of $total video lessons', style: const TextStyle(color: Colors.white38, fontSize: 11)),
                 const SizedBox(height: 14),
 
                 // Linear Progress Bar
@@ -563,7 +613,7 @@ class _CoursesLearningScreenState extends State<CoursesLearningScreen> with Sing
                     ElevatedButton.icon(
                       onPressed: () => _openLessonPlayer(c),
                       icon: const Icon(Icons.play_arrow_rounded, size: 18),
-                      label: const Text('Continue Learning', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                      label: const Text('Watch & Learn', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: MyVaultColors.accentBlue,
                         foregroundColor: Colors.white,
@@ -591,9 +641,9 @@ class _CoursesLearningScreenState extends State<CoursesLearningScreen> with Sing
             children: [
               Icon(Icons.workspace_premium_outlined, color: Colors.white30, size: 54),
               SizedBox(height: 16),
-              Text('No Certificates Earned Yet', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+              Text('No Certificates in Queue', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
               SizedBox(height: 8),
-              Text('Complete 100% of video lectures, pass video-grounded quizzes, and score 70%+ on the final exam to earn your verifiable certificate.', textAlign: TextAlign.center, style: TextStyle(color: Colors.white54, fontSize: 13)),
+              Text('Register your details, complete 100% of video lessons, and pass the final exam. Your verifiable certificate is minted within 24 hours.', textAlign: TextAlign.center, style: TextStyle(color: Colors.white54, fontSize: 13)),
             ],
           ),
         ),
@@ -611,11 +661,124 @@ class _CoursesLearningScreenState extends State<CoursesLearningScreen> with Sing
   Widget _buildCertificateCard(Map<String, dynamic> cert) {
     final certId = cert['certificateId'] ?? 'MYV-CERT-2026-XXXX';
     final course = cert['courseTitle'] ?? 'Course Certificate';
-    final student = cert['studentName'] ?? 'Rahul Kumar';
+    final student = cert['studentName'] ?? _studentName;
+    final college = cert['college'] ?? _studentCollege;
     final score = cert['score'] ?? 88;
+    final status = cert['status'] ?? 'EARNED';
+    final readyIn = cert['readyIn'] ?? '22 Hours Remaining';
     final date = cert['issuedDate'] ?? 'September 7, 2026';
     final verifyUrl = cert['verificationUrl'] ?? 'https://project-chi-six-62.vercel.app/verify/$certId';
 
+    // 1. Pending 24-Hour Review Card
+    if (status == 'PENDING_24H_REVIEW') {
+      return Container(
+        margin: const EdgeInsets.only(bottom: 20),
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(24),
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFF261D0C), Color(0xFF0F131D)],
+          ),
+          border: Border.all(color: const Color(0xFFFFB800).withValues(alpha: 0.5)),
+          boxShadow: [
+            BoxShadow(color: const Color(0xFFFFB800).withValues(alpha: 0.1), blurRadius: 20, spreadRadius: 2),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFFB800).withValues(alpha: 0.2),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.hourglass_top_rounded, color: Color(0xFFFFB800), size: 22),
+                    ),
+                    const SizedBox(width: 10),
+                    const Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('IN 24-HOUR VERIFICATION QUEUE', style: TextStyle(color: Color(0xFFFFB800), fontWeight: FontWeight.bold, fontSize: 10, letterSpacing: 1.1)),
+                        Text('Certificate Under Audit', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
+                      ],
+                    ),
+                  ],
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(color: const Color(0xFFFFB800).withValues(alpha: 0.15), borderRadius: BorderRadius.circular(8)),
+                  child: Text(readyIn, style: const TextStyle(color: Color(0xFFFFB800), fontWeight: FontWeight.bold, fontSize: 10)),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 16),
+            const Text('Registered Recipient:', style: TextStyle(color: Colors.white38, fontSize: 11)),
+            Text(student, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 17)),
+            Text(college, style: const TextStyle(color: MyVaultColors.accentCyan, fontSize: 12)),
+            const SizedBox(height: 8),
+            Text('Course: $course', style: const TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.w600)),
+
+            const SizedBox(height: 14),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.4), borderRadius: BorderRadius.circular(12)),
+              child: Column(
+                children: [
+                  _buildAuditCheck('✓ 100% Video Lecture Hours Completed', true),
+                  _buildAuditCheck('✓ Video-Grounded AI Quizzes Passed', true),
+                  _buildAuditCheck('✓ Final Certification Exam Evaluated ($score%)', true),
+                  _buildAuditCheck('⏳ Digital Seal Minting (Ready within 24 Hours)', false),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 14),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Token ID', style: TextStyle(color: Colors.white38, fontSize: 10)),
+                    Text(certId, style: const TextStyle(color: Colors.white, fontFamily: 'monospace', fontSize: 11)),
+                  ],
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    // Instant unlock demo
+                    setState(() {
+                      cert['status'] = 'EARNED';
+                      cert['issuedDate'] = 'September 7, 2026';
+                    });
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('✓ 24-Hour Review Verified! Certificate Minted.')),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFFFB800),
+                    foregroundColor: Colors.black,
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                  child: const Text('⚡ Instant Approve (Demo)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+    }
+
+    // 2. Fully Issued & Verified Certificate
     return Container(
       margin: const EdgeInsets.only(bottom: 20),
       padding: const EdgeInsets.all(20),
@@ -624,14 +787,11 @@ class _CoursesLearningScreenState extends State<CoursesLearningScreen> with Sing
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF1B2236),
-            Color(0xFF0C101A),
-          ],
+          colors: [Color(0xFF1B2236), Color(0xFF0C101A)],
         ),
-        border: Border.all(color: const Color(0xFFFFB800).withValues(alpha: 0.4)),
+        border: Border.all(color: const Color(0xFF00E676).withValues(alpha: 0.5)),
         boxShadow: [
-          BoxShadow(color: const Color(0xFFFFB800).withValues(alpha: 0.08), blurRadius: 20, spreadRadius: 2),
+          BoxShadow(color: const Color(0xFF00E676).withValues(alpha: 0.08), blurRadius: 20, spreadRadius: 2),
         ],
       ),
       child: Column(
@@ -645,16 +805,16 @@ class _CoursesLearningScreenState extends State<CoursesLearningScreen> with Sing
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFFFB800).withValues(alpha: 0.15),
+                      color: const Color(0xFF00E676).withValues(alpha: 0.15),
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(Icons.emoji_events_rounded, color: Color(0xFFFFB800), size: 24),
+                    child: const Icon(Icons.emoji_events_rounded, color: Color(0xFF00E676), size: 24),
                   ),
                   const SizedBox(width: 10),
                   const Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('MYVAULT VERIFIED', style: TextStyle(color: Color(0xFFFFB800), fontWeight: FontWeight.bold, fontSize: 10, letterSpacing: 1.2)),
+                      Text('MYVAULT OFFICIALLY VERIFIED', style: TextStyle(color: Color(0xFF00E676), fontWeight: FontWeight.bold, fontSize: 10, letterSpacing: 1.2)),
                       Text('Certificate of Achievement', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
                     ],
                   ),
@@ -671,8 +831,9 @@ class _CoursesLearningScreenState extends State<CoursesLearningScreen> with Sing
           const SizedBox(height: 18),
           const Text('This is to certify that', style: TextStyle(color: Colors.white38, fontSize: 11)),
           Text(student, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
+          Text(college, style: const TextStyle(color: Colors.white54, fontSize: 12)),
           const SizedBox(height: 6),
-          const Text('has successfully completed the comprehensive technical curriculum & video exams in', style: TextStyle(color: Colors.white54, fontSize: 11)),
+          const Text('has successfully completed the comprehensive curriculum & examinations in', style: TextStyle(color: Colors.white54, fontSize: 11)),
           Text(course, style: const TextStyle(color: MyVaultColors.accentCyan, fontWeight: FontWeight.bold, fontSize: 14)),
 
           const SizedBox(height: 18),
@@ -699,7 +860,7 @@ class _CoursesLearningScreenState extends State<CoursesLearningScreen> with Sing
                 icon: const Icon(Icons.qr_code_2_rounded, size: 16),
                 label: const Text('Verify ↗', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFFFB800),
+                  backgroundColor: const Color(0xFF00E676),
                   foregroundColor: Colors.black,
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -712,6 +873,176 @@ class _CoursesLearningScreenState extends State<CoursesLearningScreen> with Sing
     );
   }
 
+  Widget _buildAuditCheck(String text, bool isDone) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Row(
+        children: [
+          Icon(isDone ? Icons.check_circle_rounded : Icons.pending_rounded, color: isDone ? const Color(0xFF00E676) : const Color(0xFFFFB800), size: 14),
+          const SizedBox(width: 8),
+          Text(text, style: TextStyle(color: isDone ? Colors.white70 : const Color(0xFFFFB800), fontSize: 11, fontWeight: isDone ? FontWeight.normal : FontWeight.bold)),
+        ],
+      ),
+    );
+  }
+
+  void _handleCourseClick(Map<String, dynamic> course) {
+    final courseId = course['id'] ?? '';
+    if (!_enrolledCourseIds.contains(courseId)) {
+      _showPreLearningRegistrationDialog(course);
+    } else {
+      _openCourseDetails(course);
+    }
+  }
+
+  // Pre-Learning Student Registration Modal
+  void _showPreLearningRegistrationDialog(Map<String, dynamic> course) {
+    final nameCtrl = TextEditingController(text: _studentName);
+    final collegeCtrl = TextEditingController(text: _studentCollege);
+    final rollCtrl = TextEditingController(text: _studentRollNo);
+    final emailCtrl = TextEditingController(text: _studentEmail);
+    final phoneCtrl = TextEditingController(text: _studentPhone);
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Padding(
+        padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
+        child: Container(
+          padding: const EdgeInsets.all(22),
+          decoration: const BoxDecoration(
+            color: Color(0xFF0C101A),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(4)))),
+              const SizedBox(height: 14),
+
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(color: MyVaultColors.accentBlue.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(10)),
+                    child: const Icon(Icons.badge_rounded, color: MyVaultColors.accentCyan, size: 22),
+                  ),
+                  const SizedBox(width: 12),
+                  const Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Student Certificate Registration', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+                        Text('Details will be permanently engraved on your certificate', style: TextStyle(color: Colors.white54, fontSize: 11)),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(color: const Color(0xFFFFB800).withValues(alpha: 0.12), borderRadius: BorderRadius.circular(10)),
+                child: const Row(
+                  children: [
+                    Icon(Icons.info_outline_rounded, color: Color(0xFFFFB800), size: 16),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Please enter your exact legal name & college. Upon completing the course, your verified certificate is minted in these details within 24 hours.',
+                        style: TextStyle(color: Color(0xFFFFB800), fontSize: 11),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 14),
+              _buildInputField('Full Legal Name (as on Degree/ID) *', nameCtrl, Icons.person_rounded),
+              const SizedBox(height: 10),
+              _buildInputField('College / University / Organization *', collegeCtrl, Icons.school_rounded),
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  Expanded(child: _buildInputField('USN / Roll No', rollCtrl, Icons.numbers_rounded)),
+                  const SizedBox(width: 10),
+                  Expanded(child: _buildInputField('Email Address', emailCtrl, Icons.email_rounded)),
+                ],
+              ),
+
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: () async {
+                  if (nameCtrl.text.trim().isEmpty || collegeCtrl.text.trim().isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please enter your full name and college name.')));
+                    return;
+                  }
+
+                  setState(() {
+                    _studentName = nameCtrl.text.trim();
+                    _studentCollege = collegeCtrl.text.trim();
+                    _studentRollNo = rollCtrl.text.trim();
+                    _studentEmail = emailCtrl.text.trim();
+                    _studentPhone = phoneCtrl.text.trim();
+                    _enrolledCourseIds.add(course['id'] ?? '');
+                    _myEnrolledCourses.add(course);
+                  });
+
+                  // Call backend enroll endpoint
+                  try {
+                    await ApiClient.instance.dio.post('/courses/${course['id']}/enroll', data: {
+                      'studentName': _studentName,
+                      'college': _studentCollege,
+                      'studentId': _studentRollNo,
+                      'email': _studentEmail,
+                      'phone': _studentPhone,
+                    });
+                  } catch (_) {}
+
+                  Navigator.pop(ctx);
+                  _openLessonPlayer(course);
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF00E676),
+                  foregroundColor: Colors.black,
+                  minimumSize: const Size(double.infinity, 48),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                child: const Text('Save Details & Start Learning ➔', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInputField(String label, TextEditingController ctrl, IconData icon) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: const TextStyle(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.w600)),
+        const SizedBox(height: 4),
+        Container(
+          decoration: BoxDecoration(color: const Color(0xFF141824), borderRadius: BorderRadius.circular(10), border: Border.all(color: Colors.white12)),
+          child: TextField(
+            controller: ctrl,
+            style: const TextStyle(color: Colors.white, fontSize: 12),
+            decoration: InputDecoration(
+              prefixIcon: Icon(icon, color: Colors.white38, size: 16),
+              border: InputBorder.none,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+              isDense: true,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   void _openCourseDetails(Map<String, dynamic> course) {
     showModalBottomSheet(
       context: context,
@@ -719,6 +1050,7 @@ class _CoursesLearningScreenState extends State<CoursesLearningScreen> with Sing
       backgroundColor: Colors.transparent,
       builder: (ctx) => _CourseDetailsSheet(
         course: course,
+        studentName: _studentName,
         onStartLearning: () {
           Navigator.pop(ctx);
           _openLessonPlayer(course);
@@ -761,7 +1093,9 @@ class _CoursesLearningScreenState extends State<CoursesLearningScreen> with Sing
       backgroundColor: Colors.transparent,
       builder: (ctx) => _FinalExamSheet(
         course: course,
-        onExamPassed: (certData) {
+        studentName: _studentName,
+        studentCollege: _studentCollege,
+        onExamSubmitted: (certData) {
           setState(() {
             _myCertificates.insert(0, certData);
             _tabController.animateTo(2);
@@ -775,11 +1109,13 @@ class _CoursesLearningScreenState extends State<CoursesLearningScreen> with Sing
 /// Course Details Bottom Sheet
 class _CourseDetailsSheet extends StatelessWidget {
   final Map<String, dynamic> course;
+  final String studentName;
   final VoidCallback onStartLearning;
   final VoidCallback onTakeExam;
 
   const _CourseDetailsSheet({
     required this.course,
+    required this.studentName,
     required this.onStartLearning,
     required this.onTakeExam,
   });
@@ -814,7 +1150,7 @@ class _CourseDetailsSheet extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(title, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-                          Text(instructor, style: const TextStyle(color: MyVaultColors.accentCyan, fontSize: 12)),
+                          Text('Enrolled as: $studentName', style: const TextStyle(color: MyVaultColors.accentCyan, fontSize: 12)),
                         ],
                       ),
                     ),
@@ -840,7 +1176,7 @@ class _CourseDetailsSheet extends StatelessWidget {
                           _StatItem('🎥 Video Lessons', 'HD Streaming'),
                           _StatItem('🧠 AI Quizzes', 'Grounded in Videos'),
                           _StatItem('📝 PDF CheatSheets', 'Downloadable'),
-                          _StatItem('🏆 Certificate', 'QR Verified'),
+                          _StatItem('⏱️ 24h Review', 'Verified Seal'),
                         ],
                       ),
                     ),
@@ -864,11 +1200,13 @@ class _CourseDetailsSheet extends StatelessWidget {
                     ),
 
                     const SizedBox(height: 24),
-                    const Text('Certification Criteria', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
+                    const Text('24-Hour Certification Protocol', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
                     const SizedBox(height: 10),
-                    _buildCriteriaItem('Watch All Video Lectures'),
-                    _buildCriteriaItem('Pass Auto-Generated Video Quizzes (>= 70%)'),
-                    _buildCriteriaItem('Pass Final Certification Examination (>= 70%)'),
+                    _buildCriteriaItem('1. Register full legal name and college before starting'),
+                    _buildCriteriaItem('2. Watch 100% of video lecture modules'),
+                    _buildCriteriaItem('3. Pass all video-grounded AI quizzes (>= 70%)'),
+                    _buildCriteriaItem('4. Pass Final Comprehensive Examination (>= 70%)'),
+                    _buildCriteriaItem('5. Official QR-verifiable certificate generated in 24 hours'),
 
                     const SizedBox(height: 30),
                   ],
@@ -902,7 +1240,7 @@ class _CourseDetailsSheet extends StatelessWidget {
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         ),
-                        child: const Text('Watch Videos & Quizzes ➔', style: TextStyle(fontWeight: FontWeight.bold)),
+                        child: const Text('Watch Videos & Learn ➔', style: TextStyle(fontWeight: FontWeight.bold)),
                       ),
                     ),
                   ],
@@ -1474,14 +1812,18 @@ class _VideoLessonPlayerSheetState extends State<_VideoLessonPlayerSheet> {
   }
 }
 
-/// Timed Final Certification Examination Sheet
+/// Timed Final Certification Examination Sheet with 24-Hour Review Status
 class _FinalExamSheet extends StatefulWidget {
   final Map<String, dynamic> course;
-  final Function(Map<String, dynamic>) onExamPassed;
+  final String studentName;
+  final String studentCollege;
+  final Function(Map<String, dynamic>) onExamSubmitted;
 
   const _FinalExamSheet({
     required this.course,
-    required this.onExamPassed,
+    required this.studentName,
+    required this.studentCollege,
+    required this.onExamSubmitted,
   });
 
   @override
@@ -1529,7 +1871,8 @@ class _FinalExamSheetState extends State<_FinalExamSheet> {
     try {
       final res = await ApiClient.instance.dio.post('/courses/$courseId/submit-exam', data: {
         'studentId': 'student_user',
-        'studentName': 'Rahul Kumar',
+        'studentName': widget.studentName,
+        'college': widget.studentCollege,
         'answers': _answers,
         'passingScore': 60,
       });
@@ -1539,35 +1882,38 @@ class _FinalExamSheetState extends State<_FinalExamSheet> {
       if (res.data != null && res.data['certificate'] != null) {
         final cert = Map<String, dynamic>.from(res.data['certificate']);
         Navigator.pop(context);
-        widget.onExamPassed(cert);
-        _showSuccessDialog(cert);
+        widget.onExamSubmitted(cert);
+        _show24HourProcessingDialog(cert);
       } else {
-        _showFallbackSuccess(courseTitle);
+        _showFallbackProcessing(courseTitle);
       }
     } catch (_) {
       if (!mounted) return;
-      _showFallbackSuccess(courseTitle);
+      _showFallbackProcessing(courseTitle);
     } finally {
       if (mounted) setState(() => _isEvaluating = false);
     }
   }
 
-  void _showFallbackSuccess(String courseTitle) {
+  void _showFallbackProcessing(String courseTitle) {
     final certNum = 'MYV-CERT-2026-${100000 + DateTime.now().millisecondsSinceEpoch % 900000}';
     final cert = {
       'certificateId': certNum,
       'courseTitle': courseTitle,
-      'studentName': 'Rahul Kumar',
+      'studentName': widget.studentName,
+      'college': widget.studentCollege,
       'score': 88,
-      'issuedDate': 'September 7, 2026',
+      'status': 'PENDING_24H_REVIEW',
+      'submittedAt': 'Just now',
+      'readyIn': '24 Hours Remaining',
       'verificationUrl': 'https://project-chi-six-62.vercel.app/verify/$certNum',
     };
     Navigator.pop(context);
-    widget.onExamPassed(cert);
-    _showSuccessDialog(cert);
+    widget.onExamSubmitted(cert);
+    _show24HourProcessingDialog(cert);
   }
 
-  void _showSuccessDialog(Map<String, dynamic> cert) {
+  void _show24HourProcessingDialog(Map<String, dynamic> cert) {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -1575,16 +1921,21 @@ class _FinalExamSheetState extends State<_FinalExamSheet> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24), side: const BorderSide(color: Color(0xFFFFB800))),
         title: const Row(
           children: [
-            Icon(Icons.emoji_events_rounded, color: Color(0xFFFFB800), size: 28),
+            Icon(Icons.hourglass_top_rounded, color: Color(0xFFFFB800), size: 28),
             SizedBox(width: 10),
-            Text('Exam Passed! 🎓', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
+            Text('Submitted for 24h Review ⏳', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 17)),
           ],
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Congratulations! You scored 88% and satisfied all technical certification thresholds.', style: TextStyle(color: Colors.white70, fontSize: 13)),
+            Text('Congratulations ${widget.studentName}! You passed the final exam with 88%.', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+            const SizedBox(height: 10),
+            const Text(
+              'Your course completion and exam results are now in the 24-Hour Academic Verification Queue. Your official QR-verified certificate will be minted in your name within 24 hours.',
+              style: TextStyle(color: Colors.white70, fontSize: 12, height: 1.4),
+            ),
             const SizedBox(height: 14),
             Container(
               padding: const EdgeInsets.all(12),
@@ -1592,10 +1943,11 @@ class _FinalExamSheetState extends State<_FinalExamSheet> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Certificate ID:', style: TextStyle(color: Colors.white38, fontSize: 10)),
-                  Text(cert['certificateId'] ?? '', style: const TextStyle(color: Color(0xFFFFB800), fontFamily: 'monospace', fontWeight: FontWeight.bold, fontSize: 13)),
+                  const Text('Registered Name:', style: TextStyle(color: Colors.white38, fontSize: 10)),
+                  Text(widget.studentName, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
                   const SizedBox(height: 4),
-                  const Text('Live Verification Link Generated ✓', style: TextStyle(color: Color(0xFF00E676), fontSize: 11)),
+                  const Text('Certificate Token:', style: TextStyle(color: Colors.white38, fontSize: 10)),
+                  Text(cert['certificateId'] ?? '', style: const TextStyle(color: Color(0xFFFFB800), fontFamily: 'monospace', fontWeight: FontWeight.bold, fontSize: 12)),
                 ],
               ),
             ),
@@ -1605,7 +1957,7 @@ class _FinalExamSheetState extends State<_FinalExamSheet> {
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx),
             style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFFB800), foregroundColor: Colors.black),
-            child: const Text('View Certificate in Wallet', style: TextStyle(fontWeight: FontWeight.bold)),
+            child: const Text('Track in Certificates Hub', style: TextStyle(fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -1729,7 +2081,7 @@ class _FinalExamSheetState extends State<_FinalExamSheet> {
                           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         ),
-                        child: Text(_isEvaluating ? 'Evaluating...' : 'Submit & Get Certified 🎓', style: const TextStyle(fontWeight: FontWeight.bold)),
+                        child: Text(_isEvaluating ? 'Submitting...' : 'Submit for 24h Review 🎓', style: const TextStyle(fontWeight: FontWeight.bold)),
                       ),
                   ],
                 ),

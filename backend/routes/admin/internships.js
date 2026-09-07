@@ -588,13 +588,61 @@ router.post("/ai-generate-assessment", async (req, res) => {
 });
 
 /**
+ * POST /admin/internships/:id/enroll
+ * Registers student details BEFORE learning starts for certificate minting.
+ */
+router.post("/:id/enroll", async (req, res) => {
+  try {
+    const courseId = req.params.id;
+    const { studentName = "Rahul Kumar", studentId = "student_101", email = "rahul@myvault.edu", college = "Engineering Institute", phone = "" } = req.body;
+
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS course_enrollments (
+        id           VARCHAR(100) PRIMARY KEY,
+        course_id    VARCHAR(100) NOT NULL,
+        student_name VARCHAR(255) NOT NULL,
+        student_id   VARCHAR(100) NOT NULL,
+        email        VARCHAR(255),
+        college      VARCHAR(255),
+        phone        VARCHAR(50),
+        enrolled_at  TIMESTAMP DEFAULT NOW()
+      );
+    `);
+
+    const enrollmentId = `enr_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+    await pool.query(
+      `INSERT INTO course_enrollments (id, course_id, student_name, student_id, email, college, phone)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
+       ON CONFLICT (id) DO NOTHING`,
+      [enrollmentId, courseId, studentName, studentId, email, college, phone]
+    );
+
+    res.json({
+      success: true,
+      message: "Student enrolled successfully. Official name registered for 24-hour certificate generation upon course completion.",
+      enrollment: { enrollmentId, courseId, studentName, studentId, email, college }
+    });
+  } catch (err) {
+    console.error("Enrollment error:", err);
+    res.status(500).json({ error: "Failed to save student enrollment" });
+  }
+});
+
+/**
  * POST /admin/internships/:id/submit-exam
- * Evaluates student exam submission and issues digital certificate upon qualifying score.
+ * Evaluates student exam submission and puts certificate into 24-Hour verification queue.
  */
 router.post("/:id/submit-exam", async (req, res) => {
   try {
     const courseId = req.params.id;
-    const { studentId = "student_user", studentName = "Student Learner", answers = {}, passingScore = 60 } = req.body;
+    const { 
+      studentId = "student_user", 
+      studentName = "Rahul Kumar", 
+      college = "Engineering Institute",
+      email = "student@myvault.edu",
+      answers = {}, 
+      passingScore = 60 
+    } = req.body;
 
     // Ensure certificates table exists
     await pool.query(`
@@ -605,8 +653,12 @@ router.post("/:id/submit-exam", async (req, res) => {
         student_name       VARCHAR(255) NOT NULL,
         internship_id      VARCHAR(100) NOT NULL,
         course_title       VARCHAR(255) NOT NULL,
+        college            VARCHAR(255),
+        email              VARCHAR(255),
         score              INTEGER NOT NULL DEFAULT 85,
         issued_at          TIMESTAMP NOT NULL DEFAULT NOW(),
+        ready_at           TIMESTAMP NOT NULL DEFAULT NOW() + INTERVAL '24 hours',
+        status             VARCHAR(50) NOT NULL DEFAULT 'PENDING_24H_REVIEW',
         certificate_url    TEXT,
         is_valid           BOOLEAN NOT NULL DEFAULT true
       );
@@ -616,7 +668,6 @@ router.post("/:id/submit-exam", async (req, res) => {
     const courseRes = await pool.query(`SELECT * FROM internships WHERE id = $1`, [courseId]);
     const courseTitle = courseRes.rows.length ? courseRes.rows[0].title : "Professional Certification Course";
 
-    // Compute score (default to realistic 85-95% if answers provided)
     const totalAnswers = Object.keys(answers).length;
     let earnedScore = 88;
     if (totalAnswers > 0) {
@@ -635,23 +686,26 @@ router.post("/:id/submit-exam", async (req, res) => {
         `
         INSERT INTO internship_certificates (
           id, certificate_number, student_id, student_name,
-          internship_id, course_title, score, issued_at, certificate_url, is_valid
+          internship_id, course_title, college, email, score, issued_at, ready_at, status, certificate_url, is_valid
         )
-        VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), $8, true)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW() + INTERVAL '24 hours', 'PENDING_24H_REVIEW', $10, true)
         ON CONFLICT (certificate_number) DO UPDATE SET score = EXCLUDED.score
         `,
-        [certId, certNum, studentId, studentName, courseId, courseTitle, earnedScore, certUrl]
+        [certId, certNum, studentId, studentName, courseId, courseTitle, college, email, earnedScore, certUrl]
       );
 
       certificate = {
         certificateId: certNum,
         studentName,
         courseTitle,
+        college,
         score: earnedScore,
         issuedAt: new Date().toISOString(),
+        readyAt: new Date(Date.now() + 24 * 3600 * 1000).toISOString(),
+        status: "PENDING_24H_REVIEW",
         verificationUrl: certUrl,
         qrUrl: `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(certUrl)}`,
-        status: "VERIFIED",
+        message: "Course & Exam completed! Your official certificate is undergoing 24-hour verification and will be minted in your registered name within 24 hours.",
       };
     }
 
@@ -667,6 +721,23 @@ router.post("/:id/submit-exam", async (req, res) => {
     res.status(500).json({ error: "Failed to evaluate exam" });
   }
 });
+
+/**
+ * POST /admin/internships/certificates/:certNumber/approve
+ * Admin manual approval to skip 24h review.
+ */
+router.post("/certificates/:certNumber/approve", async (req, res) => {
+  try {
+    await pool.query(
+      `UPDATE internship_certificates SET status = 'EARNED', ready_at = NOW() WHERE certificate_number = $1 OR id = $1`,
+      [req.params.certNumber]
+    );
+    res.json({ success: true, message: "Certificate approved & issued immediately!" });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to approve certificate" });
+  }
+});
+
 
 /**
  * DELETE /admin/internships/:id

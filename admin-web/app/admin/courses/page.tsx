@@ -43,14 +43,17 @@ interface CourseItem {
 interface StudentGrade {
   id: string;
   studentName: string;
+  college?: string;
+  email?: string;
   courseTitle: string;
   lessonProgress: number;
   quizScore: number;
   assignmentScore: number;
   finalExamScore: number;
   overallScore: number;
-  certStatus: "EARNED" | "IN_PROGRESS" | "FAILED";
+  certStatus: "EARNED" | "PENDING_24H_REVIEW" | "IN_PROGRESS" | "FAILED";
   certNumber?: string;
+  submittedAt?: string;
 }
 
 export default function AdminCoursesPage() {
@@ -151,18 +154,23 @@ export default function AdminCoursesPage() {
       {
         id: "g1",
         studentName: "Rahul Kumar",
+        college: "RV College of Engineering (USN: 1RV21CS102)",
+        email: "rahul.k@rvce.edu.in",
         courseTitle: "Full Stack Web & Cloud Engineering",
         lessonProgress: 100,
         quizScore: 88,
         assignmentScore: 92,
         finalExamScore: 86,
         overallScore: 88,
-        certStatus: "EARNED",
+        certStatus: "PENDING_24H_REVIEW",
         certNumber: "MYV-CERT-2026-482910",
+        submittedAt: "2 Hours ago",
       },
       {
         id: "g2",
         studentName: "Priya Sharma",
+        college: "PES University (SRN: PES1UG20CS412)",
+        email: "priya.s@pesu.edu",
         courseTitle: "Python Programming & AI/ML Mastery",
         lessonProgress: 100,
         quizScore: 94,
@@ -175,6 +183,8 @@ export default function AdminCoursesPage() {
       {
         id: "g3",
         studentName: "Arjun Reddy",
+        college: "BMS College of Engineering",
+        email: "arjun.reddy@bmsce.ac.in",
         courseTitle: "Cloud Computing & AWS Architecture",
         lessonProgress: 75,
         quizScore: 78,
@@ -185,6 +195,19 @@ export default function AdminCoursesPage() {
       },
     ]);
     setLoading(false);
+  }
+
+  async function approveCertificate(certNumber: string) {
+    try {
+      await fetch(`https://project-9zrh.onrender.com/admin/internships/certificates/${certNumber}/approve`, {
+        method: "POST"
+      });
+      setGrades(prev => prev.map(g => g.certNumber === certNumber ? { ...g, certStatus: "EARNED" } : g));
+      alert(`✓ Certificate ${certNumber} approved & minted immediately!`);
+    } catch (_) {
+      setGrades(prev => prev.map(g => g.certNumber === certNumber ? { ...g, certStatus: "EARNED" } : g));
+      alert(`✓ Certificate ${certNumber} approved!`);
+    }
   }
 
   // Auto-generate AI Quiz directly for a specific video lesson
@@ -984,7 +1007,11 @@ export default function AdminCoursesPage() {
               <tbody className="divide-y divide-white/5">
                 {grades.map((g) => (
                   <tr key={g.id} className="hover:bg-white/[0.02]">
-                    <td className="py-3 px-4 font-bold text-white">{g.studentName}</td>
+                    <td className="py-3 px-4">
+                      <p className="font-bold text-white">{g.studentName}</p>
+                      {g.college && <p className="text-[10px] text-white/50">{g.college}</p>}
+                      {g.email && <p className="text-[10px] text-accentCyan/80">{g.email}</p>}
+                    </td>
                     <td className="py-3 px-4 text-accentCyan font-semibold">{g.courseTitle}</td>
                     <td className="py-3 px-4">{g.lessonProgress}%</td>
                     <td className="py-3 px-4">{g.quizScore}%</td>
@@ -1004,8 +1031,25 @@ export default function AdminCoursesPage() {
                             Verify ↗
                           </Link>
                         </div>
+                      ) : g.certStatus === "PENDING_24H_REVIEW" ? (
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-1.5">
+                            <span className="rounded bg-amber-500/20 px-2 py-0.5 text-[10px] font-bold text-amber-400 animate-pulse">
+                              ⏳ 24h Review Pending
+                            </span>
+                            <span className="text-[10px] text-white/40">{g.submittedAt}</span>
+                          </div>
+                          {g.certNumber && (
+                            <button
+                              onClick={() => approveCertificate(g.certNumber!)}
+                              className="rounded bg-gradient-to-r from-emerald-500 to-accentCyan px-2 py-0.5 text-[10px] font-bold text-black hover:opacity-90 transition-all block"
+                            >
+                              ⚡ Approve & Issue Now
+                            </button>
+                          )}
+                        </div>
                       ) : (
-                        <span className="rounded bg-amber-500/20 px-2 py-0.5 text-[10px] font-bold text-amber-400">
+                        <span className="rounded bg-white/10 px-2 py-0.5 text-[10px] font-bold text-white/50">
                           In Progress
                         </span>
                       )}

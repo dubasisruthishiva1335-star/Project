@@ -64,7 +64,7 @@ export default function CertificateVerificationPage() {
               </div>
               <div>
                 <span className="text-white/50">Certificate Number:</span>
-                <p className="font-mono text-white/80">{data.certificateId || certificateNumber}</p>
+                <p className="font-mono text-white/80">{data.certificateNumber || data.certificateId || certificateNumber}</p>
               </div>
               <div>
                 <span className="text-white/50">Issued Date:</span>

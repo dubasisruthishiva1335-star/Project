@@ -67,12 +67,13 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final tiles = [
+      _HomeTile('Courses & Learning', 'Learn, Take Exams & Get Certified', Icons.school_rounded, const Color(0xFF3E7BFF), () => context.go('/courses')),
       _HomeTile('Internship Hub', 'Explore & Apply to Tech Roles', Icons.business_center_rounded, const Color(0xFF9C27B0), () => context.go('/internships')),
-      _HomeTile('Academic Hub', 'Notes, Syllabus, Papers', Icons.menu_book_rounded, const Color(0xFF3E7BFF), () => context.go('/academic-hub')),
+      _HomeTile('Academic Hub', 'Notes, Syllabus, Papers', Icons.menu_book_rounded, const Color(0xFF00D9F5), () => context.go('/academic-hub')),
       _HomeTile('Documents Vault', 'Certificates & Resume', Icons.folder_special_rounded, const Color(0xFF00E676), () => context.go('/documents-vault')),
       _HomeTile('Results & AI', 'SGPA & AI Analyzer', Icons.grade_outlined, const Color(0xFFFFB800), () => context.go('/results')),
       _HomeTile('AI Interview', 'Mock Tech & HR Practice', Icons.psychology_outlined, const Color(0xFF7C3AFF), () => context.go('/ai-interview')),
-      _HomeTile('Uploaded Files', 'Resumes & Saved Docs', Icons.cloud_done_rounded, const Color(0xFF00D9F5), () => context.go('/uploaded-files')),
+      _HomeTile('Uploaded Files', 'Resumes & Saved Docs', Icons.cloud_done_rounded, const Color(0xFFE91E63), () => context.go('/uploaded-files')),
     ];
 
     return Scaffold(

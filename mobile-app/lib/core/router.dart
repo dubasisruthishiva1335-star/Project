@@ -6,12 +6,14 @@ import '../features/documents_vault/documents_vault_screen.dart';
 import '../features/uploaded_files/uploaded_files_screen.dart';
 import '../features/ai_interview/ai_interview_screen.dart';
 import '../features/internships/internship_hub_screen.dart';
+import '../features/courses/courses_learning_screen.dart';
 
 /// App router — opens directly to /home with all active feature routes wired up.
 final GoRouter appRouter = GoRouter(
   initialLocation: '/home',
   routes: [
     GoRoute(path: '/home',            builder: (context, state) => const HomeScreen()),
+    GoRoute(path: '/courses',         builder: (context, state) => const CoursesLearningScreen()),
     GoRoute(path: '/internships',     builder: (context, state) => const InternshipHubScreen()),
     GoRoute(path: '/academic-hub',    builder: (context, state) => const AcademicHubScreen()),
     GoRoute(path: '/documents-vault', builder: (context, state) => const DocumentsVaultScreen()),

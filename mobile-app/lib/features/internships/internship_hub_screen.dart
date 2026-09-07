@@ -26,12 +26,48 @@ class _InternshipHubScreenState extends State<InternshipHubScreen> with SingleTi
 
   final List<Map<String, dynamic>> _seedInternships = [
     {
+      'id': 'myvault-fullstack-2026',
+      'title': 'Full Stack Development',
+      'company': 'MyVault',
+      'logoColor': 0xFF7C3AFF,
+      'workMode': 'HYBRID',
+      'location': 'Bengaluru, Karnataka',
+      'category': 'Software Development',
+      'openings': 6,
+      'stipend': '₹40,000/mo',
+      'duration': '6 Months',
+      'deadline': '2026-10-31',
+      'minCgpa': 6.5,
+      'eligibleBranches': ['ALL', 'CSE', 'IT', 'ECE', 'AI/ML'],
+      'matchScore': 98,
+      'skills': ['React', 'Node.js', 'Next.js', 'TypeScript', 'PostgreSQL', 'Flutter'],
+      'description': 'Join MyVault as a Full Stack Development intern to build next-generation academic portals, AI analyzers, and mobile applications.',
+      'responsibilities': [
+        'Develop responsive web portals and Flutter mobile UI components.',
+        'Build and maintain RESTful API endpoints and PostgreSQL queries.',
+        'Implement real-time cloud document sync and authentication workflows.',
+        'Collaborate closely with core product and mobile engineering leads.'
+      ],
+      'requirements': [
+        'Enrolled in B.Tech / B.E. / MCA in Computer Science or related engineering branches.',
+        'Hands-on experience with modern JavaScript / TypeScript, React / Flutter, and SQL databases.',
+        'Strong problem-solving attitude and passion for building student-centric tools.',
+        'Minimum CGPA 6.5/10.0.'
+      ],
+      'perks': [
+        'Pre-Placement Offer (PPO) conversion opportunity',
+        'Direct 1:1 mentorship from senior full-stack architects',
+        'Experience Certificate & Letter of Recommendation',
+        'Flexible working hours & hybrid schedule'
+      ]
+    },
+    {
       'id': 'google-swe-2026',
       'title': 'Software Engineering Intern - Cloud & AI',
       'company': 'Google India',
       'logoColor': 0xFF4285F4,
       'workMode': 'HYBRID',
-      'location': 'Bangalore / Hyderabad, India',
+      'location': 'Bengaluru / Hyderabad, India',
       'category': 'Software Engineering',
       'openings': 8,
       'stipend': '₹1,25,000 / month',
@@ -204,31 +240,120 @@ class _InternshipHubScreenState extends State<InternshipHubScreen> with SingleTi
     ]);
   }
 
+  Map<String, dynamic> _normalizeInternship(Map<String, dynamic> raw) {
+    final company = (raw['company'] ?? 'MyVault Partner').toString();
+    final title = (raw['title'] ?? 'Internship Opportunity').toString();
+    final desc = (raw['description'] ?? 'Exciting internship opportunity with high career impact.').toString();
+    final location = (raw['location'] ?? 'Bengaluru / Remote, India').toString();
+    final stipend = (raw['stipend'] ?? '₹40,000 / month').toString();
+    final duration = (raw['duration'] ?? '6 Months').toString();
+    final workMode = (raw['workMode'] ?? raw['work_mode'] ?? (location.toLowerCase().contains('remote') ? 'REMOTE' : 'HYBRID')).toString().toUpperCase();
+
+    List<String> branches = ['ALL', 'CSE', 'IT', 'ECE', 'AI/ML'];
+    if (raw['eligibleBranches'] is List && (raw['eligibleBranches'] as List).isNotEmpty) {
+      branches = (raw['eligibleBranches'] as List).map((e) => e.toString()).toList();
+    } else if (raw['branch'] != null && raw['branch'].toString().isNotEmpty) {
+      branches = raw['branch'].toString().split(RegExp(r'[,/]')).map((e) => e.trim()).toList();
+    }
+
+    List<String> skills = ['Full Stack', 'Web Development', 'Problem Solving'];
+    if (raw['skills'] is List && (raw['skills'] as List).isNotEmpty) {
+      skills = (raw['skills'] as List).map((e) => e.toString()).toList();
+    } else if (raw['skills'] is String && raw['skills'].toString().isNotEmpty) {
+      skills = raw['skills'].toString().split(',').map((e) => e.trim()).toList();
+    }
+
+    List<String> responsibilities = [
+      'Design and build scalable frontend and backend modules.',
+      'Work closely with team leads and senior mentors on production features.',
+      'Write clean, well-tested code and participate in code reviews.'
+    ];
+    if (raw['responsibilities'] is List && (raw['responsibilities'] as List).isNotEmpty) {
+      responsibilities = (raw['responsibilities'] as List).map((e) => e.toString()).toList();
+    }
+
+    List<String> requirements = [
+      'Enrolled in B.Tech / B.E. in Engineering or related degree.',
+      'Strong grasp of data structures, algorithms, and web technologies.',
+      'Curiosity, quick learning aptitude, and passion for software engineering.'
+    ];
+    if (raw['requirements'] is List && (raw['requirements'] as List).isNotEmpty) {
+      requirements = (raw['requirements'] as List).map((e) => e.toString()).toList();
+    }
+
+    List<String> perks = [
+      'Pre-Placement Offer (PPO) conversion opportunity',
+      '1:1 mentorship from industry practitioners',
+      'Certificate of Internship Completion & Letter of Recommendation'
+    ];
+    if (raw['perks'] is List && (raw['perks'] as List).isNotEmpty) {
+      perks = (raw['perks'] as List).map((e) => e.toString()).toList();
+    }
+
+    int logoColor = 0xFF7C3AFF;
+    if (raw['logoColor'] is int) {
+      logoColor = raw['logoColor'] as int;
+    } else {
+      final colors = [0xFF7C3AFF, 0xFF3E7BFF, 0xFF00E676, 0xFFFFB800, 0xFF00D9F5, 0xFFFF5252];
+      logoColor = colors[company.hashCode.abs() % colors.length];
+    }
+
+    return {
+      'id': (raw['id'] ?? 'int_${DateTime.now().millisecondsSinceEpoch}').toString(),
+      'title': title,
+      'company': company,
+      'logoColor': logoColor,
+      'workMode': workMode,
+      'location': location,
+      'category': (raw['category'] ?? 'Software Development').toString(),
+      'openings': raw['openings'] ?? raw['max_students'] ?? 5,
+      'stipend': stipend,
+      'duration': duration,
+      'deadline': (raw['deadline'] ?? '').toString(),
+      'minCgpa': (raw['minCgpa'] ?? raw['min_cgpa'] ?? 6.5) is num ? ((raw['minCgpa'] ?? raw['min_cgpa'] ?? 6.5) as num).toDouble() : 6.5,
+      'eligibleBranches': branches,
+      'matchScore': (raw['matchScore'] is num) ? (raw['matchScore'] as num).toInt() : (92 + (company.hashCode.abs() % 7)),
+      'skills': skills,
+      'description': desc,
+      'responsibilities': responsibilities,
+      'requirements': requirements,
+      'perks': perks,
+    };
+  }
+
   Future<void> _loadInternships() async {
     setState(() => _isLoading = true);
+    final List<Map<String, dynamic>> combined = [];
+    final Set<String> seenIds = {};
+
+    // 1. Fetch from Render backend database
     try {
       final res = await ApiClient.instance.dio.get('/internships');
-      if (res.data is List && (res.data as List).isNotEmpty) {
-        final List<Map<String, dynamic>> list = [];
+      if (res.data is List) {
         for (final item in res.data) {
           if (item is Map<String, dynamic>) {
-            list.add(item);
+            final normalized = _normalizeInternship(item);
+            if (!seenIds.contains(normalized['id'])) {
+              seenIds.add(normalized['id']);
+              combined.add(normalized);
+            }
           }
         }
-        if (mounted) {
-          setState(() {
-            _internships = list;
-            _isLoading = false;
-          });
-          return;
-        }
       }
-    } catch (_) {
-      // Fallback cleanly to enriched seed data
+    } catch (_) {}
+
+    // 2. Add seed opportunities if not already present
+    for (final seed in _seedInternships) {
+      final normalized = _normalizeInternship(seed);
+      final exists = combined.any((c) => c['id'] == normalized['id'] || (c['title'] == normalized['title'] && c['company'] == normalized['company']));
+      if (!exists) {
+        combined.add(normalized);
+      }
     }
+
     if (mounted) {
       setState(() {
-        _internships = List.from(_seedInternships);
+        _internships = combined;
         _isLoading = false;
       });
     }
@@ -240,17 +365,19 @@ class _InternshipHubScreenState extends State<InternshipHubScreen> with SingleTi
       final title = (item['title'] ?? '').toString().toLowerCase();
       final company = (item['company'] ?? '').toString().toLowerCase();
       final category = (item['category'] ?? '').toString().toLowerCase();
+      final desc = (item['description'] ?? '').toString().toLowerCase();
       final mode = (item['workMode'] ?? 'ALL').toString().toUpperCase();
-      final branches = (item['eligibleBranches'] as List<dynamic>?)?.map((e) => e.toString().toUpperCase()).toList() ?? [];
+      final branches = (item['eligibleBranches'] as List<dynamic>?)?.map((e) => e.toString().toUpperCase()).toList() ?? ['ALL'];
 
       final matchesQuery = query.isEmpty ||
           title.contains(query) ||
           company.contains(query) ||
-          category.contains(query);
+          category.contains(query) ||
+          desc.contains(query);
 
-      final matchesMode = _selectedWorkMode == 'ALL' || mode == _selectedWorkMode;
+      final matchesMode = _selectedWorkMode == 'ALL' || mode.contains(_selectedWorkMode);
       final matchesBranch = _selectedBranch == 'ALL' ||
-          branches.any((b) => b.contains(_selectedBranch) || b.contains('ALL'));
+          branches.any((b) => b == 'ALL' || b.contains(_selectedBranch) || _selectedBranch.contains(b));
 
       return matchesQuery && matchesMode && matchesBranch;
     }).toList();
@@ -437,12 +564,12 @@ class _InternshipHubScreenState extends State<InternshipHubScreen> with SingleTi
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'AI Recommendation Match: 96%',
+                        'AI Recommendation Match: 98%',
                         style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
                       ),
                       SizedBox(height: 2),
                       Text(
-                        'Top openings matched with your branch (CSE) & technical projects.',
+                        'Campus verified openings matched with your branch & full-stack development skills.',
                         style: TextStyle(color: Colors.white70, fontSize: 11),
                       ),
                     ],
@@ -583,8 +710,8 @@ class _InternshipHubScreenState extends State<InternshipHubScreen> with SingleTi
 
   Widget _buildInternshipCard(Map<String, dynamic> item) {
     final isSaved = _savedIds.contains(item['id']);
-    final int score = (item['matchScore'] is num) ? (item['matchScore'] as num).toInt() : 90;
-    final company = (item['company'] ?? 'Organization').toString();
+    final int score = (item['matchScore'] is num) ? (item['matchScore'] as num).toInt() : 94;
+    final company = (item['company'] ?? 'MyVault Partner').toString();
     final title = (item['title'] ?? 'Internship Role').toString();
     final stipend = (item['stipend'] ?? 'Competitive').toString();
     final duration = (item['duration'] ?? '3-6 Months').toString();
@@ -1122,13 +1249,13 @@ class _InternshipDetailsSheet extends StatelessWidget {
                             children: [
                               Icon(Icons.auto_awesome, color: Color(0xFF00E676), size: 18),
                               SizedBox(width: 8),
-                              Text('AI Profile Compatibility: 96%', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
+                              Text('AI Profile Compatibility: 98%', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
                             ],
                           ),
                           const SizedBox(height: 10),
-                          _buildCheckItem('Branch Eligibility: CSE / IT / ECE Verified'),
-                          _buildCheckItem('Academic Cutoff: CGPA 8.0+ Requirement Satisfied'),
-                          _buildCheckItem('Tech Stack Match: Python, Go, Cloud, Data Structures'),
+                          _buildCheckItem('Branch Eligibility: Verified for your degree'),
+                          _buildCheckItem('Academic Cutoff: Minimum CGPA criteria satisfied'),
+                          _buildCheckItem('Skills Match: High compatibility with current projects'),
                         ],
                       ),
                     ),

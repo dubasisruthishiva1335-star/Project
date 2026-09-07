@@ -177,23 +177,68 @@ let mockInternships: InternshipItem[] = [
   }
 ];
 
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "https://project-9zrh.onrender.com";
+
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
     const status = searchParams.get("status");
 
-    let list = [...mockInternships];
+    let dbInternships: InternshipItem[] = [];
+    try {
+      const res = await fetch(`${BACKEND_URL}/internships`, { cache: "no-store" });
+      if (res.ok) {
+        const rows = await res.json();
+        if (Array.isArray(rows)) {
+          dbInternships = rows.map((r: any) => ({
+            id: r.id,
+            title: r.title,
+            company: r.company || "MyVault",
+            logo: r.logo || "",
+            workMode: r.workMode || (r.work_mode as any) || "HYBRID",
+            location: r.location || "Bengaluru, India",
+            category: r.category || "Software Development",
+            openings: Number(r.openings || r.max_students || 5),
+            startDate: r.start_date || r.startDate,
+            deadline: r.deadline,
+            duration: r.duration || "6 Months",
+            stipend: r.stipend || "₹40,000 / month",
+            isPaid: true,
+            currency: "INR",
+            description: r.description || "",
+            responsibilities: Array.isArray(r.responsibilities) ? r.responsibilities : (r.responsibilities ? String(r.responsibilities).split("\n") : []),
+            requirements: Array.isArray(r.requirements) ? r.requirements : (r.requirements ? String(r.requirements).split("\n") : []),
+            skills: Array.isArray(r.skills) ? r.skills : (r.skills ? String(r.skills).split(",") : ["Full Stack", "Problem Solving"]),
+            eligibleBranches: Array.isArray(r.eligibleBranches) ? r.eligibleBranches : (r.branch ? [r.branch] : ["ALL"]),
+            minCgpa: Number(r.minCgpa || r.min_cgpa || 6.5),
+            eligibleGradYears: [2025, 2026, 2027],
+            perks: Array.isArray(r.perks) ? r.perks : ["PPO Opportunity", "Mentorship", "Certificate"],
+            questions: [],
+            status: (r.status as any) || "PUBLISHED",
+            postedAt: r.posted_at || r.postedAt || new Date().toISOString(),
+            applicantCount: Number(r.applicantCount || r.enrollment_count || 0),
+          }));
+        }
+      }
+    } catch (e) {
+      console.error("Failed to fetch from backend DB:", e);
+    }
+
+    // Merge backend DB rows with mock list, prioritizing DB rows
+    const dbIds = new Set(dbInternships.map(i => i.id));
+    const combined = [...dbInternships, ...mockInternships.filter(m => !dbIds.has(m.id))];
+
     if (id) {
-      const found = list.find(i => i.id === id);
+      const found = combined.find(i => i.id === id);
       if (!found) return NextResponse.json({ error: "Internship not found" }, { status: 404 });
       return NextResponse.json(found);
     }
     if (status) {
-      list = list.filter(i => i.status === status);
+      return NextResponse.json(combined.filter(i => i.status === status));
     }
 
-    return NextResponse.json(list);
+    return NextResponse.json(combined);
   } catch (error: any) {
     return NextResponse.json({ error: error?.message || "Internal server error" }, { status: 500 });
   }
@@ -205,10 +250,10 @@ export async function POST(request: Request) {
     const newInternship: InternshipItem = {
       id: body.id || "int_" + Date.now() + "_" + Math.random().toString(36).substring(2, 7),
       title: body.title,
-      company: body.company || "Technology Partner",
+      company: body.company || "MyVault Partner",
       logo: body.logo || "",
       workMode: body.workMode || "HYBRID",
-      location: body.location || "Bengaluru / Remote",
+      location: body.location || "Bengaluru, Karnataka",
       category: body.category || "Software Development",
       openings: Number(body.openings) || 5,
       startDate: body.startDate,
@@ -231,7 +276,39 @@ export async function POST(request: Request) {
       applicantCount: 0,
     };
 
+    // Save locally
     mockInternships.unshift(newInternship);
+
+    // Sync to PostgreSQL on Render backend
+    try {
+      await fetch(`${BACKEND_URL}/admin/internships/confirm`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: newInternship.id,
+          title: newInternship.title,
+          company: newInternship.company,
+          type: "INTERNSHIP",
+          workMode: newInternship.workMode,
+          category: newInternship.category,
+          branch: newInternship.eligibleBranches.join(", "),
+          stipend: newInternship.stipend,
+          location: newInternship.location,
+          deadline: newInternship.deadline,
+          duration: newInternship.duration,
+          maxStudents: newInternship.openings,
+          description: newInternship.description,
+          responsibilities: newInternship.responsibilities,
+          requirements: newInternship.requirements,
+          skills: newInternship.skills,
+          minCgpa: newInternship.minCgpa,
+          perks: newInternship.perks,
+        }),
+      });
+    } catch (err) {
+      console.error("Failed to forward internship to Render backend:", err);
+    }
+
     return NextResponse.json(newInternship, { status: 201 });
   } catch (error: any) {
     return NextResponse.json({ error: error?.message || "Failed to create internship" }, { status: 500 });
@@ -243,12 +320,19 @@ export async function PATCH(request: Request) {
     const body = await request.json();
     const { id, ...updates } = body;
     const index = mockInternships.findIndex(i => i.id === id);
-    if (index === -1) {
-      return NextResponse.json({ error: "Internship not found" }, { status: 404 });
+    if (index !== -1) {
+      mockInternships[index] = { ...mockInternships[index], ...updates };
     }
 
-    mockInternships[index] = { ...mockInternships[index], ...updates };
-    return NextResponse.json(mockInternships[index]);
+    try {
+      await fetch(`${BACKEND_URL}/admin/internships/confirm`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, ...updates }),
+      });
+    } catch (_) {}
+
+    return NextResponse.json(mockInternships[index] || { id, ...updates });
   } catch (error: any) {
     return NextResponse.json({ error: error?.message || "Failed to update internship" }, { status: 500 });
   }
@@ -261,6 +345,11 @@ export async function DELETE(request: Request) {
     if (!id) return NextResponse.json({ error: "ID required" }, { status: 400 });
 
     mockInternships = mockInternships.filter(i => i.id !== id);
+
+    try {
+      await fetch(`${BACKEND_URL}/admin/internships/${id}`, { method: "DELETE" });
+    } catch (_) {}
+
     return NextResponse.json({ success: true, id });
   } catch (error: any) {
     return NextResponse.json({ error: error?.message || "Failed to delete internship" }, { status: 500 });

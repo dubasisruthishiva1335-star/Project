@@ -39,31 +39,13 @@ router.get("/", async (req, res) => {
         status               VARCHAR(64) NOT NULL DEFAULT 'PUBLISHED',
         posted_at            TIMESTAMP NOT NULL DEFAULT NOW()
       );
-      CREATE TABLE IF NOT EXISTS internship_modules (
-        id            VARCHAR(100) PRIMARY KEY,
-        internship_id VARCHAR(100) NOT NULL REFERENCES internships(id) ON DELETE CASCADE,
-        title         VARCHAR(255) NOT NULL,
-        order_index   INTEGER NOT NULL DEFAULT 1,
-        created_at    TIMESTAMP NOT NULL DEFAULT NOW()
-      );
-      CREATE TABLE IF NOT EXISTS internship_lessons (
-        id            VARCHAR(100) PRIMARY KEY,
-        module_id     VARCHAR(100) NOT NULL REFERENCES internship_modules(id) ON DELETE CASCADE,
-        title         VARCHAR(255) NOT NULL,
-        duration      VARCHAR(50),
-        video_url     TEXT,
-        pdf_url       TEXT,
-        is_preview    BOOLEAN NOT NULL DEFAULT false,
-        order_index   INTEGER NOT NULL DEFAULT 1,
-        created_at    TIMESTAMP NOT NULL DEFAULT NOW()
-      );
-      CREATE TABLE IF NOT EXISTS internship_enrollments (
-        id            VARCHAR(100) PRIMARY KEY,
-        student_id    VARCHAR(100) NOT NULL,
-        internship_id VARCHAR(100) NOT NULL REFERENCES internships(id) ON DELETE CASCADE,
-        enrolled_at   TIMESTAMP NOT NULL DEFAULT NOW(),
-        UNIQUE (student_id, internship_id)
-      );
+      ALTER TABLE internships ADD COLUMN IF NOT EXISTS work_mode VARCHAR(64) DEFAULT 'HYBRID';
+      ALTER TABLE internships ADD COLUMN IF NOT EXISTS category VARCHAR(100) DEFAULT 'Software Development';
+      ALTER TABLE internships ADD COLUMN IF NOT EXISTS responsibilities TEXT;
+      ALTER TABLE internships ADD COLUMN IF NOT EXISTS requirements TEXT;
+      ALTER TABLE internships ADD COLUMN IF NOT EXISTS skills TEXT;
+      ALTER TABLE internships ADD COLUMN IF NOT EXISTS min_cgpa NUMERIC(4,2) DEFAULT 6.5;
+      ALTER TABLE internships ADD COLUMN IF NOT EXISTS perks TEXT;
     `);
 
     const result = await pool.query(`
@@ -79,7 +61,58 @@ router.get("/", async (req, res) => {
       GROUP BY i.id
       ORDER BY i.posted_at DESC
     `);
-    res.json(result.rows);
+
+    const formatted = result.rows.map((row) => {
+      let respList = [];
+      try {
+        respList = row.responsibilities ? (row.responsibilities.startsWith('[') ? JSON.parse(row.responsibilities) : row.responsibilities.split('\n')) : [];
+      } catch (_) {
+        respList = row.responsibilities ? row.responsibilities.split('\n') : [];
+      }
+
+      let reqList = [];
+      try {
+        reqList = row.requirements ? (row.requirements.startsWith('[') ? JSON.parse(row.requirements) : row.requirements.split('\n')) : [];
+      } catch (_) {
+        reqList = row.requirements ? row.requirements.split('\n') : [];
+      }
+
+      let skillList = [];
+      try {
+        skillList = row.skills ? (row.skills.startsWith('[') ? JSON.parse(row.skills) : row.skills.split(',')) : [];
+      } catch (_) {
+        skillList = row.skills ? row.skills.split(',') : [];
+      }
+
+      let branchList = ['ALL', 'CSE', 'IT', 'ECE', 'EEE', 'MECH', 'CIVIL'];
+      if (row.branch && row.branch !== 'All Branches') {
+        branchList = row.branch.split(/[,/]/).map(b => b.trim());
+      }
+
+      return {
+        ...row,
+        workMode: row.work_mode || (row.location && row.location.toLowerCase().includes('remote') ? 'REMOTE' : 'HYBRID'),
+        category: row.category || 'Software Development',
+        openings: row.max_students || 5,
+        eligibleBranches: branchList,
+        minCgpa: row.min_cgpa ? Number(row.min_cgpa) : 6.5,
+        responsibilities: respList.length > 0 ? respList : [
+          'Design and implement core modules and frontend/backend components.',
+          'Collaborate directly with senior engineering mentors.',
+          'Participate in agile sprints, code reviews, and testing.'
+        ],
+        requirements: reqList.length > 0 ? reqList : [
+          'Enrolled in B.Tech/B.E. in Engineering or related fields.',
+          'Solid fundamentals in software engineering and problem-solving.',
+          'Good team collaboration and communication skills.'
+        ],
+        skills: skillList.length > 0 ? skillList.map(s => String(s).trim()) : ['Full Stack', 'Web Development', 'Problem Solving'],
+        perks: row.perks ? (row.perks.startsWith('[') ? JSON.parse(row.perks) : row.perks.split(',')) : ['PPO Conversion Opportunity', '1:1 Mentorship', 'Experience Certificate'],
+        applicantCount: row.enrollment_count || 0,
+      };
+    });
+
+    res.json(formatted);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Failed to load internships" });
@@ -154,6 +187,13 @@ router.post("/confirm", async (req, res) => {
     company,
     type = "INTERNSHIP",
     isLmsEnabled = false,
+    workMode = "HYBRID",
+    category = "Software Development",
+    responsibilities,
+    requirements,
+    skills,
+    minCgpa = 6.5,
+    perks,
     certificateEnabled = false,
     branch = "All Branches",
     stipend,
@@ -193,16 +233,30 @@ router.post("/confirm", async (req, res) => {
         status               VARCHAR(64) NOT NULL DEFAULT 'PUBLISHED',
         posted_at            TIMESTAMP NOT NULL DEFAULT NOW()
       );
+      ALTER TABLE internships ADD COLUMN IF NOT EXISTS work_mode VARCHAR(64) DEFAULT 'HYBRID';
+      ALTER TABLE internships ADD COLUMN IF NOT EXISTS category VARCHAR(100) DEFAULT 'Software Development';
+      ALTER TABLE internships ADD COLUMN IF NOT EXISTS responsibilities TEXT;
+      ALTER TABLE internships ADD COLUMN IF NOT EXISTS requirements TEXT;
+      ALTER TABLE internships ADD COLUMN IF NOT EXISTS skills TEXT;
+      ALTER TABLE internships ADD COLUMN IF NOT EXISTS min_cgpa NUMERIC(4,2) DEFAULT 6.5;
+      ALTER TABLE internships ADD COLUMN IF NOT EXISTS perks TEXT;
     `);
+
+    const respStr = Array.isArray(responsibilities) ? JSON.stringify(responsibilities) : (responsibilities ? String(responsibilities) : null);
+    const reqStr = Array.isArray(requirements) ? JSON.stringify(requirements) : (requirements ? String(requirements) : null);
+    const skillStr = Array.isArray(skills) ? JSON.stringify(skills) : (skills ? String(skills) : null);
+    const perksStr = Array.isArray(perks) ? JSON.stringify(perks) : (perks ? String(perks) : null);
+    const branchStr = Array.isArray(branch) ? branch.join(', ') : String(branch || 'All Branches');
 
     await pool.query(
       `
       INSERT INTO internships (
         id, title, company, type, is_lms_enabled, certificate_enabled,
         branch, stipend, location, deadline, description, apply_url,
-        file_url, s3_key, duration, max_students, status, posted_at
+        file_url, s3_key, duration, max_students, status, work_mode,
+        category, responsibilities, requirements, skills, min_cgpa, perks, posted_at
       )
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,'PUBLISHED',NOW())
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,'PUBLISHED',$17,$18,$19,$20,$21,$22,$23,NOW())
       ON CONFLICT (id) DO UPDATE SET
         title = EXCLUDED.title,
         company = EXCLUDED.company,
@@ -219,6 +273,13 @@ router.post("/confirm", async (req, res) => {
         s3_key = EXCLUDED.s3_key,
         duration = EXCLUDED.duration,
         max_students = EXCLUDED.max_students,
+        work_mode = EXCLUDED.work_mode,
+        category = EXCLUDED.category,
+        responsibilities = EXCLUDED.responsibilities,
+        requirements = EXCLUDED.requirements,
+        skills = EXCLUDED.skills,
+        min_cgpa = EXCLUDED.min_cgpa,
+        perks = EXCLUDED.perks,
         status = 'PUBLISHED'
       `,
       [
@@ -228,7 +289,7 @@ router.post("/confirm", async (req, res) => {
         type || "INTERNSHIP",
         Boolean(isLmsEnabled === true || isLmsEnabled === "true"),
         Boolean(certificateEnabled === true || certificateEnabled === "true"),
-        branch || "All Branches",
+        branchStr,
         stipend || null,
         location || null,
         finalDeadline,
@@ -238,6 +299,13 @@ router.post("/confirm", async (req, res) => {
         s3Key || null,
         duration || null,
         maxStudents ? Number(maxStudents) : null,
+        workMode || "HYBRID",
+        category || "Software Development",
+        respStr,
+        reqStr,
+        skillStr,
+        minCgpa ? Number(minCgpa) : 6.5,
+        perksStr,
       ]
     );
 

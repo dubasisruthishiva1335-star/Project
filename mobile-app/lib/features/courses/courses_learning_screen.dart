@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -1002,7 +1001,9 @@ class _CoursesLearningScreenState extends State<CoursesLearningScreen> with Sing
                     });
                   } catch (_) {}
 
+                  if (!ctx.mounted) return;
                   Navigator.pop(ctx);
+                  if (!mounted) return;
                   _openLessonPlayer(course);
                 },
                 style: ElevatedButton.styleFrom(
@@ -1150,7 +1151,7 @@ class _CourseDetailsSheet extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(title, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-                          Text('Enrolled as: $studentName', style: const TextStyle(color: MyVaultColors.accentCyan, fontSize: 12)),
+                          Text('Instructor: $instructor • Enrolled as: $studentName', style: const TextStyle(color: MyVaultColors.accentCyan, fontSize: 12)),
                         ],
                       ),
                     ),

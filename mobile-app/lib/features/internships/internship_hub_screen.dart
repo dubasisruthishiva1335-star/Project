@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -1224,17 +1223,17 @@ class _InternshipHubScreenState extends State<InternshipHubScreen> with SingleTi
     final savedList = _internships.where((i) => _savedIds.contains(i['id'])).toList();
 
     if (savedList.isEmpty) {
-      return Center(
+      return const Center(
         child: Padding(
-          padding: const EdgeInsets.all(32),
+          padding: EdgeInsets.all(32),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.bookmark_border_rounded, color: Colors.white30, size: 54),
-              const SizedBox(height: 16),
-              const Text('No saved internships', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 8),
-              const Text(
+              Icon(Icons.bookmark_border_rounded, color: Colors.white30, size: 54),
+              SizedBox(height: 16),
+              Text('No saved internships', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+              SizedBox(height: 8),
+              Text(
                 'Bookmark roles you want to prepare for and apply later.',
                 textAlign: TextAlign.center,
                 style: TextStyle(color: Colors.white54, fontSize: 13),
@@ -1702,7 +1701,7 @@ class _ApplicationWizardSheetState extends State<_ApplicationWizardSheet> {
   final _linkedinCtrl = TextEditingController(text: 'https://linkedin.com/in/student-dev');
   final _pitchCtrl = TextEditingController();
 
-  String _selectedResume = 'Resume_FullStack_2026.pdf';
+  final String _selectedResume = 'Resume_FullStack_2026.pdf';
 
   @override
   Widget build(BuildContext context) {

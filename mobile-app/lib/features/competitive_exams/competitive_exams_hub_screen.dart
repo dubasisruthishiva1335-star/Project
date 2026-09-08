@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -188,6 +189,7 @@ class _CompetitiveExamsHubScreenState extends State<CompetitiveExamsHubScreen> w
     final List<Map<String, dynamic>> combined = [];
     final Set<String> seenIds = {};
 
+    // 1. Fetch from live Render backend
     try {
       final res = await ApiClient.instance.dio.get('/exams');
       if (res.data is List) {
@@ -203,7 +205,27 @@ class _CompetitiveExamsHubScreenState extends State<CompetitiveExamsHubScreen> w
       }
     } catch (_) {}
 
-    // Add seed exams
+    // 2. Fetch from Vercel Next.js Admin API in real-time
+    try {
+      final vercelDio = Dio(BaseOptions(
+        connectTimeout: const Duration(seconds: 10),
+        receiveTimeout: const Duration(seconds: 10),
+      ));
+      final vRes = await vercelDio.get('https://project-chi-six-62.vercel.app/api/admin/competitive-exams');
+      if (vRes.data is List) {
+        for (final item in vRes.data) {
+          if (item is Map<String, dynamic>) {
+            final norm = _normalizeExam(item);
+            if (!seenIds.contains(norm['id'])) {
+              seenIds.add(norm['id']);
+              combined.add(norm);
+            }
+          }
+        }
+      }
+    } catch (_) {}
+
+    // 3. Add seed exams fallback if not already present
     for (final seed in _seedExams) {
       final norm = _normalizeExam(seed);
       final exists = combined.any((c) => c['id'] == norm['id'] || (c['title'] == norm['title'] && c['examName'] == norm['examName']));

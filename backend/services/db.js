@@ -12,6 +12,8 @@ const memoryStore = {
   competitive_exams: [],
   exam_results: [],
   students: [],
+  course_enrollments: [],
+  internship_certificates: [],
 };
 
 if (isRemote) {
@@ -30,15 +32,69 @@ if (isRemote) {
     async query(sql, params = []) {
       const s = String(sql).trim();
 
-      // Handle CREATE TABLE
-      if (s.toUpperCase().startsWith("CREATE TABLE")) {
+      // Handle DDL
+      if (s.toUpperCase().startsWith("CREATE TABLE") || s.toUpperCase().startsWith("ALTER TABLE")) {
         return { rows: [], rowCount: 0 };
+      }
+
+      // Handle competitive_exams
+      if (s.includes("competitive_exams")) {
+        if (s.toUpperCase().startsWith("INSERT")) {
+          // params: [id, exam_id, exam_name, category, title, subject, unit, content_type, year, difficulty, file_url, s3_key, file_size, description, author, syllabus_url, exam_date, is_featured]
+          const id = params[0] || `exam_${Date.now()}`;
+          const record = {
+            id,
+            exam_id: params[1] || "gate-cs-2026",
+            exam_name: params[2] || "GATE Computer Science & IT",
+            category: params[3] || "ENGINEERING",
+            title: params[4] || "Exam Preparation Material",
+            subject: params[5] || "General",
+            unit: params[6] || "1",
+            content_type: params[7] || "NOTES",
+            year: Number(params[8]) || 2026,
+            difficulty: params[9] || "ALL_LEVELS",
+            file_url: params[10] || "",
+            s3_key: params[11] || "",
+            file_size: params[12] || "2.5 MB",
+            description: params[13] || "",
+            author: params[14] || "MyVault Academic Team",
+            syllabus_url: params[15] || "",
+            exam_date: params[16] || "",
+            is_featured: Boolean(params[17]),
+            downloads_count: 0,
+            uploaded_at: new Date().toISOString(),
+          };
+
+          const existingIdx = memoryStore.competitive_exams.findIndex((e) => e.id === id);
+          if (existingIdx >= 0) {
+            memoryStore.competitive_exams[existingIdx] = { ...memoryStore.competitive_exams[existingIdx], ...record };
+          } else {
+            memoryStore.competitive_exams.unshift(record);
+          }
+          return { rows: [record], rowCount: 1 };
+        }
+
+        if (s.toUpperCase().startsWith("SELECT")) {
+          let rows = [...memoryStore.competitive_exams];
+          if (s.includes("WHERE id = $1") && params.length > 0) {
+            rows = rows.filter((r) => r.id === params[0]);
+          } else if (s.includes("category") && params.length > 0) {
+            // filter if needed
+          }
+          return { rows, rowCount: rows.length };
+        }
+
+        if (s.toUpperCase().startsWith("DELETE")) {
+          if (params.length > 0) {
+            memoryStore.competitive_exams = memoryStore.competitive_exams.filter((r) => r.id !== params[0]);
+          }
+          return { rows: [], rowCount: 1 };
+        }
       }
 
       // Handle academic_materials
       if (s.includes("academic_materials")) {
         if (s.toUpperCase().startsWith("INSERT")) {
-          // params: [id, title, branch, semester, unit, content_type, file_url, s3_key]
           const id = params[0] || `mat_${Date.now()}`;
           const existingIdx = memoryStore.academic_materials.findIndex((m) => m.id === id);
           const record = {
@@ -63,7 +119,6 @@ if (isRemote) {
 
         if (s.toUpperCase().startsWith("SELECT")) {
           let rows = [...memoryStore.academic_materials];
-          // Check if selecting specific id
           if (s.includes("WHERE id = $1") && params.length > 0) {
             rows = rows.filter((r) => r.id === params[0]);
           }
@@ -78,7 +133,7 @@ if (isRemote) {
         }
       }
 
-      // Handle internships / placements / jobs
+      // Handle internships / placements / jobs / courses
       if (s.includes("internships")) {
         if (s.toUpperCase().startsWith("INSERT")) {
           const id = params[0] || `job_${Date.now()}`;
@@ -95,6 +150,18 @@ if (isRemote) {
             apply_url: params[11] || "",
             file_url: params[12] || "",
             s3_key: params[13] || "",
+            duration: params[14] || "",
+            max_students: params[15] || 5,
+            work_mode: params[16] || "HYBRID",
+            category: params[17] || "Software Development",
+            responsibilities: params[18] || "",
+            requirements: params[19] || "",
+            skills: params[20] || "",
+            min_cgpa: params[21] || 6.5,
+            perks: params[22] || "",
+            contact_phone: params[23] || "",
+            contact_email: params[24] || "",
+            company_website: params[25] || "",
             posted_at: new Date().toISOString(),
           };
           const existingIdx = memoryStore.internships.findIndex((j) => j.id === id);
@@ -103,7 +170,11 @@ if (isRemote) {
           return { rows: [record], rowCount: 1 };
         }
         if (s.toUpperCase().startsWith("SELECT")) {
-          return { rows: [...memoryStore.internships], rowCount: memoryStore.internships.length };
+          let rows = [...memoryStore.internships];
+          if (s.includes("WHERE id = $1") && params.length > 0) {
+            rows = rows.filter((r) => r.id === params[0]);
+          }
+          return { rows, rowCount: rows.length };
         }
         if (s.toUpperCase().startsWith("DELETE")) {
           if (params.length > 0) {

@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../core/api_client.dart';
 import '../../core/colors.dart';
+import 'academic_curriculum_data.dart';
 import 'pdf_viewer_screen.dart';
 
 const _branches = ['CSE', 'ECE', 'AI_ML', 'EEE', 'MECH', 'CIVIL', 'GENERAL'];
@@ -15,7 +16,7 @@ class AcademicHubScreen extends StatefulWidget {
 }
 
 class _AcademicHubScreenState extends State<AcademicHubScreen> {
-  String _branch = 'CSE';
+  String _branch = 'ECE';
   int _semester = 1;
   int _selectedUnit = 0; // 0 = All Units, 1-5 = Unit 1..5
   String _selectedCategory = 'ALL';
@@ -46,18 +47,59 @@ class _AcademicHubScreenState extends State<AcademicHubScreen> {
       _loading = true;
       _error = null;
     });
+
+    final defaultSubjects = AcademicCurriculumData.getSubjects(_branch, _semester);
+
     try {
       final res = await ApiClient.instance.dio.get('/subjects', queryParameters: {
         'branch': _branch,
         'semester': _semester,
       });
-      final data = res.data as List<dynamic>;
-      setState(() {
-        _subjects = data;
-      });
+      final serverData = res.data as List<dynamic>;
+
+      if (serverData.isEmpty) {
+        setState(() {
+          _subjects = defaultSubjects;
+        });
+      } else {
+        final Map<String, Map<String, dynamic>> subjectMap = {};
+
+        for (final ds in defaultSubjects) {
+          final code = (ds['code'] ?? '').toString().toUpperCase();
+          subjectMap[code] = Map<String, dynamic>.from(ds);
+        }
+
+        for (final ss in serverData) {
+          if (ss is Map<String, dynamic>) {
+            final code = (ss['code'] ?? '').toString().toUpperCase();
+            if (subjectMap.containsKey(code)) {
+              final existingContents = List<dynamic>.from(subjectMap[code]!['contents'] as List<dynamic>? ?? []);
+              final serverContents = ss['contents'] as List<dynamic>? ?? [];
+              
+              final Set<String> existingKeys = existingContents.map((c) => '${c['title']}_${c['unit']}').toSet();
+              for (final sc in serverContents) {
+                final key = '${sc['title']}_${sc['unit']}';
+                if (!existingKeys.contains(key)) {
+                  existingContents.add(sc);
+                }
+              }
+              subjectMap[code]!['contents'] = existingContents;
+              if (ss['name'] != null && (ss['name'] as String).isNotEmpty) {
+                subjectMap[code]!['name'] = ss['name'];
+              }
+            } else {
+              subjectMap[code] = ss;
+            }
+          }
+        }
+
+        setState(() {
+          _subjects = subjectMap.values.toList();
+        });
+      }
     } catch (e) {
       setState(() {
-        _error = "Could not connect to live backend.";
+        _subjects = defaultSubjects;
       });
     } finally {
       setState(() => _loading = false);

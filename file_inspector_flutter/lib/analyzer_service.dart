@@ -208,6 +208,9 @@ Rules:
   }
 
   /// Calls the Anthropic Messages API directly from the device.
+  /// NOTE: this embeds [apiKey] in a client-side request. Fine for local
+  /// testing; for a shipped app, proxy this call through your own backend
+  /// so the key never lives in the client.
   static Future<AnalysisResult> analyze(AnalyzedFile f, String apiKey) async {
     final content = await buildContent(f);
     final header = 'Filename: ${f.name}\nDetected category: ${f.category.name}\n';
@@ -253,9 +256,9 @@ Rules:
         .trim();
 
     var cleaned = text
-        .replaceFirst(RegExp(r'^\`\`\`json\s*', caseSensitive: false), '')
-        .replaceFirst(RegExp(r'^\`\`\`\s*'), '')
-        .replaceFirst(RegExp(r'\`\`\`\s*$'), '')
+        .replaceFirst(RegExp(r'^```json\s*', caseSensitive: false), '')
+        .replaceFirst(RegExp(r'^```\s*'), '')
+        .replaceFirst(RegExp(r'```\s*$'), '')
         .trim();
 
     Map<String, dynamic> parsed;

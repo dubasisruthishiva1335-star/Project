@@ -52,8 +52,8 @@ class ReportView extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 16, top: 12),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.red.withValues(alpha: 0.06),
-        border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
+        color: Colors.red.withOpacity(0.06),
+        border: Border.all(color: Colors.red.withOpacity(0.3)),
         borderRadius: BorderRadius.circular(4),
       ),
       child: Text(file.error ?? 'Something went wrong.', style: const TextStyle(color: Colors.redAccent)),
@@ -83,7 +83,7 @@ class ReportView extends StatelessWidget {
     }
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(border: Border.all(color: color.withValues(alpha: 0.5)), borderRadius: BorderRadius.circular(20)),
+      decoration: BoxDecoration(border: Border.all(color: color.withOpacity(0.5)), borderRadius: BorderRadius.circular(20)),
       child: Text(label, style: TextStyle(color: color, fontSize: 11, fontFamily: 'monospace')),
     );
   }
@@ -138,7 +138,7 @@ class ReportView extends StatelessWidget {
                 child: LinearProgressIndicator(
                   value: r.confidence! / 100,
                   minHeight: 6,
-                  backgroundColor: Colors.grey.withValues(alpha: 0.2),
+                  backgroundColor: Colors.grey.withOpacity(0.2),
                   color: Colors.teal,
                 ),
               ),
@@ -178,7 +178,7 @@ class ReportView extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.25), borderRadius: BorderRadius.circular(4)),
+      decoration: BoxDecoration(color: Colors.black.withOpacity(0.25), borderRadius: BorderRadius.circular(4)),
       child: SelectableText(text, style: const TextStyle(fontFamily: 'monospace', fontSize: 12, height: 1.5)),
     );
   }

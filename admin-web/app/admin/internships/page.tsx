@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { savePersistedUpload, removePersistedUpload } from "@/lib/uploads-store";
 
 interface InternshipItem {
   id: string;
@@ -208,6 +209,21 @@ export default function AdminInternshipsPage() {
       if (res.ok) {
         const created = await res.json();
         setInternships(prev => [created, ...prev]);
+        savePersistedUpload({
+          id: created.id,
+          hubType: "INTERNSHIP",
+          hubLabel: "Career & Internship",
+          title: created.title,
+          subtitle: `${created.company} • ${created.location} (${created.workMode})`,
+          category: created.category,
+          formatOrType: created.stipend || "Paid Internship",
+          externalUrl: created.applyUrl || created.companyWebsite,
+          authorOrCompany: created.company,
+          uploadedAt: created.postedAt || new Date().toISOString(),
+          badgeColor: "bg-blue-500/20 text-blue-300 border-blue-500/30",
+          extraMeta: `${created.openings || 1} Openings • Min CGPA: ${created.minCgpa || 7.0}`,
+          rawItem: created,
+        });
         setMessage({ type: "success", text: "🎉 " + created.title + " at " + created.company + " published successfully!" });
         setActiveTab("internships");
         setWizardStep(1);

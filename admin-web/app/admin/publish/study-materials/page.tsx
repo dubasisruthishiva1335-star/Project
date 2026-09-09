@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { apiRequest, uploadAndConfirm } from "@/lib/api-client";
+import { savePersistedUpload } from "@/lib/uploads-store";
 
 const BRANCHES = [
   { value: "CSE", label: "CSE (Computer Science & IT)" },
@@ -87,6 +88,20 @@ export default function StudyMaterialsPublish() {
 
       setProgress(100);
       setStageText("Done!");
+      savePersistedUpload({
+        id: "note_" + Date.now(),
+        hubType: "NOTE",
+        hubLabel: "Academic Study Material",
+        title: form.title,
+        subtitle: form.subject ? `Subject: ${form.subject}` : `${form.branch} • Semester ${form.semester}`,
+        category: form.branch,
+        formatOrType: form.contentType,
+        fileUrl: (file && "https://myvault-files-app.s3.eu-north-1.amazonaws.com/notes/" + file.name) || undefined,
+        uploadedAt: new Date().toISOString(),
+        badgeColor: "bg-cyan-500/20 text-accentCyan border-cyan-500/30",
+        extraMeta: `Unit ${form.unit} • Sem ${form.semester}`,
+        rawItem: form,
+      });
       setMessage({ type: "success", text: "📚 Study Material published successfully — visible in Academic Repository instantly." });
       setForm({ title: "", branch: "CSE & IT", semester: 1, unit: 1, subject: "", contentType: "NOTES", description: "" });
       setFile(null);

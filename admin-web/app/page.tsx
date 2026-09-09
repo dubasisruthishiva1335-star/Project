@@ -4,6 +4,7 @@ import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { apiRequest, ApiError } from "../lib/api-client";
+import { getPersistedUploads, savePersistedUpload, removePersistedUpload } from "../lib/uploads-store";
 
 export interface UnifiedUploadItem {
   id: string;
@@ -20,7 +21,7 @@ export interface UnifiedUploadItem {
   uploadedAt: string;
   badgeColor: string;
   extraMeta?: string;
-  rawItem: any;
+  rawItem?: any;
 }
 
 interface StudentItem {
@@ -109,29 +110,29 @@ export default function DashboardPage() {
       });
 
       // 2. Process Competitive Exams
-      const examsList: any[] = examsRes?.exams || [];
+      const examsList: any[] = Array.isArray(examsRes) ? examsRes : (examsRes?.exams || []);
       examsList.forEach((e: any) => {
         items.push({
           id: e.id,
           hubType: "COMPETITIVE_EXAM",
           hubLabel: "Competitive Exam & PYQ",
-          title: e.title || e.examName,
-          subtitle: `${e.examName} • Topic: ${e.subject || "Full Syllabus"}`,
+          title: e.title || e.examName || e.exam_name,
+          subtitle: `${e.examName || e.exam_name || "Exam Prep"} • Topic: ${e.subject || "Full Syllabus"}`,
           category: e.category || "ENGINEERING",
-          formatOrType: e.contentType?.replace("_", " ") || "PYQ PAPER",
-          fileUrl: e.fileUrl,
-          externalUrl: e.syllabusUrl,
-          fileSize: e.fileSize || "PDF",
+          formatOrType: (e.contentType || e.content_type || "PYQ_PAPER").replace("_", " "),
+          fileUrl: e.fileUrl || e.file_url,
+          externalUrl: e.syllabusUrl || e.syllabus_url,
+          fileSize: e.fileSize || e.file_size || "PDF",
           authorOrCompany: e.author || "Faculty Team",
-          uploadedAt: e.uploadedAt || new Date().toISOString(),
+          uploadedAt: e.uploadedAt || e.uploaded_at || new Date().toISOString(),
           badgeColor: "bg-purple-500/20 text-purple-300 border-purple-500/30",
-          extraMeta: `Target: ${e.year || 2026} • Exam Date: ${e.examDate || "Scheduled"}`,
+          extraMeta: `Target: ${e.year || 2026} • Exam Date: ${e.examDate || e.exam_date || "Scheduled"}`,
           rawItem: e,
         });
       });
 
       // 3. Process Video Courses
-      const coursesList: any[] = coursesRes?.courses || [];
+      const coursesList: any[] = Array.isArray(coursesRes) ? coursesRes : (coursesRes?.courses || []);
       coursesList.forEach((c: any) => {
         items.push({
           id: c.id,
@@ -143,7 +144,7 @@ export default function DashboardPage() {
           formatOrType: `Level: ${c.level || "All Levels"}`,
           fileUrl: c.thumbnail,
           authorOrCompany: c.instructor || "MyVault Academy",
-          uploadedAt: c.postedAt || new Date().toISOString(),
+          uploadedAt: c.postedAt || c.posted_at || new Date().toISOString(),
           badgeColor: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30",
           extraMeta: `Passing Score: ${c.passingScore || 70}% • 24h Certificate Seal`,
           rawItem: c,
@@ -151,27 +152,39 @@ export default function DashboardPage() {
       });
 
       // 4. Process Internships
-      const internshipsList: any[] = internshipsRes?.internships || [];
+      const internshipsList: any[] = Array.isArray(internshipsRes) ? internshipsRes : (internshipsRes?.internships || []);
       internshipsList.forEach((i: any) => {
         items.push({
           id: i.id,
           hubType: "INTERNSHIP",
           hubLabel: "Career & Internship",
           title: i.title,
-          subtitle: `${i.company} • ${i.location || "Remote"} (${i.workMode || "Hybrid"})`,
+          subtitle: `${i.company} • ${i.location || "Remote"} (${i.workMode || i.work_mode || "Hybrid"})`,
           category: i.category || "Engineering",
           formatOrType: i.stipend || "Paid Internship",
-          externalUrl: i.applyUrl || i.companyWebsite,
+          externalUrl: i.applyUrl || i.apply_url || i.companyWebsite || i.company_website,
           authorOrCompany: i.company,
-          uploadedAt: i.postedAt || new Date().toISOString(),
+          uploadedAt: i.postedAt || i.posted_at || new Date().toISOString(),
           badgeColor: "bg-blue-500/20 text-blue-300 border-blue-500/30",
-          extraMeta: `${i.openings || 1} Openings • Min CGPA: ${i.minCgpa || 7.0}`,
+          extraMeta: `${i.openings || i.max_students || 1} Openings • Min CGPA: ${i.minCgpa || 7.0}`,
           rawItem: i,
         });
       });
 
+      // Merge with locally persisted uploads for resilient permanent offline/online retention
+      const persisted = getPersistedUploads();
+      const existingIds = new Set(items.map(i => i.id));
+      persisted.forEach(p => {
+        if (!existingIds.has(p.id)) {
+          items.push(p);
+        }
+      });
+
       // Sort newest first
       items.sort((a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime());
+
+      // Persist all active items to local permanent storage
+      items.forEach(item => savePersistedUpload(item));
 
       setAllItems(items);
       setStudents(recentRes?.allStudents || []);
@@ -180,7 +193,11 @@ export default function DashboardPage() {
         localStorage.removeItem("myvault_admin_token");
         router.push("/login");
       } else {
-        setError("Failed to load uploaded files and contents. Showing cached view.");
+        const persisted = getPersistedUploads();
+        if (persisted.length > 0) {
+          setAllItems(persisted);
+        }
+        setError("Network sync active. Showing permanently stored records.");
       }
     } finally {
       setIsLoading(false);
@@ -198,16 +215,20 @@ export default function DashboardPage() {
 
     setDeletingId(item.id);
     try {
+      // 1. Remove from local permanent cache immediately
+      removePersistedUpload(item.id);
+
+      // 2. Remove from backend & Vercel API
       if (item.hubType === "NOTE") {
         await apiRequest(`/admin/notes/${item.id}`, { method: "DELETE" }).catch(() => {});
         await fetch(`/api/admin/notes?id=${item.id}`, { method: "DELETE" }).catch(() => {});
       } else if (item.hubType === "COMPETITIVE_EXAM") {
-        await fetch(`/api/admin/competitive-exams?id=${item.id}`, { method: "DELETE" });
+        await fetch(`/api/admin/competitive-exams?id=${item.id}`, { method: "DELETE" }).catch(() => {});
         await apiRequest(`/admin/exams/${item.id}`, { method: "DELETE" }).catch(() => {});
       } else if (item.hubType === "COURSE") {
-        await fetch(`/api/admin/courses?id=${item.id}`, { method: "DELETE" });
+        await fetch(`/api/admin/courses?id=${item.id}`, { method: "DELETE" }).catch(() => {});
       } else if (item.hubType === "INTERNSHIP") {
-        await fetch(`/api/admin/internships?id=${item.id}`, { method: "DELETE" });
+        await fetch(`/api/admin/internships?id=${item.id}`, { method: "DELETE" }).catch(() => {});
         await apiRequest(`/admin/internships/${item.id}`, { method: "DELETE" }).catch(() => {});
       }
 

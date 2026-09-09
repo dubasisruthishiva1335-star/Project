@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
+import { savePersistedUpload, removePersistedUpload } from "@/lib/uploads-store";
 
 interface CompetitiveExamItem {
   id: string;
@@ -203,6 +204,23 @@ export default function AdminCompetitiveExamsPage() {
       if (res.ok) {
         const created = await res.json();
         setItems(prev => [created, ...prev]);
+        savePersistedUpload({
+          id: created.id,
+          hubType: "COMPETITIVE_EXAM",
+          hubLabel: "Competitive Exam & PYQ",
+          title: created.title,
+          subtitle: `${created.examName} • Topic: ${created.subject}`,
+          category: created.category,
+          formatOrType: created.contentType?.replace("_", " ") || "PYQ PAPER",
+          fileUrl: created.fileUrl,
+          externalUrl: created.syllabusUrl,
+          fileSize: created.fileSize,
+          authorOrCompany: created.author,
+          uploadedAt: created.uploadedAt || new Date().toISOString(),
+          badgeColor: "bg-purple-500/20 text-purple-300 border-purple-500/30",
+          extraMeta: `Target: ${created.year || 2026} • Exam Date: ${created.examDate || "Scheduled"}`,
+          rawItem: created,
+        });
         setMessage({ type: "success", text: "🎉 Published " + created.title + " successfully!" });
         setActiveTab("library");
         setSelectedFile(null);
@@ -216,6 +234,7 @@ export default function AdminCompetitiveExamsPage() {
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this preparation resource?")) return;
     try {
+      removePersistedUpload(id);
       await fetch("/api/admin/competitive-exams?id=" + id, { method: "DELETE" });
       setItems(prev => prev.filter(i => i.id !== id));
       setMessage({ type: "success", text: "Resource deleted successfully." });

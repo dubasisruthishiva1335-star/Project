@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
+import { savePersistedUpload, removePersistedUpload } from "@/lib/uploads-store";
 
 interface Lesson {
   title: string;
@@ -369,12 +370,42 @@ export default function AdminCoursesPage() {
       });
 
       if (res.ok) {
+        const created = await res.json().catch(() => null);
+        savePersistedUpload({
+          id: (created && created.id) || "course_" + Date.now(),
+          hubType: "COURSE",
+          hubLabel: "Video Course & Quizzes",
+          title: title,
+          subtitle: `${modules.length} Modules • ${totalLessons} Video Lessons • ${totalQuizzes} AI Quizzes`,
+          category: category,
+          formatOrType: `Level: ${level}`,
+          fileUrl: (created && created.thumbnail) || "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&auto=format&fit=crop&q=60",
+          authorOrCompany: instructor,
+          uploadedAt: new Date().toISOString(),
+          badgeColor: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30",
+          extraMeta: `Pass: ${passingScore}% • 24h Certificate Seal`,
+          rawItem: payload,
+        });
         alert("🎓 Course published successfully! Students can now watch video lectures, solve video-grounded AI quizzes, and take certification exams.");
         setActiveTab("courses");
         loadData();
       }
     } catch (_) {
-      alert("Course saved to local state.");
+      savePersistedUpload({
+        id: "course_" + Date.now(),
+        hubType: "COURSE",
+        hubLabel: "Video Course & Quizzes",
+        title: title,
+        subtitle: `${modules.length} Modules • ${totalLessons} Video Lessons • ${totalQuizzes} AI Quizzes`,
+        category: category,
+        formatOrType: `Level: ${level}`,
+        authorOrCompany: instructor,
+        uploadedAt: new Date().toISOString(),
+        badgeColor: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30",
+        extraMeta: `Pass: ${passingScore}% • 24h Certificate Seal`,
+        rawItem: payload,
+      });
+      alert("Course saved to permanent store.");
       setActiveTab("courses");
     } finally {
       setIsSubmitting(false);

@@ -1,22 +1,22 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
-/// Central Dio client configured for live Railway production backend.
+/// Central Dio client configured for live Vercel & AWS S3 cloud production backend.
 class ApiClient {
   ApiClient._internal();
   static final ApiClient instance = ApiClient._internal();
 
   static const _storage = FlutterSecureStorage();
   static const _tokenKey = 'myvault_jwt';
-  static const defaultBaseUrl = 'https://project-9zrh.onrender.com';
+  static const defaultBaseUrl = 'https://project-chi-six-62.vercel.app';
 
   late final Dio dio = _buildDio();
 
   Dio _buildDio() {
     final d = Dio(BaseOptions(
       baseUrl: defaultBaseUrl,
-      connectTimeout: const Duration(seconds: 45),
-      receiveTimeout: const Duration(seconds: 45),
+      connectTimeout: const Duration(seconds: 25),
+      receiveTimeout: const Duration(seconds: 25),
       headers: {
         'Accept': 'application/json',
         'Content-Type': 'application/json',

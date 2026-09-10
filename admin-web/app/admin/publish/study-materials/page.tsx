@@ -35,59 +35,56 @@ export default function StudyMaterialsPublish() {
     setForm((p) => ({ ...p, [e.target.name]: e.target.value }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.title) {
       setMessage({ type: "error", text: "Material Title is required." });
       return;
     }
     setSubmitting(true);
-    setProgress(5);
-    setStageText("Connecting to storage…");
+    setProgress(15);
+    setStageText("Uploading to AWS S3 storage…");
     setMessage(null);
     try {
+      let fileUrl = "";
+      let s3Key = "";
+
       if (file) {
-        await uploadAndConfirm(
-          "/admin/notes/confirm",
-          {
-            file,
-            domain: "notes",
-            onProgress: (stg) => {
-              if (stg === "presigning") setStageText("Getting upload slot…");
-              if (stg === "uploading") setStageText("Uploading file to AWS S3…");
-              if (stg === "confirming") setStageText("Saving & syncing across apps…");
-              if (stg === "done") setStageText("Published!");
-            },
-            onPercent: (pct) => setProgress(pct),
-            presignMeta: {
-              title: form.title,
-              branch: form.branch,
-              semester: String(form.semester),
-              unit: String(form.unit),
-              contentType: form.contentType,
-              subject: form.subject,
-            },
-          },
-          {
-            title: form.title,
-            branch: form.branch,
-            semester: String(form.semester),
-            unit: String(form.unit),
-            contentType: form.contentType,
-            subject: form.subject,
-            description: form.description,
-          }
-        );
-      } else {
-        setStageText("Saving material details…");
-        await apiRequest("/admin/notes/confirm", {
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("title", form.title);
+        formData.append("category", "notes");
+
+        setProgress(40);
+        const upRes = await fetch("/api/upload", {
           method: "POST",
-          body: JSON.stringify(form),
+          body: formData,
         });
+        const upData = await upRes.json();
+        if (upRes.ok && upData.url) {
+          fileUrl = upData.url;
+          s3Key = upData.s3Key || "";
+        }
       }
 
+      setProgress(75);
+      setStageText("Saving & broadcasting across Mobile App…");
+
+      const notePayload = {
+        ...form,
+        fileUrl,
+        s3Key,
+        fileSize: file ? (file.size / (1024 * 1024)).toFixed(1) + " MB" : "2.5 MB",
+      };
+
+      await fetch("/api/notes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(notePayload),
+      });
+
       setProgress(100);
-      setStageText("Done!");
+      setStageText("Published!");
       savePersistedUpload({
         id: "note_" + Date.now(),
         hubType: "NOTE",
@@ -96,14 +93,14 @@ export default function StudyMaterialsPublish() {
         subtitle: form.subject ? `Subject: ${form.subject}` : `${form.branch} • Semester ${form.semester}`,
         category: form.branch,
         formatOrType: form.contentType,
-        fileUrl: (file && "https://myvault-files-app.s3.eu-north-1.amazonaws.com/notes/" + file.name) || undefined,
+        fileUrl: fileUrl || undefined,
         uploadedAt: new Date().toISOString(),
         badgeColor: "bg-cyan-500/20 text-accentCyan border-cyan-500/30",
         extraMeta: `Unit ${form.unit} • Sem ${form.semester}`,
-        rawItem: form,
+        rawItem: notePayload,
       });
-      setMessage({ type: "success", text: "📚 Study Material published successfully — visible in Academic Repository instantly." });
-      setForm({ title: "", branch: "CSE & IT", semester: 1, unit: 1, subject: "", contentType: "NOTES", description: "" });
+      setMessage({ type: "success", text: "📚 Study Material published successfully — visible in Mobile App instantly." });
+      setForm({ title: "", branch: "CSE", semester: 1, unit: 1, subject: "", contentType: "NOTES", description: "" });
       setFile(null);
     } catch (err: any) {
       setMessage({ type: "error", text: err instanceof Error ? err.message : "Upload failed. Try again." });

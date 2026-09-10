@@ -22,29 +22,64 @@ class UploadedFileModel {
   });
 
   factory UploadedFileModel.fromMap(Map<String, dynamic> map) {
-    final fileNameStr = map['file_name'] as String? ?? 'file';
-    final extension = fileNameStr.contains('.') ? fileNameStr.split('.').last.toLowerCase() : 'file';
+    final rawName = (map['fileName'] ?? map['file_name'] ?? map['name'] ?? map['title'] ?? 'Uploaded File').toString();
+    final cleanTitle = (map['title'] ?? rawName.split('.').first).toString();
+    final rawUrl = (map['url'] ?? map['fileUrl'] ?? map['file_url'] ?? map['filePath'] ?? map['storagePath'] ?? '').toString();
+    
+    String ext = 'pdf';
+    if (rawName.contains('.')) {
+      ext = rawName.split('.').last.toLowerCase();
+    } else if (rawUrl.contains('.')) {
+      final seg = rawUrl.split('?').first.split('.').last.toLowerCase();
+      if (seg.length <= 4) ext = seg;
+    }
+
+    int parsedSize = 2500000;
+    final rawSize = map['fileSize'] ?? map['file_size'];
+    if (rawSize is int) {
+      parsedSize = rawSize;
+    } else if (rawSize is String) {
+      final numPart = double.tryParse(rawSize.replaceAll(RegExp(r'[^0-9.]'), ''));
+      if (numPart != null) {
+        if (rawSize.toUpperCase().contains('MB')) {
+          parsedSize = (numPart * 1024 * 1024).toInt();
+        } else if (rawSize.toUpperCase().contains('KB')) {
+          parsedSize = (numPart * 1024).toInt();
+        } else {
+          parsedSize = numPart.toInt();
+        }
+      }
+    }
+
+    DateTime parsedDate = DateTime.now();
+    final rawDate = map['createdAt'] ?? map['created_at'] ?? map['uploadedAt'] ?? map['addedAt'];
+    if (rawDate != null) {
+      parsedDate = DateTime.tryParse(rawDate.toString()) ?? DateTime.now();
+    }
+
     return UploadedFileModel(
-      id: (map['id'] ?? DateTime.now().millisecondsSinceEpoch.toString()).toString(),
-      title: fileNameStr.contains('.') ? fileNameStr.split('.').first : fileNameStr,
-      fileName: fileNameStr,
-      storagePath: fileNameStr,
-      publicUrl: map['file_url'] as String? ?? map['fileUrl'] as String? ?? '',
-      fileType: extension,
-      fileSize: (map['file_size'] ?? map['fileSize'] ?? 0) as int,
-      uploadedBy: map['user_id'] as String?,
-      createdAt: map['created_at'] != null
-          ? DateTime.parse(map['created_at'] as String)
-          : DateTime.now(),
+      id: (map['id'] ?? map['_id'] ?? DateTime.now().millisecondsSinceEpoch.toString()).toString(),
+      title: cleanTitle,
+      fileName: rawName,
+      storagePath: rawUrl,
+      publicUrl: rawUrl,
+      fileType: ext,
+      fileSize: parsedSize,
+      uploadedBy: (map['author'] ?? map['user_id'] ?? 'Admin Cloud').toString(),
+      createdAt: parsedDate,
     );
   }
 
   Map<String, dynamic> toMap() {
     return {
       'id': id,
-      'user_id': uploadedBy,
-      'file_url': publicUrl,
+      'title': title,
       'file_name': fileName,
+      'storage_path': storagePath,
+      'file_url': publicUrl,
+      'file_type': fileType,
+      'file_size': fileSize,
+      'user_id': uploadedBy,
       'created_at': createdAt.toIso8601String(),
     };
   }

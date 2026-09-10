@@ -20,16 +20,33 @@ class AppScaffold extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: MyVaultColors.obsidian,
+      backgroundColor: MyVaultColors.backgroundWhite,
       appBar: showAppBar
           ? AppBar(
-              backgroundColor: MyVaultColors.obsidian,
+              backgroundColor: Colors.white,
               elevation: 0,
-              title: Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              iconTheme: const IconThemeData(color: MyVaultColors.metalBlack),
+              title: Text(
+                title,
+                style: const TextStyle(
+                  color: MyVaultColors.metalBlack,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                ),
+              ),
               actions: actions,
+              bottom: const PreferredSize(
+                preferredSize: Size.fromHeight(1),
+                child: Divider(height: 1, color: Color(0xFFE2E8F0)),
+              ),
             )
           : null,
-      body: body,
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: MyVaultColors.whiteShadingGradient,
+        ),
+        child: body,
+      ),
       floatingActionButton: floatingActionButton,
     );
   }

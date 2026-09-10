@@ -40,26 +40,30 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: MyVaultColors.obsidian,
+      backgroundColor: MyVaultColors.backgroundWhite,
       appBar: AppBar(
-        backgroundColor: MyVaultColors.obsidian,
+        backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white70),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: MyVaultColors.metalBlack, size: 20),
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text(
           widget.title,
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white),
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: MyVaultColors.metalBlack),
           overflow: TextOverflow.ellipsis,
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.download_rounded, color: MyVaultColors.accentCyan),
+            icon: const Icon(Icons.download_rounded, color: MyVaultColors.metalBlack),
             tooltip: 'Download PDF',
             onPressed: _downloadExternal,
           ),
         ],
+        bottom: const PreferredSize(
+          preferredSize: Size.fromHeight(1),
+          child: Divider(height: 1, color: Color(0xFFE2E8F0)),
+        ),
       ),
       body: Stack(
         children: [
@@ -79,36 +83,36 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
             ),
           if (_loading)
             Container(
-              color: MyVaultColors.obsidian,
+              color: Colors.white,
               child: const Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    CircularProgressIndicator(color: MyVaultColors.accentCyan),
+                    CircularProgressIndicator(color: MyVaultColors.metalBlack),
                     SizedBox(height: 16),
-                    Text('Loading PDF Document...', style: TextStyle(color: Colors.white54, fontSize: 13)),
+                    Text('Loading PDF Document...', style: TextStyle(color: MyVaultColors.textSecondary, fontSize: 13)),
                   ],
                 ),
               ),
             ),
           if (_error != null)
             Container(
-              color: MyVaultColors.obsidian,
+              color: Colors.white,
               padding: const EdgeInsets.all(24),
               child: Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.error_outline_rounded, color: Colors.redAccent, size: 60),
+                    const Icon(Icons.error_outline_rounded, color: Colors.redAccent, size: 48),
+                    const SizedBox(height: 12),
+                    Text(_error!, style: const TextStyle(color: Colors.redAccent, fontSize: 14), textAlign: TextAlign.center),
                     const SizedBox(height: 16),
-                    Text(_error!, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white70, fontSize: 14)),
-                    const SizedBox(height: 24),
                     ElevatedButton.icon(
                       onPressed: _downloadExternal,
                       icon: const Icon(Icons.open_in_browser_rounded),
-                      label: const Text('Open in Browser / Download'),
+                      label: const Text('Open Externally'),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: MyVaultColors.accentBlue,
+                        backgroundColor: MyVaultColors.metalBlack,
                         foregroundColor: Colors.white,
                       ),
                     ),

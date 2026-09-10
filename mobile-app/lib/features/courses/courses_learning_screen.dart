@@ -256,12 +256,12 @@ class _CoursesLearningScreenState extends State<CoursesLearningScreen> with Sing
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: MyVaultColors.obsidian,
+      backgroundColor: MyVaultColors.backgroundWhite,
       appBar: AppBar(
-        backgroundColor: MyVaultColors.obsidian,
+        backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 20),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: MyVaultColors.metalBlack, size: 20),
           onPressed: () => context.go('/home'),
         ),
         title: Row(
@@ -270,60 +270,73 @@ class _CoursesLearningScreenState extends State<CoursesLearningScreen> with Sing
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(10),
-                gradient: MyVaultColors.accentGradient,
+                gradient: MyVaultColors.metalGradient,
               ),
               child: const Icon(Icons.school_rounded, color: Colors.white, size: 18),
             ),
             const SizedBox(width: 10),
             const Text(
               'Courses & AI Learning',
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18),
+              style: TextStyle(color: MyVaultColors.metalBlack, fontWeight: FontWeight.bold, fontSize: 18),
             ),
           ],
         ),
-        bottom: TabBar(
-          controller: _tabController,
-          indicatorColor: MyVaultColors.accentCyan,
-          indicatorWeight: 3,
-          labelColor: Colors.white,
-          unselectedLabelColor: Colors.white54,
-          labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-          tabs: [
-            const Tab(text: 'Explore Courses'),
-            const Tab(text: 'My Learning'),
-            Tab(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Text('Certificates'),
-                  const SizedBox(width: 6),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFFB800).withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      '${_myCertificates.length}',
-                      style: const TextStyle(color: Color(0xFFFFB800), fontSize: 10, fontWeight: FontWeight.bold),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(48),
+          child: Column(
+            children: [
+              TabBar(
+                controller: _tabController,
+                indicatorColor: MyVaultColors.metalBlack,
+                indicatorWeight: 3,
+                labelColor: MyVaultColors.metalBlack,
+                unselectedLabelColor: MyVaultColors.textMuted,
+                labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                tabs: [
+                  const Tab(text: 'Explore Courses'),
+                  const Tab(text: 'My Learning'),
+                  Tab(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Text('Certificates'),
+                        const SizedBox(width: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFE2E8F0),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            '${_myCertificates.length}',
+                            style: const TextStyle(color: MyVaultColors.metalBlack, fontSize: 10, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
               ),
-            ),
-          ],
+              const Divider(height: 1, color: Color(0xFFE2E8F0)),
+            ],
+          ),
         ),
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: MyVaultColors.accentCyan))
-          : TabBarView(
-              controller: _tabController,
-              children: [
-                _buildExploreTab(),
-                _buildMyLearningTab(),
-                _buildCertificatesTab(),
-              ],
-            ),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: MyVaultColors.whiteShadingGradient,
+        ),
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator(color: MyVaultColors.metalBlack))
+            : TabBarView(
+                controller: _tabController,
+                children: [
+                  _buildExploreTab(),
+                  _buildMyLearningTab(),
+                  _buildCertificatesTab(),
+                ],
+              ),
+      ),
     );
   }
 
@@ -347,23 +360,21 @@ class _CoursesLearningScreenState extends State<CoursesLearningScreen> with Sing
           // Search Box
           Container(
             decoration: BoxDecoration(
-              color: MyVaultColors.glassFill,
+              color: Colors.white,
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: MyVaultColors.glassBorder),
+              border: Border.all(color: const Color(0xFFE2E8F0)),
             ),
             child: TextField(
               controller: _searchController,
               onChanged: (_) => setState(() {}),
-              style: const TextStyle(color: Colors.white, fontSize: 13),
+              style: const TextStyle(color: MyVaultColors.textDark, fontSize: 13),
               decoration: InputDecoration(
                 hintText: 'Search video courses, AI topics, certifications...',
-                hintStyle: const TextStyle(color: Colors.white38, fontSize: 13),
-                prefixIcon: const Icon(Icons.search_rounded, color: Colors.white54, size: 20),
+                hintStyle: const TextStyle(color: MyVaultColors.textMuted, fontSize: 13),
+                prefixIcon: const Icon(Icons.search_rounded, color: MyVaultColors.metalBlack, size: 20),
                 border: InputBorder.none,
                 contentPadding: const EdgeInsets.symmetric(vertical: 14),
-                suffixIcon: _searchController.text.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(Icons.close_rounded, color: Colors.white54, size: 18),
+                suffixIcon: _searchController.text.isNotEmpty ? IconButton(icon: const Icon(Icons.close_rounded, color: MyVaultColors.metalBlack, size: 18),
                         onPressed: () {
                           _searchController.clear();
                           setState(() {});
@@ -390,17 +401,17 @@ class _CoursesLearningScreenState extends State<CoursesLearningScreen> with Sing
                     onSelected: (selected) {
                       if (selected) setState(() => _selectedCategory = cat);
                     },
-                    backgroundColor: const Color(0xFF0F131D),
-                    selectedColor: MyVaultColors.accentBlue,
+                    backgroundColor: Colors.white,
+                    selectedColor: MyVaultColors.metalBlack,
                     labelStyle: TextStyle(
-                      color: isSelected ? Colors.white : Colors.white60,
+                      color: isSelected ? Colors.white : MyVaultColors.textSecondary,
                       fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                       fontSize: 12,
                     ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(20),
                       side: BorderSide(
-                        color: isSelected ? MyVaultColors.accentBlue : Colors.white12,
+                        color: isSelected ? MyVaultColors.metalBlack : const Color(0xFFCBD5E1),
                       ),
                     ),
                   ),
@@ -432,9 +443,9 @@ class _CoursesLearningScreenState extends State<CoursesLearningScreen> with Sing
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: const Color(0xFF0F131D),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: MyVaultColors.glassBorder),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
       child: Material(
         color: Colors.transparent,
@@ -567,9 +578,9 @@ class _CoursesLearningScreenState extends State<CoursesLearningScreen> with Sing
             margin: const EdgeInsets.only(bottom: 16),
             padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(
-              color: const Color(0xFF0F131D),
+              color: Colors.white,
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: MyVaultColors.glassBorder),
+              border: Border.all(color: const Color(0xFFE2E8F0)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1170,7 +1181,7 @@ class _CourseDetailsSheet extends StatelessWidget {
                     // Key Stats
                     Container(
                       padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(color: MyVaultColors.glassFill, borderRadius: BorderRadius.circular(16), border: Border.all(color: MyVaultColors.glassBorder)),
+                      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: const Color(0xFFE2E8F0))),
                       child: const Row(
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
                         children: [
@@ -1195,7 +1206,7 @@ class _CourseDetailsSheet extends StatelessWidget {
                       runSpacing: 8,
                       children: skills.map((s) => Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                        decoration: BoxDecoration(color: MyVaultColors.glassFill, borderRadius: BorderRadius.circular(8), border: Border.all(color: MyVaultColors.accentCyan.withValues(alpha: 0.3))),
+                        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8), border: Border.all(color: MyVaultColors.accentCyan.withValues(alpha: 0.3))),
                         child: Text(s.toString(), style: const TextStyle(color: MyVaultColors.accentCyan, fontSize: 12)),
                       )).toList(),
                     ),
@@ -1550,7 +1561,7 @@ class _VideoLessonPlayerSheetState extends State<_VideoLessonPlayerSheet> {
         // Attached PDF Resource Box
         Container(
           padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(color: MyVaultColors.glassFill, borderRadius: BorderRadius.circular(12), border: Border.all(color: const Color(0xFF00E676).withValues(alpha: 0.3))),
+          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: const Color(0xFF00E676).withValues(alpha: 0.3))),
           child: Row(
             children: [
               const Icon(Icons.picture_as_pdf_rounded, color: Color(0xFF00E676), size: 22),
@@ -1673,7 +1684,7 @@ class _VideoLessonPlayerSheetState extends State<_VideoLessonPlayerSheet> {
             margin: const EdgeInsets.only(bottom: 16),
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: const Color(0xFF0F131D),
+              color: Colors.white,
               borderRadius: BorderRadius.circular(14),
               border: Border.all(color: Colors.white10),
             ),

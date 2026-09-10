@@ -50,21 +50,30 @@ class _ResultUploadAnalyzeScreenState extends ConsumerState<ResultUploadAnalyzeS
     final state = ref.watch(resultAnalyzerProvider);
 
     return Scaffold(
-      backgroundColor: MyVaultColors.obsidian,
+      backgroundColor: MyVaultColors.backgroundWhite,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white70),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: MyVaultColors.metalBlack, size: 20),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        title: const Text('Upload Result', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        title: const Text('Upload Result', style: TextStyle(color: MyVaultColors.metalBlack, fontWeight: FontWeight.bold, fontSize: 18)),
+        bottom: const PreferredSize(
+          preferredSize: Size.fromHeight(1),
+          child: Divider(height: 1, color: Color(0xFFE2E8F0)),
+        ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(20),
-        child: state.stage == AnalyzerStage.idle || state.stage == AnalyzerStage.error
-            ? _buildPickerState(state)
-            : _buildAnalyzingState(state),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: MyVaultColors.whiteShadingGradient,
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: state.stage == AnalyzerStage.idle || state.stage == AnalyzerStage.error
+              ? _buildPickerState(state)
+              : _buildAnalyzingState(state),
+        ),
       ),
     );
   }
@@ -100,32 +109,28 @@ class _ResultUploadAnalyzeScreenState extends ConsumerState<ResultUploadAnalyzeS
       child: Container(
         padding: const EdgeInsets.all(28),
         decoration: BoxDecoration(
+          color: Colors.white,
           borderRadius: BorderRadius.circular(24),
-          gradient: LinearGradient(
-            colors: [MyVaultColors.accentCyan.withValues(alpha: 0.12), MyVaultColors.accentBlue.withValues(alpha: 0.06)],
-          ),
-          border: Border.all(color: MyVaultColors.glassBorder),
+          border: Border.all(color: const Color(0xFFE2E8F0)),
+          boxShadow: const [
+            BoxShadow(color: Color(0x08000000), blurRadius: 12, offset: Offset(0, 4)),
+          ],
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const SizedBox(
-              width: 56,
-              height: 56,
-              child: CircularProgressIndicator(strokeWidth: 3, color: MyVaultColors.accentCyan),
-            ),
+            const CircularProgressIndicator(color: MyVaultColors.metalBlack, strokeWidth: 3),
             const SizedBox(height: 20),
             Text(
-              labels[state.stage] ?? 'Working…',
-              style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600),
+              labels[state.stage] ?? 'Processing…',
+              style: const TextStyle(color: MyVaultColors.textDark, fontWeight: FontWeight.w600, fontSize: 16),
             ),
-            if (state.quickScanPreviewText != null && state.stage != AnalyzerStage.quickScan) ...[
-              const SizedBox(height: 12),
-              Text(
-                'Quick preview captured — refining with AI…',
-                style: TextStyle(color: Colors.white.withValues(alpha: 0.5), fontSize: 12),
-              ),
-            ],
+            const SizedBox(height: 8),
+            const Text(
+              'Running OCR & calculating SGPA / Grade stats…',
+              style: TextStyle(color: MyVaultColors.textMuted, fontSize: 12),
+              textAlign: TextAlign.center,
+            ),
           ],
         ),
       ),
@@ -142,53 +147,71 @@ class _GlassDropzone extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.all(28),
       decoration: BoxDecoration(
+        color: Colors.white,
         borderRadius: BorderRadius.circular(24),
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [MyVaultColors.accentCyan.withValues(alpha: 0.15), MyVaultColors.accentBlue.withValues(alpha: 0.08)],
-        ),
-        border: Border.all(color: MyVaultColors.accentCyan.withValues(alpha: 0.3)),
+        border: Border.all(color: const Color(0xFFCBD5E1), width: 1.5),
+        boxShadow: const [
+          BoxShadow(color: Color(0x08000000), blurRadius: 12, offset: Offset(0, 4)),
+        ],
       ),
       child: Column(
         children: [
-          const Icon(Icons.auto_awesome_rounded, size: 40, color: MyVaultColors.accentCyan),
-          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: const BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: MyVaultColors.metalGradient,
+            ),
+            child: const Icon(Icons.document_scanner_rounded, size: 36, color: Colors.white),
+          ),
+          const SizedBox(height: 16),
           const Text(
-            'Upload your marksheet',
-            style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700),
+            'Upload Marksheet / Result',
+            style: TextStyle(color: MyVaultColors.textDark, fontWeight: FontWeight.bold, fontSize: 17),
           ),
           const SizedBox(height: 6),
-          Text(
-            'JPG, PNG, or PDF — AI will read and analyze it automatically',
+          const Text(
+            'Take a photo or pick a PDF/Image of your semester marksheet.',
+            style: TextStyle(color: MyVaultColors.textSecondary, fontSize: 12),
             textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.white.withValues(alpha: 0.6), fontSize: 13),
           ),
-          const SizedBox(height: 22),
+          const SizedBox(height: 24),
           Row(
             children: [
               Expanded(
                 child: OutlinedButton.icon(
                   onPressed: onCamera,
-                  icon: const Icon(Icons.camera_alt_outlined, color: MyVaultColors.accentCyan),
-                  label: const Text('Camera', style: TextStyle(color: Colors.white)),
+                  icon: const Icon(Icons.camera_alt_rounded, size: 18, color: MyVaultColors.metalBlack),
+                  label: const Text('Camera', style: TextStyle(color: MyVaultColors.metalBlack, fontWeight: FontWeight.bold)),
                   style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: MyVaultColors.accentCyan),
-                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    side: const BorderSide(color: Color(0xFFCBD5E1)),
+                    backgroundColor: const Color(0xFFF8FAFC),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                   ),
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: ElevatedButton.icon(
-                  onPressed: onFile,
-                  icon: const Icon(Icons.upload_file_rounded, color: Colors.white),
-                  label: const Text('Choose File', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: MyVaultColors.accentBlue,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(14),
+                    gradient: MyVaultColors.metalGradient,
+                  ),
+                  child: ElevatedButton.icon(
+                    onPressed: onFile,
+                    icon: const Icon(Icons.folder_open_rounded, size: 18, color: Colors.white),
+                    label: const Text('Browse', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      backgroundColor: Colors.transparent,
+                      foregroundColor: Colors.white,
+                      shadowColor: Colors.transparent,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    ),
                   ),
                 ),
               ),

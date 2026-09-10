@@ -292,12 +292,12 @@ class _CompetitiveExamsHubScreenState extends State<CompetitiveExamsHubScreen> w
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: MyVaultColors.obsidian,
+      backgroundColor: MyVaultColors.backgroundWhite,
       appBar: AppBar(
-        backgroundColor: MyVaultColors.obsidian,
+        backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 20),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: MyVaultColors.metalBlack, size: 20),
           onPressed: () => context.go('/home'),
         ),
         title: Row(
@@ -306,35 +306,45 @@ class _CompetitiveExamsHubScreenState extends State<CompetitiveExamsHubScreen> w
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(10),
-                gradient: const LinearGradient(
-                  colors: [Color(0xFFFF5722), Color(0xFFFF9800)],
-                ),
+                gradient: MyVaultColors.metalGradient,
               ),
               child: const Icon(Icons.psychology_rounded, color: Colors.white, size: 18),
             ),
             const SizedBox(width: 10),
             const Text(
               'Competitive Exams Hub',
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18),
+              style: TextStyle(color: MyVaultColors.metalBlack, fontWeight: FontWeight.bold, fontSize: 18),
             ),
           ],
         ),
-        bottom: TabBar(
-          controller: _tabController,
-          isScrollable: true,
-          tabAlignment: TabAlignment.start,
-          indicatorColor: const Color(0xFFFF5722),
-          indicatorWeight: 3,
-          labelColor: Colors.white,
-          unselectedLabelColor: Colors.white54,
-          labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-          tabs: _categories.map((c) => Tab(text: '${c['icon']} ${c['label']}')).toList(),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(48),
+          child: Column(
+            children: [
+              TabBar(
+                controller: _tabController,
+                isScrollable: true,
+                tabAlignment: TabAlignment.start,
+                indicatorColor: MyVaultColors.metalBlack,
+                indicatorWeight: 3,
+                labelColor: MyVaultColors.metalBlack,
+                unselectedLabelColor: MyVaultColors.textMuted,
+                labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                tabs: _categories.map((c) => Tab(text: '${c['icon']} ${c['label']}')).toList(),
+              ),
+              const Divider(height: 1, color: Color(0xFFE2E8F0)),
+            ],
+          ),
         ),
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: Color(0xFFFF5722)))
-          : Column(
-              children: [
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: MyVaultColors.whiteShadingGradient,
+        ),
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator(color: MyVaultColors.metalBlack))
+            : Column(
+                children: [
                 // Top Search & Content Filter Bar
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
@@ -344,14 +354,12 @@ class _CompetitiveExamsHubScreenState extends State<CompetitiveExamsHubScreen> w
                       TextField(
                         controller: _searchController,
                         onChanged: (_) => setState(() {}),
-                        style: const TextStyle(color: Colors.white, fontSize: 14),
+                        style: const TextStyle(color: MyVaultColors.textDark, fontSize: 14),
                         decoration: InputDecoration(
                           hintText: 'Search GATE, UPSC, PYQ papers, formula sheets...',
-                          hintStyle: const TextStyle(color: Colors.white38, fontSize: 13),
-                          prefixIcon: const Icon(Icons.search_rounded, color: Colors.white54, size: 20),
-                          suffixIcon: _searchController.text.isNotEmpty
-                              ? IconButton(
-                                  icon: const Icon(Icons.clear, color: Colors.white54, size: 18),
+                          hintStyle: const TextStyle(color: MyVaultColors.textMuted, fontSize: 13),
+                          prefixIcon: const Icon(Icons.search_rounded, color: MyVaultColors.metalBlack, size: 20),
+                          suffixIcon: _searchController.text.isNotEmpty ? IconButton(icon: const Icon(Icons.clear, color: MyVaultColors.metalBlack, size: 18),
                                   onPressed: () {
                                     _searchController.clear();
                                     setState(() {});
@@ -363,11 +371,11 @@ class _CompetitiveExamsHubScreenState extends State<CompetitiveExamsHubScreen> w
                           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(14),
-                            borderSide: const BorderSide(color: MyVaultColors.glassBorder),
+                            borderSide: const BorderSide(color: const Color(0xFFE2E8F0)),
                           ),
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(14),
-                            borderSide: const BorderSide(color: MyVaultColors.glassBorder),
+                            borderSide: const BorderSide(color: const Color(0xFFE2E8F0)),
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(14),
@@ -440,7 +448,7 @@ class _CompetitiveExamsHubScreenState extends State<CompetitiveExamsHubScreen> w
                               children: [
                                 Text(
                                   '${list.length} resources available',
-                                  style: const TextStyle(color: Colors.white60, fontSize: 12, fontWeight: FontWeight.w600),
+                                  style: const TextStyle(color: MyVaultColors.textSecondary, fontSize: 12, fontWeight: FontWeight.w600),
                                 ),
                                 const Row(
                                   children: [
@@ -460,7 +468,7 @@ class _CompetitiveExamsHubScreenState extends State<CompetitiveExamsHubScreen> w
                                 alignment: Alignment.center,
                                 child: const Column(
                                   children: [
-                                    Icon(Icons.search_off_rounded, color: Colors.white24, size: 48),
+                                    Icon(Icons.search_off_rounded, color: const Color(0xFFCBD5E1), size: 48),
                                     SizedBox(height: 12),
                                     Text('No exam resources found matching filters', style: TextStyle(color: Colors.white54, fontSize: 13)),
                                   ],
@@ -476,6 +484,7 @@ class _CompetitiveExamsHubScreenState extends State<CompetitiveExamsHubScreen> w
                 ),
               ],
             ),
+        ),
     );
   }
 
@@ -488,15 +497,14 @@ class _CompetitiveExamsHubScreenState extends State<CompetitiveExamsHubScreen> w
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(10),
-          color: isSelected ? const Color(0xFFFF5722) : MyVaultColors.glassFill,
+          color: isSelected ? MyVaultColors.metalBlack : Colors.white,
           border: Border.all(
-            color: isSelected ? const Color(0xFFFF7043) : MyVaultColors.glassBorder,
+            color: isSelected ? MyVaultColors.metalBlack : const Color(0xFFCBD5E1),
           ),
         ),
         child: Text(
           label,
-          style: TextStyle(
-            color: isSelected ? Colors.white : Colors.white70,
+          style: TextStyle(color: isSelected ? Colors.white : MyVaultColors.textSecondary,
             fontSize: 11,
             fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
           ),
@@ -535,7 +543,7 @@ class _CompetitiveExamsHubScreenState extends State<CompetitiveExamsHubScreen> w
               children: [
                 Row(
                   children: [
-                    Text(examTitle, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+                    Text(examTitle, style: const TextStyle(color: MyVaultColors.textDark, fontWeight: FontWeight.bold, fontSize: 13)),
                     const Spacer(),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
@@ -548,7 +556,7 @@ class _CompetitiveExamsHubScreenState extends State<CompetitiveExamsHubScreen> w
                   ],
                 ),
                 const SizedBox(height: 4),
-                Text(subtitle, style: const TextStyle(color: Colors.white70, fontSize: 11)),
+                Text(subtitle, style: const TextStyle(color: MyVaultColors.textSecondary, fontSize: 11)),
               ],
             ),
           ),
@@ -585,9 +593,9 @@ class _CompetitiveExamsHubScreenState extends State<CompetitiveExamsHubScreen> w
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
       decoration: BoxDecoration(
-        color: const Color(0xFF0F131D),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: MyVaultColors.glassBorder),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -613,12 +621,12 @@ class _CompetitiveExamsHubScreenState extends State<CompetitiveExamsHubScreen> w
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.06),
+                    color: const Color(0xFFF1F5F9),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
                     fileSize,
-                    style: const TextStyle(color: Colors.white54, fontSize: 10, fontFamily: 'monospace'),
+                    style: const TextStyle(color: MyVaultColors.textSecondary, fontSize: 10, fontFamily: 'monospace'),
                   ),
                 ),
                 const Spacer(),
@@ -671,7 +679,7 @@ class _CompetitiveExamsHubScreenState extends State<CompetitiveExamsHubScreen> w
                 children: [
                   Row(
                     children: [
-                      const Text('Topic: ', style: TextStyle(color: Colors.white38, fontSize: 11)),
+                      const Text('Topic: ', style: TextStyle(color: MyVaultColors.textMuted, fontSize: 11)),
                       Expanded(
                         child: Text(subject, style: const TextStyle(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.w500), overflow: TextOverflow.ellipsis),
                       ),
@@ -680,9 +688,9 @@ class _CompetitiveExamsHubScreenState extends State<CompetitiveExamsHubScreen> w
                   const SizedBox(height: 2),
                   Row(
                     children: [
-                      const Text('Credit: ', style: TextStyle(color: Colors.white38, fontSize: 11)),
+                      const Text('Credit: ', style: TextStyle(color: MyVaultColors.textMuted, fontSize: 11)),
                       Expanded(
-                        child: Text(author, style: const TextStyle(color: Colors.white70, fontSize: 11), overflow: TextOverflow.ellipsis),
+                        child: Text(author, style: const TextStyle(color: MyVaultColors.textSecondary, fontSize: 11), overflow: TextOverflow.ellipsis),
                       ),
                     ],
                   ),
@@ -703,7 +711,7 @@ class _CompetitiveExamsHubScreenState extends State<CompetitiveExamsHubScreen> w
                     onTap: () => _launchExternalUrl(syllabusUrl),
                     child: const Row(
                       children: [
-                        Icon(Icons.open_in_new_rounded, color: Colors.white38, size: 12),
+                        Icon(Icons.open_in_new_rounded, color: MyVaultColors.textMuted, size: 12),
                         SizedBox(width: 4),
                         Text('Syllabus ↗', style: TextStyle(color: Colors.white54, fontSize: 11)),
                       ],
@@ -712,7 +720,7 @@ class _CompetitiveExamsHubScreenState extends State<CompetitiveExamsHubScreen> w
                 else
                   Text(
                     examDate.isNotEmpty ? 'Date: $examDate' : '2026 Batch',
-                    style: const TextStyle(color: Colors.white38, fontSize: 11),
+                    style: const TextStyle(color: MyVaultColors.textMuted, fontSize: 11),
                   ),
 
                 ElevatedButton.icon(

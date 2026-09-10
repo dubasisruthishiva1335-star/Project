@@ -492,12 +492,12 @@ class _InternshipHubScreenState extends State<InternshipHubScreen> with SingleTi
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: MyVaultColors.obsidian,
+      backgroundColor: MyVaultColors.backgroundWhite,
       appBar: AppBar(
-        backgroundColor: MyVaultColors.obsidian,
+        backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 20),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: MyVaultColors.metalBlack, size: 20),
           onPressed: () => context.go('/home'),
         ),
         title: Row(
@@ -506,40 +506,51 @@ class _InternshipHubScreenState extends State<InternshipHubScreen> with SingleTi
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(10),
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF7C3AFF), Color(0xFF3E7BFF)],
-                ),
+                gradient: MyVaultColors.metalGradient,
               ),
               child: const Icon(Icons.business_center_rounded, color: Colors.white, size: 18),
             ),
             const SizedBox(width: 10),
             const Text(
               'Internship Hub',
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 19),
+              style: TextStyle(color: MyVaultColors.metalBlack, fontWeight: FontWeight.bold, fontSize: 19),
             ),
           ],
         ),
-        bottom: TabBar(
-          controller: _tabController,
-          indicatorColor: MyVaultColors.accentCyan,
-          indicatorWeight: 3,
-          labelColor: Colors.white,
-          unselectedLabelColor: Colors.white54,
-          labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-          tabs: [
-            Tab(text: 'Explore (${_internships.length})'),
-            Tab(text: 'My Applications (${_myApplications.length})'),
-            Tab(text: 'Saved (${_savedIds.length})'),
-          ],
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(48),
+          child: Column(
+            children: [
+              TabBar(
+                controller: _tabController,
+                indicatorColor: MyVaultColors.metalBlack,
+                indicatorWeight: 3,
+                labelColor: MyVaultColors.metalBlack,
+                unselectedLabelColor: MyVaultColors.textMuted,
+                labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                tabs: [
+                  Tab(text: 'Explore (${_internships.length})'),
+                  Tab(text: 'My Applications (${_myApplications.length})'),
+                  Tab(text: 'Saved (${_savedIds.length})'),
+                ],
+              ),
+              const Divider(height: 1, color: Color(0xFFE2E8F0)),
+            ],
+          ),
         ),
       ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          _buildExploreTab(),
-          _buildApplicationsTab(),
-          _buildSavedTab(),
-        ],
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: MyVaultColors.whiteShadingGradient,
+        ),
+        child: TabBarView(
+          controller: _tabController,
+          children: [
+            _buildExploreTab(),
+            _buildApplicationsTab(),
+            _buildSavedTab(),
+          ],
+        ),
       ),
     );
   }
@@ -608,14 +619,12 @@ class _InternshipHubScreenState extends State<InternshipHubScreen> with SingleTi
           TextField(
             controller: _searchController,
             onChanged: (_) => setState(() {}),
-            style: const TextStyle(color: Colors.white, fontSize: 14),
+            style: const TextStyle(color: MyVaultColors.textDark, fontSize: 14),
             decoration: InputDecoration(
               hintText: 'Search roles, companies, or tech stacks...',
-              hintStyle: const TextStyle(color: Colors.white38, fontSize: 13),
-              prefixIcon: const Icon(Icons.search_rounded, color: Colors.white54, size: 20),
-              suffixIcon: _searchController.text.isNotEmpty
-                  ? IconButton(
-                      icon: const Icon(Icons.clear, color: Colors.white54, size: 18),
+              hintStyle: const TextStyle(color: MyVaultColors.textMuted, fontSize: 13),
+              prefixIcon: const Icon(Icons.search_rounded, color: MyVaultColors.metalBlack, size: 20),
+              suffixIcon: _searchController.text.isNotEmpty ? IconButton(icon: const Icon(Icons.clear, color: MyVaultColors.metalBlack, size: 18),
                       onPressed: () {
                         _searchController.clear();
                         setState(() {});
@@ -627,11 +636,11 @@ class _InternshipHubScreenState extends State<InternshipHubScreen> with SingleTi
               contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(14),
-                borderSide: const BorderSide(color: MyVaultColors.glassBorder),
+                borderSide: const BorderSide(color: const Color(0xFFE2E8F0)),
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(14),
-                borderSide: const BorderSide(color: MyVaultColors.glassBorder),
+                borderSide: const BorderSide(color: const Color(0xFFE2E8F0)),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(14),
@@ -655,7 +664,7 @@ class _InternshipHubScreenState extends State<InternshipHubScreen> with SingleTi
                 const SizedBox(width: 8),
                 _buildFilterChip('📍 On-Site', 'ONSITE', _selectedWorkMode == 'ONSITE', (v) => setState(() => _selectedWorkMode = 'ONSITE')),
                 const SizedBox(width: 12),
-                Container(height: 20, width: 1, color: Colors.white24),
+                Container(height: 20, width: 1, color: const Color(0xFFCBD5E1)),
                 const SizedBox(width: 12),
                 _buildFilterChip('CSE / IT', 'CSE', _selectedBranch == 'CSE', (v) => setState(() => _selectedBranch = _selectedBranch == 'CSE' ? 'ALL' : 'CSE')),
                 const SizedBox(width: 8),
@@ -672,7 +681,7 @@ class _InternshipHubScreenState extends State<InternshipHubScreen> with SingleTi
             children: [
               Text(
                 'Showing ${list.length} opportunities',
-                style: const TextStyle(color: Colors.white60, fontSize: 12, fontWeight: FontWeight.w600),
+                style: const TextStyle(color: MyVaultColors.textSecondary, fontSize: 12, fontWeight: FontWeight.w600),
               ),
               const Row(
                 children: [
@@ -693,7 +702,7 @@ class _InternshipHubScreenState extends State<InternshipHubScreen> with SingleTi
               alignment: Alignment.center,
               child: const Column(
                 children: [
-                  Icon(Icons.search_off_rounded, color: Colors.white30, size: 48),
+                  Icon(Icons.search_off_rounded, color: const Color(0xFFCBD5E1), size: 48),
                   SizedBox(height: 12),
                   Text('No internships found matching filters', style: TextStyle(color: Colors.white60, fontSize: 14)),
                 ],
@@ -714,15 +723,14 @@ class _InternshipHubScreenState extends State<InternshipHubScreen> with SingleTi
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12),
-          color: isSelected ? MyVaultColors.accentBlue : MyVaultColors.glassFill,
+          color: isSelected ? MyVaultColors.metalBlack : Colors.white,
           border: Border.all(
-            color: isSelected ? MyVaultColors.accentCyan : MyVaultColors.glassBorder,
+            color: isSelected ? MyVaultColors.metalBlack : const Color(0xFFCBD5E1),
           ),
         ),
         child: Text(
           label,
-          style: TextStyle(
-            color: isSelected ? Colors.white : Colors.white70,
+          style: TextStyle(color: isSelected ? Colors.white : MyVaultColors.textSecondary,
             fontSize: 12,
             fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
           ),
@@ -745,9 +753,9 @@ class _InternshipHubScreenState extends State<InternshipHubScreen> with SingleTi
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: const Color(0xFF0F131D),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: MyVaultColors.glassBorder),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
       child: Material(
         color: Colors.transparent,
@@ -795,7 +803,7 @@ class _InternshipHubScreenState extends State<InternshipHubScreen> with SingleTi
                             children: [
                               Text(company, style: const TextStyle(color: MyVaultColors.accentCyan, fontWeight: FontWeight.w600, fontSize: 13)),
                               const SizedBox(width: 6),
-                              const Icon(Icons.circle, color: Colors.white24, size: 4),
+                              const Icon(Icons.circle, color: const Color(0xFFCBD5E1), size: 4),
                               const SizedBox(width: 6),
                               Flexible(
                                 child: Text(
@@ -931,7 +939,7 @@ class _InternshipHubScreenState extends State<InternshipHubScreen> with SingleTi
                             decoration: BoxDecoration(
                               color: Colors.white.withValues(alpha: 0.05),
                               borderRadius: BorderRadius.circular(6),
-                              border: Border.all(color: Colors.white24),
+                              border: Border.all(color: const Color(0xFFCBD5E1)),
                             ),
                             child: const Row(
                               mainAxisSize: MainAxisSize.min,
@@ -955,7 +963,7 @@ class _InternshipHubScreenState extends State<InternshipHubScreen> with SingleTi
                             decoration: BoxDecoration(
                               color: Colors.white.withValues(alpha: 0.05),
                               borderRadius: BorderRadius.circular(6),
-                              border: Border.all(color: Colors.white24),
+                              border: Border.all(color: const Color(0xFFCBD5E1)),
                             ),
                             child: const Row(
                               mainAxisSize: MainAxisSize.min,
@@ -1053,7 +1061,7 @@ class _InternshipHubScreenState extends State<InternshipHubScreen> with SingleTi
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.assignment_turned_in_outlined, color: Colors.white30, size: 54),
+              const Icon(Icons.assignment_turned_in_outlined, color: const Color(0xFFCBD5E1), size: 54),
               const SizedBox(height: 16),
               const Text(
                 'No applications yet',
@@ -1104,9 +1112,9 @@ class _InternshipHubScreenState extends State<InternshipHubScreen> with SingleTi
           margin: const EdgeInsets.only(bottom: 16),
           padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
-            color: const Color(0xFF0F131D),
+            color: Colors.white,
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: MyVaultColors.glassBorder),
+            border: Border.all(color: const Color(0xFFE2E8F0)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -1143,7 +1151,7 @@ class _InternshipHubScreenState extends State<InternshipHubScreen> with SingleTi
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: MyVaultColors.glassFill,
+                  color: Colors.white,
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: Colors.white10),
                 ),
@@ -1229,7 +1237,7 @@ class _InternshipHubScreenState extends State<InternshipHubScreen> with SingleTi
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.bookmark_border_rounded, color: Colors.white30, size: 54),
+              Icon(Icons.bookmark_border_rounded, color: const Color(0xFFCBD5E1), size: 54),
               SizedBox(height: 16),
               Text('No saved internships', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
               SizedBox(height: 8),
@@ -1306,7 +1314,7 @@ class _InternshipDetailsSheet extends StatelessWidget {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Colors.white24,
+                  color: const Color(0xFFCBD5E1),
                   borderRadius: BorderRadius.circular(4),
                 ),
               ),
@@ -1349,9 +1357,9 @@ class _InternshipDetailsSheet extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: MyVaultColors.glassFill,
+                        color: Colors.white,
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: MyVaultColors.glassBorder),
+                        border: Border.all(color: const Color(0xFFE2E8F0)),
                       ),
                       child: GridView.count(
                         shrinkWrap: true,
@@ -1428,7 +1436,7 @@ class _InternshipDetailsSheet extends StatelessWidget {
                         children: skills.map((s) => Container(
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                           decoration: BoxDecoration(
-                            color: MyVaultColors.glassFill,
+                            color: Colors.white,
                             borderRadius: BorderRadius.circular(8),
                             border: Border.all(color: MyVaultColors.accentCyan.withValues(alpha: 0.3)),
                           ),
@@ -1725,7 +1733,7 @@ class _ApplicationWizardSheetState extends State<_ApplicationWizardSheet> {
                 margin: const EdgeInsets.symmetric(vertical: 10),
                 width: 40,
                 height: 4,
-                decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(4)),
+                decoration: BoxDecoration(color: const Color(0xFFCBD5E1), borderRadius: BorderRadius.circular(4)),
               ),
 
               // Title
@@ -1881,7 +1889,7 @@ class _ApplicationWizardSheetState extends State<_ApplicationWizardSheet> {
         Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: MyVaultColors.glassFill,
+            color: Colors.white,
             borderRadius: BorderRadius.circular(14),
             border: Border.all(color: const Color(0xFF00E676).withValues(alpha: 0.4)),
           ),
@@ -1929,8 +1937,8 @@ class _ApplicationWizardSheetState extends State<_ApplicationWizardSheet> {
             hintStyle: const TextStyle(color: Colors.white38, fontSize: 12),
             filled: true,
             fillColor: MyVaultColors.glassFill,
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: MyVaultColors.glassBorder)),
-            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: MyVaultColors.glassBorder)),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: const Color(0xFFE2E8F0))),
+            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: const Color(0xFFE2E8F0))),
             focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: MyVaultColors.accentCyan)),
           ),
         ),
@@ -1949,9 +1957,9 @@ class _ApplicationWizardSheetState extends State<_ApplicationWizardSheet> {
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: MyVaultColors.glassFill,
+            color: Colors.white,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: MyVaultColors.glassBorder),
+            border: Border.all(color: const Color(0xFFE2E8F0)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -2008,8 +2016,8 @@ class _ApplicationWizardSheetState extends State<_ApplicationWizardSheet> {
             filled: true,
             fillColor: MyVaultColors.glassFill,
             contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: MyVaultColors.glassBorder)),
-            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: MyVaultColors.glassBorder)),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: const Color(0xFFE2E8F0))),
+            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: const Color(0xFFE2E8F0))),
             focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: MyVaultColors.accentCyan)),
           ),
         ),

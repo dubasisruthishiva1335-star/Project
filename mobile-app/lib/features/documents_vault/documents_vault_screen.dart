@@ -1,3 +1,4 @@
+import '../../core/colors.dart';
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:image_picker/image_picker.dart';
@@ -303,15 +304,15 @@ class _AddDocumentSheetState extends State<AddDocumentSheet> {
             // Title Input
             TextField(
               controller: _titleCtrl,
-              style: const TextStyle(color: Colors.white, fontSize: 14, fontFamily: 'Poppins'),
+              style: const TextStyle(color: MyVaultColors.textDark, fontSize: 14, fontFamily: 'Poppins'),
               decoration: InputDecoration(
                 labelText: 'Document Title',
                 hintText: 'e.g. Physics Lab Manual - Unit 1',
                 labelStyle: const TextStyle(color: AppColors.textSecondary, fontFamily: 'Poppins'),
-                hintStyle: TextStyle(color: Colors.grey.shade600, fontFamily: 'Poppins'),
+                hintStyle: const TextStyle(color: Color(0xFF94A3B8), fontFamily: 'Poppins'),
                 filled: true,
                 fillColor: AppColors.background,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFCBD5E1))),
               ),
             ),
             const SizedBox(height: 12),
@@ -319,14 +320,14 @@ class _AddDocumentSheetState extends State<AddDocumentSheet> {
             // Category Selector
             DropdownButtonFormField<String>(
               value: _selectedCategory,
-              dropdownColor: AppColors.surface,
-              style: const TextStyle(color: Colors.white, fontFamily: 'Poppins', fontSize: 14),
+              dropdownColor: Colors.white,
+              style: const TextStyle(color: MyVaultColors.textDark, fontFamily: 'Poppins', fontSize: 14),
               decoration: InputDecoration(
                 labelText: 'Category',
                 labelStyle: const TextStyle(color: AppColors.textSecondary, fontFamily: 'Poppins'),
                 filled: true,
                 fillColor: AppColors.background,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFCBD5E1))),
               ),
               items: _categories
                   .where((c) => c.name != 'All')

@@ -3,10 +3,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
-import 'package:image_picker/image_picker.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../core/colors.dart';
-import '../../core/api_client.dart';
 import '../academic_hub/pdf_viewer_screen.dart';
 import 'screens/result_upload_analyze_screen.dart';
 
@@ -98,80 +96,74 @@ class ResultRecord {
 
 class ResultsService {
   Future<ResultRecord> uploadAndAnalyze({
-    required List<int> fileBytes,
-    required String filename,
+    required File imageFile,
+    String? title,
     String? studentId,
   }) async {
-    final urls = [
-      '$kBackendBaseUrl/api/results/analyze',
-      '$kEmulatorBackendBaseUrl/api/results/analyze',
-    ];
+    final uri = Uri.parse('$kBackendBaseUrl/api/results/analyze');
+    final request = http.MultipartRequest('POST', uri);
+    request.files.add(await http.MultipartFile.fromPath('image', imageFile.path));
+    if (title != null) request.fields['title'] = title;
+    if (studentId != null) request.fields['studentId'] = studentId;
 
-    for (final url in urls) {
-      try {
-        final uri = Uri.parse(url);
-        final request = http.MultipartRequest('POST', uri);
-        if (studentId != null) request.fields['studentId'] = studentId;
-        request.files.add(http.MultipartFile.fromBytes('file', fileBytes, filename: filename));
+    final streamedResponse = await request.send();
+    final response = await http.Response.fromStream(streamedResponse);
 
-        final streamedResponse = await request.send().timeout(const Duration(seconds: 15));
-        final response = await http.Response.fromStream(streamedResponse);
-
-        if (response.statusCode == 201 || response.statusCode == 200) {
-          return ResultRecord.fromJson(jsonDecode(response.body));
-        }
-      } catch (_) {}
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      final json = jsonDecode(response.body) as Map<String, dynamic>;
+      return ResultRecord.fromJson(json);
+    } else {
+      throw Exception('Upload failed with status: ${response.statusCode}');
     }
-
-    return ResultRecord(
-      id: 'demo-${DateTime.now().millisecondsSinceEpoch}',
-      title: 'B.Tech CSE Semester 6 AI Analysis Report',
-      analysis: ResultAnalysis(
-        studentName: 'Engineering Student',
-        rollNumber: studentId ?? '21A91A0501',
-        semester: 'Semester 6',
-        sgpa: 8.85,
-        cgpa: 8.72,
-        result: 'PASS',
-        aiSummary: 'Outstanding academic performance across Computer Science core subjects. Strong analytical and problem-solving aptitude demonstrated.',
-        strengths: ['Algorithms & Data Structures mastery', 'Consistent lab & programming performance'],
-        improvementAreas: ['Focus on advanced Operating Systems kernel concepts and network protocol edge-cases'],
-        subjects: [
-          SubjectMark(name: 'Data Structures & Algorithms', marksObtained: 88, maxMarks: 100, grade: 'O'),
-          SubjectMark(name: 'Database Management Systems', marksObtained: 82, maxMarks: 100, grade: 'A+'),
-          SubjectMark(name: 'Operating Systems', marksObtained: 79, maxMarks: 100, grade: 'A'),
-        ],
-      ),
-      pdfUrl: 'https://myvault-files-app.s3.eu-north-1.amazonaws.com/notes/1786544055523-478f14f9-ade1-411b-882d-5124b5b84967-RADAR_Ashok.pdf',
-      createdAt: DateTime.now(),
-    );
   }
 
   Future<List<ResultRecord>> fetchResults({String? studentId}) async {
     try {
-      final res = await ApiClient.instance.dio.get('/results');
-      if (res.statusCode == 200 && res.data is List) {
-        return (res.data as List).map((r) => ResultRecord.fromJson(r)).toList();
+      final query = studentId != null ? '?studentId=$studentId' : '';
+      final uri = Uri.parse('$kBackendBaseUrl/api/results$query');
+      final response = await http.get(uri).timeout(const Duration(seconds: 5));
+      if (response.statusCode == 200) {
+        final List<dynamic> jsonList = jsonDecode(response.body);
+        return jsonList.map((j) => ResultRecord.fromJson(j as Map<String, dynamic>)).toList();
       }
-    } catch (_) {}
+    } catch (_) {
+      // Return sample records if offline
+    }
 
     return [
       ResultRecord(
-        id: 'res-sem-3',
-        title: 'B.Tech CSE Semester 3 Official Grade Sheet',
+        id: '1',
+        title: 'B.Tech Sem 6 Result (Autonomous)',
         analysis: ResultAnalysis(
-          studentName: 'Engineering Student',
-          rollNumber: '21A91A0501',
-          semester: 'Semester 3',
-          sgpa: 8.85,
-          cgpa: 8.72,
-          result: 'PASS',
-          aiSummary: 'Strong performance in Data Structures and Computer Architecture.',
-          strengths: ['Problem Solving', 'Data Structures'],
-          improvementAreas: ['Discrete Mathematics proofs'],
+          studentName: 'Rahul Kumar',
+          rollNumber: '1RV21CS102',
+          semester: 'Semester 6',
+          sgpa: 9.14,
+          cgpa: 8.87,
+          result: 'FIRST CLASS WITH DISTINCTION',
+          aiSummary: 'Outstanding performance in Operating Systems and Distributed Cloud Networks. Demonstrates strong analytical and core computer science fundamentals.',
+          strengths: ['Cloud Computing (100/100)', 'Operating Systems (94/100)', 'System Architecture'],
+          improvementAreas: ['Discrete Mathematics proof structuring'],
         ),
         pdfUrl: 'https://myvault-files-app.s3.eu-north-1.amazonaws.com/notes/1786544055523-478f14f9-ade1-411b-882d-5124b5b84967-RADAR_Ashok.pdf',
-        createdAt: DateTime.now().subtract(const Duration(days: 30)),
+        createdAt: DateTime.now().subtract(const Duration(days: 2)),
+      ),
+      ResultRecord(
+        id: '2',
+        title: 'B.Tech Sem 5 Result',
+        analysis: ResultAnalysis(
+          studentName: 'Rahul Kumar',
+          rollNumber: '1RV21CS102',
+          semester: 'Semester 5',
+          sgpa: 8.65,
+          cgpa: 8.78,
+          result: 'FIRST CLASS WITH DISTINCTION',
+          aiSummary: 'Consistent upper-percentile ranking. High marks in Database Management and Software Engineering.',
+          strengths: ['Database Systems', 'Algorithms'],
+          improvementAreas: ['Automata Theory & Computability'],
+        ),
+        pdfUrl: 'https://myvault-files-app.s3.eu-north-1.amazonaws.com/notes/1786544055523-478f14f9-ade1-411b-882d-5124b5b84967-RADAR_Ashok.pdf',
+        createdAt: DateTime.now().subtract(const Duration(days: 90)),
       ),
     ];
   }
@@ -187,11 +179,9 @@ class ResultsScreen extends StatefulWidget {
 
 class _ResultsScreenState extends State<ResultsScreen> {
   final _service = ResultsService();
-  final _picker = ImagePicker();
 
   List<ResultRecord> _results = [];
   bool _loadingList = true;
-  bool _uploading = false;
   String? _error;
 
   @override
@@ -237,7 +227,10 @@ class _ResultsScreenState extends State<ResultsScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: MyVaultColors.obsidian,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
       builder: (context) => DraggableScrollableSheet(
         initialChildSize: 0.75,
         maxChildSize: 0.95,
@@ -245,7 +238,7 @@ class _ResultsScreenState extends State<ResultsScreen> {
         builder: (context, scrollController) => Container(
           padding: const EdgeInsets.all(20),
           decoration: const BoxDecoration(
-            color: MyVaultColors.obsidian,
+            color: Colors.white,
             borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
           ),
           child: ListView(
@@ -257,47 +250,58 @@ class _ResultsScreenState extends State<ResultsScreen> {
                   height: 4,
                   margin: const EdgeInsets.only(bottom: 16),
                   decoration: BoxDecoration(
-                    color: Colors.white24,
+                    color: const Color(0xFFCBD5E1),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
               ),
               Text(
                 record.title,
-                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18),
+                style: const TextStyle(color: MyVaultColors.textDark, fontWeight: FontWeight.bold, fontSize: 18),
               ),
               const SizedBox(height: 14),
               _statRow('SGPA', record.analysis.sgpa?.toString() ?? '-'),
               _statRow('CGPA', record.analysis.cgpa?.toString() ?? '-'),
               _statRow('Result', record.analysis.result ?? '-'),
               const SizedBox(height: 16),
-              const Text('AI Summary', style: TextStyle(color: MyVaultColors.accentCyan, fontWeight: FontWeight.bold, fontSize: 14)),
+              const Text('AI Summary', style: TextStyle(color: Color(0xFF2563EB), fontWeight: FontWeight.bold, fontSize: 14)),
               const SizedBox(height: 6),
               Text(
                 record.analysis.aiSummary ?? '-',
-                style: const TextStyle(color: Colors.white70, fontSize: 13, height: 1.4),
+                style: const TextStyle(color: MyVaultColors.textSecondary, fontSize: 13, height: 1.4),
               ),
               if (record.analysis.strengths.isNotEmpty) ...[
                 const SizedBox(height: 14),
-                const Text('Key Strengths', style: TextStyle(color: Color(0xFF00C48C), fontWeight: FontWeight.bold, fontSize: 13)),
+                const Text('Key Strengths', style: TextStyle(color: Color(0xFF059669), fontWeight: FontWeight.bold, fontSize: 13)),
                 const SizedBox(height: 4),
-                ...record.analysis.strengths.map((s) => Text('• $s', style: const TextStyle(color: Colors.white70, fontSize: 12))),
+                ...record.analysis.strengths.map((s) => Text('• $s', style: const TextStyle(color: MyVaultColors.textSecondary, fontSize: 12))),
               ],
               if (record.analysis.improvementAreas.isNotEmpty) ...[
                 const SizedBox(height: 14),
-                const Text('Areas for Improvement', style: TextStyle(color: Colors.orangeAccent, fontWeight: FontWeight.bold, fontSize: 13)),
+                const Text('Areas for Improvement', style: TextStyle(color: Color(0xFFD97706), fontWeight: FontWeight.bold, fontSize: 13)),
                 const SizedBox(height: 4),
-                ...record.analysis.improvementAreas.map((s) => Text('• $s', style: const TextStyle(color: Colors.white70, fontSize: 12))),
+                ...record.analysis.improvementAreas.map((s) => Text('• $s', style: const TextStyle(color: MyVaultColors.textSecondary, fontSize: 12))),
               ],
               const SizedBox(height: 20),
-              ElevatedButton.icon(
-                onPressed: () => _openPdf(record.title, record.fullPdfUrl),
-                icon: const Icon(Icons.picture_as_pdf_rounded, color: Colors.white),
-                label: const Text('Open Styled PDF Report', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: MyVaultColors.accentBlue,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(14),
+                  gradient: MyVaultColors.metalGradient,
+                  boxShadow: const [
+                    BoxShadow(color: Color(0x18000000), blurRadius: 8, offset: Offset(0, 3)),
+                  ],
+                ),
+                child: ElevatedButton.icon(
+                  onPressed: () => _openPdf(record.title, record.fullPdfUrl),
+                  icon: const Icon(Icons.picture_as_pdf_rounded, color: Colors.white),
+                  label: const Text('Open Styled PDF Report', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.transparent,
+                    foregroundColor: Colors.white,
+                    shadowColor: Colors.transparent,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  ),
                 ),
               ),
             ],
@@ -312,8 +316,8 @@ class _ResultsScreenState extends State<ResultsScreen> {
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         children: [
-          SizedBox(width: 80, child: Text(label, style: const TextStyle(color: Colors.white54, fontSize: 13))),
-          Text(value, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
+          SizedBox(width: 80, child: Text(label, style: const TextStyle(color: MyVaultColors.textMuted, fontSize: 13))),
+          Text(value, style: const TextStyle(color: MyVaultColors.textDark, fontWeight: FontWeight.bold, fontSize: 15)),
         ],
       ),
     );
@@ -327,152 +331,180 @@ class _ResultsScreenState extends State<ResultsScreen> {
         if (!didPop) context.go('/home');
       },
       child: Scaffold(
-        backgroundColor: MyVaultColors.obsidian,
+        backgroundColor: MyVaultColors.backgroundWhite,
         appBar: AppBar(
-          backgroundColor: MyVaultColors.obsidian,
+          backgroundColor: Colors.white,
           elevation: 0,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white70),
+            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: MyVaultColors.metalBlack, size: 20),
             onPressed: () => context.go('/home'),
           ),
-          title: ShaderMask(
-            shaderCallback: (b) => MyVaultColors.accentGradient.createShader(b),
-            child: const Text(
-              'Results & AI Analyzer',
-              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
-            ),
+          title: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                  gradient: MyVaultColors.metalGradient,
+                ),
+                child: const Icon(Icons.auto_graph_rounded, color: Colors.white, size: 18),
+              ),
+              const SizedBox(width: 10),
+              const Text(
+                'Results & AI Analyzer',
+                style: TextStyle(fontWeight: FontWeight.bold, color: MyVaultColors.metalBlack, fontSize: 18),
+              ),
+            ],
+          ),
+          bottom: const PreferredSize(
+            preferredSize: Size.fromHeight(1),
+            child: Divider(height: 1, color: Color(0xFFE2E8F0)),
           ),
         ),
-        floatingActionButton: _uploading
-            ? const FloatingActionButton(
-                onPressed: null,
-                backgroundColor: MyVaultColors.accentBlue,
-                child: CircularProgressIndicator(color: Colors.white),
-              )
-            : FloatingActionButton.extended(
-                onPressed: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => const ResultUploadAnalyzeScreen()),
-                  );
-                },
-                backgroundColor: MyVaultColors.accentBlue,
-                icon: const Icon(Icons.auto_awesome_rounded, color: Colors.white),
-                label: const Text('Performance Dashboard', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-              ),
-        body: RefreshIndicator(
-          onRefresh: _loadResults,
-          color: MyVaultColors.accentCyan,
-          child: ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              // Banner for Performance Dashboard Launch
-              InkWell(
-                onTap: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => const ResultUploadAnalyzeScreen()),
-                  );
-                },
-                borderRadius: BorderRadius.circular(18),
-                child: Container(
-                  padding: const EdgeInsets.all(18),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(18),
-                    gradient: LinearGradient(
-                      colors: [
-                        MyVaultColors.accentBlue.withValues(alpha: 0.35),
-                        MyVaultColors.accentCyan.withValues(alpha: 0.15),
+        floatingActionButton: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(30),
+            gradient: MyVaultColors.metalGradient,
+            boxShadow: const [
+              BoxShadow(color: Color(0x20000000), blurRadius: 10, offset: Offset(0, 4)),
+            ],
+          ),
+          child: FloatingActionButton.extended(
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const ResultUploadAnalyzeScreen()),
+              );
+            },
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            icon: const Icon(Icons.auto_awesome_rounded, color: Colors.white),
+            label: const Text('Performance Dashboard', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          ),
+        ),
+        body: Container(
+          decoration: const BoxDecoration(
+            gradient: MyVaultColors.whiteShadingGradient,
+          ),
+          child: RefreshIndicator(
+            onRefresh: _loadResults,
+            color: MyVaultColors.metalBlack,
+            child: ListView(
+              padding: const EdgeInsets.all(16),
+              children: [
+                // Banner for Performance Dashboard Launch
+                InkWell(
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const ResultUploadAnalyzeScreen()),
+                    );
+                  },
+                  borderRadius: BorderRadius.circular(18),
+                  child: Container(
+                    padding: const EdgeInsets.all(18),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(18),
+                      color: Colors.white,
+                      border: Border.all(color: const Color(0xFFCBD5E1)),
+                      boxShadow: const [
+                        BoxShadow(color: Color(0x06000000), blurRadius: 10, offset: Offset(0, 4)),
                       ],
                     ),
-                    border: Border.all(color: MyVaultColors.accentCyan.withValues(alpha: 0.4)),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(12),
-                          color: MyVaultColors.accentBlue,
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(14),
+                            gradient: MyVaultColors.metalGradient,
+                          ),
+                          child: const Icon(Icons.insights_rounded, color: Colors.white, size: 24),
                         ),
-                        child: const Icon(Icons.insights_rounded, color: Colors.white, size: 24),
-                      ),
-                      const SizedBox(width: 14),
-                      const Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Performance Dashboard & AI OCR',
-                              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15),
-                            ),
-                            SizedBox(height: 2),
-                            Text(
-                              'Upload marksheet -> Google Vision/Claude OCR -> SGPA & GPA Trend charts.',
-                              style: TextStyle(color: Colors.white70, fontSize: 11),
-                            ),
-                          ],
+                        const SizedBox(width: 14),
+                        const Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Performance Dashboard & AI OCR',
+                                style: TextStyle(color: MyVaultColors.textDark, fontWeight: FontWeight.bold, fontSize: 15),
+                              ),
+                              SizedBox(height: 2),
+                              Text(
+                                'Upload marksheet -> AI OCR -> SGPA & GPA Trend charts.',
+                                style: TextStyle(color: MyVaultColors.textSecondary, fontSize: 11),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                      const Icon(Icons.arrow_forward_ios_rounded, color: MyVaultColors.accentCyan, size: 18),
-                    ],
+                        const Icon(Icons.arrow_forward_ios_rounded, color: MyVaultColors.metalBlack, size: 16),
+                      ],
+                    ),
                   ),
                 ),
-              ),
 
-              const SizedBox(height: 16),
+                const SizedBox(height: 16),
 
-              if (_loadingList)
-                const Center(child: Padding(padding: EdgeInsets.all(32), child: CircularProgressIndicator(color: MyVaultColors.accentCyan)))
-              else if (_results.isEmpty)
-                ListView(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  children: [
-                    const SizedBox(height: 40),
-                    const Icon(Icons.insert_drive_file_outlined, size: 64, color: Colors.white24),
-                    const SizedBox(height: 12),
-                    const Center(
-                      child: Text(
-                        'No results yet.\nUpload a marksheet image to get an\nAI-analyzed, styled PDF report.',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(color: Colors.white54, height: 1.4),
-                      ),
-                    ),
-                    if (_error != null) ...[
+                if (_loadingList)
+                  const Center(child: Padding(padding: EdgeInsets.all(32), child: CircularProgressIndicator(color: MyVaultColors.metalBlack)))
+                else if (_results.isEmpty)
+                  ListView(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    children: [
+                      const SizedBox(height: 40),
+                      const Icon(Icons.insert_drive_file_outlined, size: 64, color: Color(0xFFCBD5E1)),
                       const SizedBox(height: 12),
-                      Center(child: Text(_error!, style: const TextStyle(color: Colors.redAccent))),
+                      const Center(
+                        child: Text(
+                          'No results yet.\nUpload a marksheet image to get an\nAI-analyzed, styled PDF report.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(color: MyVaultColors.textMuted, height: 1.4),
+                        ),
+                      ),
+                      if (_error != null) ...[
+                        const SizedBox(height: 12),
+                        Center(child: Text(_error!, style: const TextStyle(color: Colors.redAccent))),
+                      ],
                     ],
-                  ],
-                )
-              else
-                ..._results.map((record) => Container(
-                      margin: const EdgeInsets.only(bottom: 14),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(16),
-                        color: MyVaultColors.glassFill,
-                        border: Border.all(color: MyVaultColors.glassBorder),
-                      ),
-                      child: ListTile(
-                        onTap: () => _showAnalysisSheet(record),
-                        leading: Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(12),
-                            color: MyVaultColors.accentBlue.withValues(alpha: 0.2),
+                  )
+                else
+                  ..._results.map((record) => Container(
+                        margin: const EdgeInsets.only(bottom: 14),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(18),
+                          color: Colors.white,
+                          border: Border.all(color: const Color(0xFFE2E8F0)),
+                          boxShadow: const [
+                            BoxShadow(color: Color(0x06000000), blurRadius: 10, offset: Offset(0, 4)),
+                          ],
+                        ),
+                        child: ListTile(
+                          onTap: () => _showAnalysisSheet(record),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          leading: Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(12),
+                              gradient: MyVaultColors.metalGradient,
+                            ),
+                            child: const Icon(Icons.picture_as_pdf_rounded, color: Colors.white, size: 20),
                           ),
-                          child: const Icon(Icons.picture_as_pdf_rounded, color: MyVaultColors.accentCyan),
+                          title: Text(
+                            record.title,
+                            style: const TextStyle(color: MyVaultColors.textDark, fontWeight: FontWeight.bold, fontSize: 14),
+                          ),
+                          subtitle: Padding(
+                            padding: const EdgeInsets.only(top: 4),
+                            child: Text(
+                              'SGPA ${record.analysis.sgpa ?? '-'}  •  CGPA ${record.analysis.cgpa ?? '-'}  •  ${record.analysis.result ?? '-'}',
+                              style: const TextStyle(color: MyVaultColors.textSecondary, fontSize: 12),
+                            ),
+                          ),
+                          trailing: const Icon(Icons.arrow_forward_ios_rounded, color: MyVaultColors.textMuted, size: 16),
                         ),
-                        title: Text(
-                          record.title,
-                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
-                        ),
-                        subtitle: Text(
-                          'SGPA ${record.analysis.sgpa ?? '-'}  •  CGPA ${record.analysis.cgpa ?? '-'}  •  ${record.analysis.result ?? '-'}',
-                          style: const TextStyle(color: Colors.white54, fontSize: 12),
-                        ),
-                        trailing: const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white38, size: 16),
-                      ),
-                    )),
-            ],
+                      )),
+              ],
+            ),
           ),
         ),
       ),

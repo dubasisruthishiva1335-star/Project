@@ -476,21 +476,21 @@ class _CoursesLearningScreenState extends State<CoursesLearningScreen> with Sing
                       width: 46,
                       height: 46,
                       decoration: BoxDecoration(
-                        color: Color(colorVal).withValues(alpha: 0.2),
+                        color: Color(colorVal).withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Color(colorVal).withValues(alpha: 0.5)),
+                        border: Border.all(color: Color(colorVal).withValues(alpha: 0.3)),
                       ),
                       alignment: Alignment.center,
-                      child: const Icon(Icons.code_rounded, color: Colors.white, size: 22),
+                      child: Icon(Icons.code_rounded, color: Color(colorVal), size: 22),
                     ),
                     const SizedBox(width: 14),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16, height: 1.2)),
+                          Text(title, style: const TextStyle(color: MyVaultColors.textDark, fontWeight: FontWeight.bold, fontSize: 16, height: 1.2)),
                           const SizedBox(height: 4),
-                          Text(instructor, style: const TextStyle(color: MyVaultColors.accentCyan, fontSize: 12, fontWeight: FontWeight.w500)),
+                          Text(instructor, style: const TextStyle(color: MyVaultColors.textSecondary, fontSize: 12, fontWeight: FontWeight.w500)),
                         ],
                       ),
                     ),
@@ -501,7 +501,7 @@ class _CoursesLearningScreenState extends State<CoursesLearningScreen> with Sing
                         children: [
                           const Icon(Icons.star_rounded, color: Color(0xFFFFB800), size: 14),
                           const SizedBox(width: 3),
-                          Text('$rating', style: const TextStyle(color: Color(0xFFFFB800), fontWeight: FontWeight.bold, fontSize: 11)),
+                          Text('$rating', style: const TextStyle(color: Color(0xFFD97706), fontWeight: FontWeight.bold, fontSize: 11)),
                         ],
                       ),
                     ),
@@ -522,7 +522,7 @@ class _CoursesLearningScreenState extends State<CoursesLearningScreen> with Sing
                 ),
 
                 const SizedBox(height: 16),
-                const Divider(color: Colors.white10, height: 1),
+                const Divider(color: Color(0xFFE2E8F0), height: 1),
                 const SizedBox(height: 14),
 
                 Row(
@@ -530,9 +530,9 @@ class _CoursesLearningScreenState extends State<CoursesLearningScreen> with Sing
                   children: [
                     const Row(
                       children: [
-                        Icon(Icons.video_library_rounded, color: Colors.white38, size: 14),
+                        Icon(Icons.video_library_rounded, color: MyVaultColors.textMuted, size: 14),
                         SizedBox(width: 5),
-                        Text('Videos • AI Quizzes • Exams', style: TextStyle(color: Colors.white38, fontSize: 11)),
+                        Text('Videos • AI Quizzes • Exams', style: TextStyle(color: MyVaultColors.textSecondary, fontSize: 11)),
                       ],
                     ),
                     ElevatedButton(
@@ -601,15 +601,15 @@ class _CoursesLearningScreenState extends State<CoursesLearningScreen> with Sing
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(c['category'] ?? 'Engineering', style: const TextStyle(color: MyVaultColors.accentCyan, fontWeight: FontWeight.bold, fontSize: 11)),
-                    Text('$progress% Complete', style: const TextStyle(color: Color(0xFF00E676), fontWeight: FontWeight.bold, fontSize: 12)),
+                    Text('$progress% Complete', style: const TextStyle(color: Color(0xFF16A34A), fontWeight: FontWeight.bold, fontSize: 12)),
                   ],
                 ),
                 const SizedBox(height: 8),
-                Text(c['title'] ?? 'Course Title', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+                Text(c['title'] ?? 'Course Title', style: const TextStyle(color: MyVaultColors.textDark, fontWeight: FontWeight.bold, fontSize: 16)),
                 const SizedBox(height: 4),
-                Text('Registered to: $_studentName • $_studentCollege', style: const TextStyle(color: Colors.white54, fontSize: 11)),
+                Text('Registered to: $_studentName • $_studentCollege', style: const TextStyle(color: MyVaultColors.textSecondary, fontSize: 11)),
                 const SizedBox(height: 4),
-                Text('Completed $completed of $total video lessons', style: const TextStyle(color: Colors.white38, fontSize: 11)),
+                Text('Completed $completed of $total video lessons', style: const TextStyle(color: MyVaultColors.textMuted, fontSize: 11)),
                 const SizedBox(height: 14),
 
                 // Linear Progress Bar
@@ -618,8 +618,8 @@ class _CoursesLearningScreenState extends State<CoursesLearningScreen> with Sing
                   child: LinearProgressIndicator(
                     value: progress / 100,
                     minHeight: 8,
-                    backgroundColor: Colors.white12,
-                    valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF00E676)),
+                    backgroundColor: const Color(0xFFE2E8F0),
+                    valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF16A34A)),
                   ),
                 ),
 
@@ -629,8 +629,8 @@ class _CoursesLearningScreenState extends State<CoursesLearningScreen> with Sing
                   children: [
                     TextButton.icon(
                       onPressed: () => _openCourseDetails(c),
-                      icon: const Icon(Icons.list_alt_rounded, size: 16, color: Colors.white70),
-                      label: const Text('Syllabus & Quizzes', style: TextStyle(color: Colors.white70, fontSize: 12)),
+                      icon: const Icon(Icons.list_alt_rounded, size: 16, color: MyVaultColors.textSecondary),
+                      label: const Text('Syllabus & Quizzes', style: TextStyle(color: MyVaultColors.textSecondary, fontSize: 12)),
                     ),
                     ElevatedButton.icon(
                       onPressed: () => _openLessonPlayer(c),
@@ -661,11 +661,11 @@ class _CoursesLearningScreenState extends State<CoursesLearningScreen> with Sing
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.workspace_premium_outlined, color: Colors.white30, size: 54),
+              Icon(Icons.workspace_premium_outlined, color: MyVaultColors.textMuted, size: 54),
               SizedBox(height: 16),
-              Text('No Certificates in Queue', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+              Text('No Certificates in Queue', style: TextStyle(color: MyVaultColors.textDark, fontSize: 18, fontWeight: FontWeight.bold)),
               SizedBox(height: 8),
-              Text('Register your details, complete 100% of video lessons, and pass the final exam. Your verifiable certificate is minted within 24 hours.', textAlign: TextAlign.center, style: TextStyle(color: Colors.white54, fontSize: 13)),
+              Text('Register your details, complete 100% of video lessons, and pass the final exam. Your verifiable certificate is minted within 24 hours.', textAlign: TextAlign.center, style: TextStyle(color: MyVaultColors.textSecondary, fontSize: 13)),
             ],
           ),
         ),
@@ -1300,9 +1300,9 @@ class _StatItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
+        Text(title, style: const TextStyle(color: MyVaultColors.textDark, fontWeight: FontWeight.bold, fontSize: 12)),
         const SizedBox(height: 2),
-        Text(subtitle, style: const TextStyle(color: Colors.white38, fontSize: 10)),
+        Text(subtitle, style: const TextStyle(color: MyVaultColors.textSecondary, fontSize: 10)),
       ],
     );
   }

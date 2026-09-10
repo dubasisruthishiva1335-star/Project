@@ -481,7 +481,7 @@ class _CompetitiveExamsHubScreenState extends State<CompetitiveExamsHubScreen> w
                                   children: [
                                     Icon(Icons.search_off_rounded, color: Color(0xFFCBD5E1), size: 48),
                                     SizedBox(height: 12),
-                                    Text('No exam resources found matching filters', style: TextStyle(color: Colors.white54, fontSize: 13)),
+                                    Text('No exam resources found matching filters', style: TextStyle(color: MyVaultColors.textSecondary, fontSize: 13)),
                                   ],
                                 ),
                               )
@@ -647,7 +647,7 @@ class _CompetitiveExamsHubScreenState extends State<CompetitiveExamsHubScreen> w
                   constraints: const BoxConstraints(),
                   icon: Icon(
                     isBookmarked ? Icons.bookmark_rounded : Icons.bookmark_outline_rounded,
-                    color: isBookmarked ? const Color(0xFFFFB800) : Colors.white38,
+                    color: isBookmarked ? const Color(0xFFFFB800) : MyVaultColors.textMuted,
                     size: 20,
                   ),
                   onPressed: () {
@@ -668,7 +668,7 @@ class _CompetitiveExamsHubScreenState extends State<CompetitiveExamsHubScreen> w
             // Title & Exam
             Text(
               title,
-              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15, height: 1.25),
+              style: const TextStyle(color: MyVaultColors.textDark, fontWeight: FontWeight.bold, fontSize: 15, height: 1.25),
             ),
             const SizedBox(height: 4),
             Text(
@@ -682,9 +682,9 @@ class _CompetitiveExamsHubScreenState extends State<CompetitiveExamsHubScreen> w
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha: 0.3),
+                color: const Color(0xFFF8FAFC),
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+                border: Border.all(color: const Color(0xFFE2E8F0)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -693,7 +693,7 @@ class _CompetitiveExamsHubScreenState extends State<CompetitiveExamsHubScreen> w
                     children: [
                       const Text('Topic: ', style: TextStyle(color: MyVaultColors.textMuted, fontSize: 11)),
                       Expanded(
-                        child: Text(subject, style: const TextStyle(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.w500), overflow: TextOverflow.ellipsis),
+                        child: Text(subject, style: const TextStyle(color: MyVaultColors.textDark, fontSize: 11, fontWeight: FontWeight.w500), overflow: TextOverflow.ellipsis),
                       ),
                     ],
                   ),
@@ -711,7 +711,7 @@ class _CompetitiveExamsHubScreenState extends State<CompetitiveExamsHubScreen> w
             ),
 
             const SizedBox(height: 12),
-            const Divider(color: Colors.white10, height: 1),
+            const Divider(color: Color(0xFFE2E8F0), height: 1),
             const SizedBox(height: 10),
 
             // Bottom Actions: Syllabus + Open PDF Button
@@ -725,7 +725,7 @@ class _CompetitiveExamsHubScreenState extends State<CompetitiveExamsHubScreen> w
                       children: [
                         Icon(Icons.open_in_new_rounded, color: MyVaultColors.textMuted, size: 12),
                         SizedBox(width: 4),
-                        Text('Syllabus ↗', style: TextStyle(color: Colors.white54, fontSize: 11)),
+                        Text('Syllabus ↗', style: TextStyle(color: MyVaultColors.textSecondary, fontSize: 11)),
                       ],
                     ),
                   )

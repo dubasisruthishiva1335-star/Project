@@ -716,7 +716,7 @@ class _InternshipHubScreenState extends State<InternshipHubScreen> with SingleTi
                 children: [
                   Icon(Icons.search_off_rounded, color: Color(0xFFCBD5E1), size: 48),
                   SizedBox(height: 12),
-                  Text('No internships found matching filters', style: TextStyle(color: Colors.white60, fontSize: 14)),
+                  Text('No internships found matching filters', style: TextStyle(color: MyVaultColors.textSecondary, fontSize: 14)),
                 ],
               ),
             )
@@ -808,7 +808,7 @@ class _InternshipHubScreenState extends State<InternshipHubScreen> with SingleTi
                         children: [
                           Text(
                             title,
-                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16, height: 1.2),
+                            style: const TextStyle(color: MyVaultColors.textDark, fontWeight: FontWeight.bold, fontSize: 16, height: 1.2),
                           ),
                           const SizedBox(height: 4),
                           Row(
@@ -820,7 +820,7 @@ class _InternshipHubScreenState extends State<InternshipHubScreen> with SingleTi
                               Flexible(
                                 child: Text(
                                   location,
-                                  style: const TextStyle(color: Colors.white54, fontSize: 12),
+                                  style: const TextStyle(color: MyVaultColors.textSecondary, fontSize: 12),
                                   overflow: TextOverflow.ellipsis,
                                 ),
                               ),
@@ -832,7 +832,7 @@ class _InternshipHubScreenState extends State<InternshipHubScreen> with SingleTi
                     IconButton(
                       icon: Icon(
                         isSaved ? Icons.bookmark_rounded : Icons.bookmark_outline_rounded,
-                        color: isSaved ? const Color(0xFFFFB800) : Colors.white38,
+                        color: isSaved ? const Color(0xFFFFB800) : MyVaultColors.textMuted,
                         size: 24,
                       ),
                       onPressed: () {
@@ -992,7 +992,7 @@ class _InternshipHubScreenState extends State<InternshipHubScreen> with SingleTi
                 ],
 
                 const SizedBox(height: 16),
-                const Divider(color: Colors.white10, height: 1),
+                const Divider(color: Color(0xFFE2E8F0), height: 1),
                 const SizedBox(height: 14),
 
                 // Bottom CTA: Deadline + Actions
@@ -1001,11 +1001,11 @@ class _InternshipHubScreenState extends State<InternshipHubScreen> with SingleTi
                   children: [
                     Row(
                       children: [
-                        const Icon(Icons.hourglass_bottom_rounded, color: Colors.white38, size: 14),
+                        const Icon(Icons.hourglass_bottom_rounded, color: MyVaultColors.textMuted, size: 14),
                         const SizedBox(width: 4),
                         Text(
                           deadline.isNotEmpty ? 'Deadline: $deadline' : 'Rolling Admissions',
-                          style: const TextStyle(color: Colors.white38, fontSize: 11),
+                          style: const TextStyle(color: MyVaultColors.textSecondary, fontSize: 11),
                         ),
                       ],
                     ),
@@ -1014,7 +1014,7 @@ class _InternshipHubScreenState extends State<InternshipHubScreen> with SingleTi
                         TextButton(
                           onPressed: () => _openInternshipDetails(item),
                           style: TextButton.styleFrom(
-                            foregroundColor: Colors.white70,
+                            foregroundColor: MyVaultColors.textSecondary,
                             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                           ),
                           child: const Text('Details', style: TextStyle(fontSize: 12)),
@@ -1077,13 +1077,13 @@ class _InternshipHubScreenState extends State<InternshipHubScreen> with SingleTi
               const SizedBox(height: 16),
               const Text(
                 'No applications yet',
-                style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                style: TextStyle(color: MyVaultColors.textDark, fontSize: 18, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
               const Text(
                 'Discover top internships in the Explore tab and submit applications with 1 click.',
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.white54, fontSize: 13),
+                style: TextStyle(color: MyVaultColors.textSecondary, fontSize: 13),
               ),
               const SizedBox(height: 20),
               ElevatedButton(
@@ -1251,12 +1251,12 @@ class _InternshipHubScreenState extends State<InternshipHubScreen> with SingleTi
             children: [
               Icon(Icons.bookmark_border_rounded, color: Color(0xFFCBD5E1), size: 54),
               SizedBox(height: 16),
-              Text('No saved internships', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+              Text('No saved internships', style: TextStyle(color: MyVaultColors.textDark, fontSize: 18, fontWeight: FontWeight.bold)),
               SizedBox(height: 8),
               Text(
                 'Bookmark roles you want to prepare for and apply later.',
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.white54, fontSize: 13),
+                style: TextStyle(color: MyVaultColors.textSecondary, fontSize: 13),
               ),
             ],
           ),

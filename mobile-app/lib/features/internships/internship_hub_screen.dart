@@ -491,14 +491,25 @@ class _InternshipHubScreenState extends State<InternshipHubScreen> with SingleTi
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) {
+          if (context.canPop()) {
+            context.pop();
+          } else {
+            context.go('/home');
+          }
+        }
+      },
+      child: Scaffold(
       backgroundColor: MyVaultColors.backgroundWhite,
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded, color: MyVaultColors.metalBlack, size: 20),
-          onPressed: () => context.go('/home'),
+          onPressed: () { if (context.canPop()) { context.pop(); } else { context.go('/home'); } },
         ),
         title: Row(
           children: [
@@ -552,6 +563,7 @@ class _InternshipHubScreenState extends State<InternshipHubScreen> with SingleTi
           ],
         ),
       ),
+    ),
     );
   }
 

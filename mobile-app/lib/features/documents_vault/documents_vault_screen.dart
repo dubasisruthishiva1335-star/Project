@@ -461,87 +461,81 @@ class _DocumentsVaultScreenState extends ConsumerState<DocumentsVaultScreen> {
     }
 
     return AppScaffold(
-      showAppBar: false,
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => showAddDocumentSheet(context, ref),
-        backgroundColor: AppColors.primary,
-        icon: const Icon(Icons.add_rounded, color: Colors.white),
-        label: const Text('Add Document', style: TextStyle(color: Colors.white, fontFamily: 'Poppins', fontWeight: FontWeight.w600)),
+      showAppBar: true,
+      title: 'Documents Vault',
+      actions: [
+        IconButton(
+          onPressed: () => context.go(AppRoutes.uploadedFiles),
+          icon: const Icon(Icons.cloud_queue_rounded, color: MyVaultColors.metalBlack),
+          tooltip: 'Uploaded Files',
+        ),
+        Container(
+          margin: const EdgeInsets.only(right: 14),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF1F5F9),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: const Color(0xFFE2E8F0)),
+          ),
+          child: Center(
+            child: Text(
+              '${allDocs.length} files',
+              style: const TextStyle(color: MyVaultColors.textSecondary, fontSize: 12, fontWeight: FontWeight.bold),
+            ),
+          ),
+        ),
+      ],
+      floatingActionButton: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(30),
+          gradient: MyVaultColors.metalGradient,
+          boxShadow: const [
+            BoxShadow(color: Color(0x20000000), blurRadius: 10, offset: Offset(0, 4)),
+          ],
+        ),
+        child: FloatingActionButton.extended(
+          onPressed: () => showAddDocumentSheet(context, ref),
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          icon: const Icon(Icons.add_rounded, color: Colors.white),
+          label: const Text('Add Document', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        ),
       ),
       body: Column(
         children: [
-          // ── Header ───────────────────────────────────────────────────────
-          Container(
-            padding: EdgeInsets.only(
-              top: MediaQuery.of(context).padding.top + 12,
-              left: 16,
-              right: 16,
-              bottom: 16,
-            ),
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [AppColors.certificates, Color(0xFFD4520C)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+          // Search Input Bar
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: const Color(0xFFE2E8F0)),
+                boxShadow: const [
+                  BoxShadow(color: Color(0x06000000), blurRadius: 8, offset: Offset(0, 2)),
+                ],
               ),
-            ),
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    IconButton(
-                      onPressed: () => context.go('/home'),
-                      icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
-                    ),
-                    const Expanded(
-                      child: Text(
-                        'Documents Hub',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 20,
-                          fontWeight: FontWeight.w700,
-                          fontFamily: 'Poppins',
-                        ),
-                      ),
-                    ),
-                    IconButton(
-                      onPressed: () => context.go(AppRoutes.uploadedFiles),
-                      icon: const Icon(Icons.cloud_queue_rounded, color: Colors.white),
-                      tooltip: 'Uploaded Files',
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        '${allDocs.length} files',
-                        style: const TextStyle(color: Colors.white, fontSize: 12, fontFamily: 'Poppins'),
-                      ),
-                    ),
-                  ],
+              child: TextField(
+                controller: _searchCtrl,
+                onChanged: (v) => setState(() => _searchQuery = v),
+                style: const TextStyle(color: MyVaultColors.textDark, fontSize: 14),
+                decoration: InputDecoration(
+                  hintText: 'Search stored documents & marks...',
+                  hintStyle: const TextStyle(color: MyVaultColors.textMuted, fontSize: 13),
+                  prefixIcon: const Icon(Icons.search_rounded, color: MyVaultColors.metalBlack, size: 20),
+                  suffixIcon: _searchCtrl.text.isNotEmpty
+                      ? IconButton(
+                          icon: const Icon(Icons.clear_rounded, color: MyVaultColors.textMuted, size: 18),
+                          onPressed: () {
+                            _searchCtrl.clear();
+                            setState(() => _searchQuery = '');
+                          },
+                        )
+                      : null,
+                  border: InputBorder.none,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 ),
-                const SizedBox(height: 8),
-                // Search
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: TextField(
-                    controller: _searchCtrl,
-                    onChanged: (v) => setState(() => _searchQuery = v),
-                    decoration: const InputDecoration(
-                      hintText: 'Search documents...',
-                      prefixIcon: Icon(Icons.search_rounded, color: AppColors.textSecondary),
-                      border: InputBorder.none,
-                      contentPadding: EdgeInsets.symmetric(vertical: 12),
-                      hintStyle: TextStyle(fontFamily: 'Poppins'),
-                    ),
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
 

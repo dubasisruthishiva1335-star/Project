@@ -1,4 +1,3 @@
-import '../../core/api_client.dart';
 import '../../core/colors.dart';
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
@@ -69,68 +68,45 @@ class DocumentsNotifier extends StateNotifier<List<DocumentModel>> {
   }
 
   Future<void> _load() async {
-    // 1. Load from local cache
     final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getString('documents_hub_data');
-    List<DocumentModel> localList = [];
+    final raw = prefs.getString('student_personal_vault_data');
     if (raw != null) {
       try {
-        localList = (jsonDecode(raw) as List).map((e) => DocumentModel.fromJson(e as Map<String, dynamic>)).toList();
+        final list = (jsonDecode(raw) as List)
+            .map((e) => DocumentModel.fromJson(Map<String, dynamic>.from(e as Map)))
+            .toList();
+        state = list;
+        return;
       } catch (_) {}
     }
 
-    if (localList.isNotEmpty) {
-      state = localList;
-    }
-
-    // 2. Sync from live Cloud Notes & Vault Archives so fresh installs immediately have all uploaded materials
-    try {
-      final res = await ApiClient.instance.dio.get('/api/notes');
-      if (res.statusCode == 200 && res.data is List) {
-        final List<DocumentModel> cloudDocs = [];
-        for (final item in (res.data as List)) {
-          if (item is Map<String, dynamic>) {
-            final title = (item['title'] ?? 'Document').toString();
-            final url = (item['fileUrl'] ?? item['url'] ?? '').toString();
-            final id = (item['id'] ?? item['_id'] ?? title).toString();
-            if (url.isNotEmpty) {
-              cloudDocs.add(DocumentModel(
-                id: id,
-                name: title,
-                category: item['contentType'] == 'CERTIFICATE' ? 'Certificates' : 'Academic Notes',
-                filePath: url,
-                fileSize: (item['fileSize'] ?? '3.5 MB').toString(),
-                addedAt: DateTime.tryParse(item['createdAt']?.toString() ?? '') ?? DateTime.now(),
-                description: (item['description'] ?? '${item['branch'] ?? ''} Sem ${item['semester'] ?? 1}').toString(),
-              ));
-            }
-          }
-        }
-
-        // Merge local and cloud docs
-        final Map<String, DocumentModel> mergedMap = {};
-        for (final d in localList) {
-          mergedMap[d.id] = d;
-        }
-        for (final d in cloudDocs) {
-          if (!mergedMap.containsKey(d.id)) {
-            mergedMap[d.id] = d;
-          }
-        }
-
-        final finalList = mergedMap.values.toList();
-        finalList.sort((a, b) => b.addedAt.compareTo(a.addedAt));
-        state = finalList;
-        await _save();
-      }
-    } catch (e) {
-      debugPrint('Cloud vault sync fallback: $e');
-    }
+    // Default sample student personal credentials
+    state = [
+      DocumentModel(
+        id: 'student_id_card_2026',
+        name: 'College Student ID Card (2026)',
+        category: 'ID Cards',
+        filePath: 'https://myvault-files-app.s3.eu-north-1.amazonaws.com/notes/basic_electronics_u1.pdf',
+        fileSize: '450 KB',
+        addedAt: DateTime.now().subtract(const Duration(days: 5)),
+        description: 'Verified Student Identification • Roll: 2026-ECE-1042',
+      ),
+      DocumentModel(
+        id: 'student_bonafide_cert_2026',
+        name: 'College Bonafide & Study Certificate',
+        category: 'Bonafide',
+        filePath: 'https://myvault-files-app.s3.eu-north-1.amazonaws.com/notes/dsa_unit1_asymptotic.pdf',
+        fileSize: '620 KB',
+        addedAt: DateTime.now().subtract(const Duration(days: 3)),
+        description: 'Academic Year 2025-2026 • Validated by Principal',
+      ),
+    ];
+    await _save();
   }
 
   Future<void> _save() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('documents_hub_data', jsonEncode(state.map((d) => d.toJson()).toList()));
+    await prefs.setString('student_personal_vault_data', jsonEncode(state.map((d) => d.toJson()).toList()));
   }
 
   Future<void> addDocument(DocumentModel doc) async {

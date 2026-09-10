@@ -195,6 +195,7 @@ class _CompetitiveExamsHubScreenState extends State<CompetitiveExamsHubScreen> w
       if (res.data is List) {
         for (final item in res.data) {
           if (item is Map<String, dynamic>) {
+            if (item['type'] == 'COURSE' || item['type'] == 'INTERNSHIP' || item['modulesCount'] != null) continue;
             final norm = _normalizeExam(item);
             if (!seenIds.contains(norm['id'])) {
               seenIds.add(norm['id']);
@@ -215,6 +216,7 @@ class _CompetitiveExamsHubScreenState extends State<CompetitiveExamsHubScreen> w
       if (vRes.data is List) {
         for (final item in vRes.data) {
           if (item is Map<String, dynamic>) {
+            if (item['type'] == 'COURSE' || item['type'] == 'INTERNSHIP' || item['modulesCount'] != null) continue;
             final norm = _normalizeExam(item);
             if (!seenIds.contains(norm['id'])) {
               seenIds.add(norm['id']);

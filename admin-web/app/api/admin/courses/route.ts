@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { connectDB } from "@/lib/db";
 
 export interface CourseItem {
   id: string;
@@ -19,6 +20,8 @@ export interface CourseItem {
   enrolledCount: number;
   rating: number;
   postedAt: string;
+  modules?: any[];
+  finalExamQuestions?: any[];
 }
 
 let mockCourses: CourseItem[] = [
@@ -84,8 +87,6 @@ let mockCourses: CourseItem[] = [
   }
 ];
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "https://project-9zrh.onrender.com";
-
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -93,33 +94,37 @@ export async function GET(request: Request) {
 
     let dbCourses: CourseItem[] = [];
     try {
-      const res = await fetch(`${BACKEND_URL}/internships`, { cache: "no-store" });
-      if (res.ok) {
-        const rows = await res.json();
+      const db = await connectDB();
+      if (db) {
+        const rows = await db.collection("courses").find({}).sort({ createdAt: -1 }).toArray();
         if (Array.isArray(rows)) {
           dbCourses = rows.map((r: any) => ({
-            id: r.id,
+            id: r.id || (r._id ? r._id.toString() : ""),
             title: r.title,
-            category: r.category || "Software Development",
-            level: "All Levels",
+            category: r.category || "Web Development",
+            level: r.level || "All Levels",
             duration: r.duration || "30 Hours",
-            instructor: r.company || "MyVault Faculty",
-            thumbnail: r.thumbnail || "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&auto=format&fit=crop&q=60",
-            description: r.description || "Comprehensive hands-on technical course.",
-            modulesCount: Number(r.module_count || 4),
-            lessonsCount: Number(r.lesson_count || 24),
-            quizzesCount: 6,
-            assignmentsCount: 3,
-            passingScore: 70,
-            certEnabled: true,
-            status: "PUBLISHED",
-            enrolledCount: Number(r.enrollment_count || 120),
-            rating: 4.8,
-            postedAt: r.posted_at || new Date().toISOString(),
+            instructor: r.instructor || "MyVault Faculty",
+            thumbnail: r.thumbnail || r.url || "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&auto=format&fit=crop&q=60",
+            description: r.description || "Comprehensive hands-on course.",
+            modulesCount: Number(r.modulesCount || (r.modules ? r.modules.length : 4)),
+            lessonsCount: Number(r.lessonsCount || 24),
+            quizzesCount: Number(r.quizzesCount || 6),
+            assignmentsCount: Number(r.assignmentsCount || 3),
+            passingScore: Number(r.passingScore || 70),
+            certEnabled: r.certEnabled !== false,
+            status: (r.status as any) || "PUBLISHED",
+            enrolledCount: Number(r.enrolledCount || 120),
+            rating: Number(r.rating || 4.9),
+            postedAt: r.postedAt || (r.createdAt ? new Date(r.createdAt).toISOString() : new Date().toISOString()),
+            modules: r.modules || [],
+            finalExamQuestions: r.finalExamQuestions || [],
           }));
         }
       }
-    } catch (_) {}
+    } catch (e) {
+      console.error("Failed to query MongoDB courses:", e);
+    }
 
     const dbIds = new Set(dbCourses.map(c => c.id));
     const combined = [...dbCourses, ...mockCourses.filter(m => !dbIds.has(m.id))];
@@ -148,7 +153,7 @@ export async function POST(request: Request) {
       instructor: body.instructor || "MyVault Faculty",
       thumbnail: body.thumbnail || "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&auto=format&fit=crop&q=60",
       description: body.description || "",
-      modulesCount: Number(body.modulesCount || 4),
+      modulesCount: Number(body.modulesCount || (body.modules ? body.modules.length : 4)),
       lessonsCount: Number(body.lessonsCount || 24),
       quizzesCount: Number(body.quizzesCount || 6),
       assignmentsCount: Number(body.assignmentsCount || 3),
@@ -158,31 +163,47 @@ export async function POST(request: Request) {
       enrolledCount: 0,
       rating: 5.0,
       postedAt: new Date().toISOString(),
+      modules: body.modules || [],
+      finalExamQuestions: body.finalExamQuestions || [],
     };
 
     mockCourses.unshift(newCourse);
 
     try {
-      await fetch(`${BACKEND_URL}/admin/internships/confirm`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          id: newCourse.id,
-          title: newCourse.title,
-          company: newCourse.instructor,
-          type: "COURSE",
-          category: newCourse.category,
-          duration: newCourse.duration,
-          description: newCourse.description,
-          status: "PUBLISHED",
-          isLmsEnabled: true,
-          certificateEnabled: newCourse.certEnabled,
-        }),
-      });
-    } catch (_) {}
+      const db = await connectDB();
+      if (db) {
+        await db.collection("courses").insertOne({
+          ...newCourse,
+          createdAt: new Date(),
+        });
+      }
+    } catch (e) {
+      console.warn("MongoDB course insert notice:", e);
+    }
 
     return NextResponse.json(newCourse, { status: 201 });
   } catch (err: any) {
     return NextResponse.json({ error: err?.message || "Failed to create course" }, { status: 500 });
+  }
+}
+
+export async function DELETE(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get("id");
+    if (!id) return NextResponse.json({ error: "Course ID is required" }, { status: 400 });
+
+    mockCourses = mockCourses.filter((c) => c.id !== id);
+
+    try {
+      const db = await connectDB();
+      if (db) {
+        await db.collection("courses").deleteOne({ id });
+      }
+    } catch (_) {}
+
+    return NextResponse.json({ success: true, id });
+  } catch (err: any) {
+    return NextResponse.json({ error: err?.message || "Failed to delete course" }, { status: 500 });
   }
 }

@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -197,34 +198,70 @@ class _CoursesLearningScreenState extends State<CoursesLearningScreen> with Sing
 
   Future<void> _fetchCourses() async {
     setState(() => _isLoading = true);
-    try {
-      final res = await ApiClient.instance.dio.get('/courses');
-      if (res.data != null && res.data is List && (res.data as List).isNotEmpty) {
-        final List<Map<String, dynamic>> loaded = [];
-        for (var item in res.data) {
-          loaded.add(Map<String, dynamic>.from(item));
-        }
-        setState(() {
-          _courses = loaded;
-          _isLoading = false;
-        });
-      } else {
-        _loadSeedData();
-      }
-    } catch (_) {
-      _loadSeedData();
-    }
-  }
+    final List<Map<String, dynamic>> combined = [];
+    final Set<String> seenIds = {};
 
-  void _loadSeedData() {
+    // 1. Fetch from live Vercel Admin Courses API
+    try {
+      final vercelDio = Dio(BaseOptions(
+        connectTimeout: const Duration(seconds: 10),
+        receiveTimeout: const Duration(seconds: 10),
+      ));
+      final res = await vercelDio.get('https://project-chi-six-62.vercel.app/api/admin/courses');
+      if (res.data is List) {
+        for (final item in res.data) {
+          if (item is Map<String, dynamic>) {
+            // Strict course validation: Must NOT be an internship, exam, or study note
+            if (item['type'] == 'INTERNSHIP' || item['stipend'] != null || item['eligibleBranches'] != null) {
+              continue;
+            }
+            final id = (item['id'] ?? '').toString();
+            if (id.isNotEmpty && !seenIds.contains(id)) {
+              seenIds.add(id);
+              combined.add(Map<String, dynamic>.from(item));
+            }
+          }
+        }
+      }
+    } catch (_) {}
+
+    // 2. Fetch from live Vercel public courses API
+    try {
+      final vercelDio = Dio(BaseOptions(
+        connectTimeout: const Duration(seconds: 10),
+        receiveTimeout: const Duration(seconds: 10),
+      ));
+      final res = await vercelDio.get('https://project-chi-six-62.vercel.app/api/courses');
+      if (res.data is List) {
+        for (final item in res.data) {
+          if (item is Map<String, dynamic>) {
+            if (item['type'] == 'INTERNSHIP' || item['stipend'] != null) continue;
+            final id = (item['id'] ?? '').toString();
+            if (id.isNotEmpty && !seenIds.contains(id)) {
+              seenIds.add(id);
+              combined.add(Map<String, dynamic>.from(item));
+            }
+          }
+        }
+      }
+    } catch (_) {}
+
+    // 3. Fallback / Merge with seed courses
+    for (final seed in _seedCourses) {
+      final id = seed['id']?.toString() ?? '';
+      if (!seenIds.contains(id)) {
+        seenIds.add(id);
+        combined.add(Map<String, dynamic>.from(seed));
+      }
+    }
+
     setState(() {
-      _courses = List.from(_seedCourses);
+      _courses = combined;
       _myEnrolledCourses.clear();
-      _myEnrolledCourses.add(_seedCourses[0]);
-      _myEnrolledCourses.add(_seedCourses[1]);
+      if (_courses.isNotEmpty) _myEnrolledCourses.add(_courses[0]);
+      if (_courses.length > 1) _myEnrolledCourses.add(_courses[1]);
 
       _myCertificates.clear();
-      // 1. Pending 24-Hour Review Certificate
       _myCertificates.add({
         'certificateId': 'MYV-CERT-2026-482910',
         'courseTitle': 'Full Stack Web & Cloud Engineering',
@@ -236,8 +273,6 @@ class _CoursesLearningScreenState extends State<CoursesLearningScreen> with Sing
         'readyIn': '22 Hours Remaining',
         'verificationUrl': 'https://project-chi-six-62.vercel.app/verify/MYV-CERT-2026-482910',
       });
-
-      // 2. Fully Earned & Minted Certificate
       _myCertificates.add({
         'certificateId': 'MYV-CERT-2026-773129',
         'courseTitle': 'Python Programming & AI/ML Mastery',
@@ -252,6 +287,7 @@ class _CoursesLearningScreenState extends State<CoursesLearningScreen> with Sing
       _isLoading = false;
     });
   }
+
 
   @override
   Widget build(BuildContext context) {

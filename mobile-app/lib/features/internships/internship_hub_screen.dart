@@ -349,12 +349,15 @@ class _InternshipHubScreenState extends State<InternshipHubScreen> with SingleTi
     final List<Map<String, dynamic>> combined = [];
     final Set<String> seenIds = {};
 
-    // 1. Fetch from Render backend database
+    // 1. Fetch from live Vercel Admin Internships API
     try {
-      final res = await ApiClient.instance.dio.get('/internships');
+      final res = await ApiClient.instance.dio.get('https://project-chi-six-62.vercel.app/api/admin/internships');
       if (res.data is List) {
         for (final item in res.data) {
           if (item is Map<String, dynamic>) {
+            if (item['type'] == 'COURSE' || item['hubType'] == 'COURSE' || item['modulesCount'] != null) {
+              continue;
+            }
             final normalized = _normalizeInternship(item);
             if (!seenIds.contains(normalized['id'])) {
               seenIds.add(normalized['id']);
@@ -365,7 +368,24 @@ class _InternshipHubScreenState extends State<InternshipHubScreen> with SingleTi
       }
     } catch (_) {}
 
-    // 2. Add seed opportunities if not already present
+    // 2. Fetch from Render backend database
+    try {
+      final res = await ApiClient.instance.dio.get('/job-listings', queryParameters: {'type': 'INTERNSHIP'});
+      if (res.data is List) {
+        for (final item in res.data) {
+          if (item is Map<String, dynamic>) {
+            if (item['type'] == 'COURSE' || item['hubType'] == 'COURSE') continue;
+            final normalized = _normalizeInternship(item);
+            if (!seenIds.contains(normalized['id'])) {
+              seenIds.add(normalized['id']);
+              combined.add(normalized);
+            }
+          }
+        }
+      }
+    } catch (_) {}
+
+    // 3. Add seed opportunities if not already present
     for (final seed in _seedInternships) {
       final normalized = _normalizeInternship(seed);
       final exists = combined.any((c) => c['id'] == normalized['id'] || (c['title'] == normalized['title'] && c['company'] == normalized['company']));

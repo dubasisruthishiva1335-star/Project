@@ -352,9 +352,11 @@ class _InternshipHubScreenState extends State<InternshipHubScreen> with SingleTi
     // 1. Fetch from live Vercel Admin Internships API
     try {
       final res = await ApiClient.instance.dio.get('https://project-chi-six-62.vercel.app/api/admin/internships');
-      if (res.data is List) {
-        for (final item in res.data) {
-          if (item is Map<String, dynamic>) {
+      final dynamic data = res.data;
+      if (data is List) {
+        for (final raw in data) {
+          if (raw is Map) {
+            final item = Map<String, dynamic>.from(raw);
             if (item['type'] == 'COURSE' || item['hubType'] == 'COURSE' || item['modulesCount'] != null) {
               continue;
             }
@@ -368,12 +370,14 @@ class _InternshipHubScreenState extends State<InternshipHubScreen> with SingleTi
       }
     } catch (_) {}
 
-    // 2. Fetch from Render backend database
+    // 2. Fetch from public internships API
     try {
-      final res = await ApiClient.instance.dio.get('/job-listings', queryParameters: {'type': 'INTERNSHIP'});
-      if (res.data is List) {
-        for (final item in res.data) {
-          if (item is Map<String, dynamic>) {
+      final res = await ApiClient.instance.dio.get('/api/internships');
+      final dynamic data = res.data;
+      if (data is List) {
+        for (final raw in data) {
+          if (raw is Map) {
+            final item = Map<String, dynamic>.from(raw);
             if (item['type'] == 'COURSE' || item['hubType'] == 'COURSE') continue;
             final normalized = _normalizeInternship(item);
             if (!seenIds.contains(normalized['id'])) {

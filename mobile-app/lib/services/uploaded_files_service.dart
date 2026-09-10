@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
@@ -23,43 +24,74 @@ class UploadedFilesService {
     final List<UploadedFileModel> allFiles = [];
     final Set<String> seenUrls = {};
 
+    // Helper to safely extract list of items
+    List<dynamic> parseResponseList(dynamic data) {
+      if (data == null) return [];
+      if (data is List) return data;
+      if (data is String) {
+        try {
+          final parsed = jsonDecode(data);
+          if (parsed is List) return parsed;
+        } catch (_) {}
+      }
+      return [];
+    }
+
     // 1. Fetch Cloud Notes & Study Materials
     try {
       final res = await ApiClient.instance.dio.get('/api/notes');
-      if (res.statusCode == 200 && res.data is List) {
-        for (final item in (res.data as List)) {
-          if (item is Map<String, dynamic>) {
-            final model = UploadedFileModel.fromMap(item);
-            if (model.publicUrl.isNotEmpty && !seenUrls.contains(model.publicUrl)) {
-              seenUrls.add(model.publicUrl);
-              allFiles.add(model);
-            }
+      final list = parseResponseList(res.data);
+      for (final item in list) {
+        if (item is Map) {
+          final map = Map<String, dynamic>.from(item);
+          final model = UploadedFileModel.fromMap(map);
+          if (model.publicUrl.isNotEmpty && !seenUrls.contains(model.publicUrl)) {
+            seenUrls.add(model.publicUrl);
+            allFiles.add(model);
           }
         }
       }
     } catch (e) {
-      debugPrint('Fetch notes cloud fallback: $e');
+      debugPrint('Fetch notes cloud notice: $e');
     }
 
     // 2. Fetch Competitive Exams Materials
     try {
       final res = await ApiClient.instance.dio.get('/api/admin/competitive-exams');
-      if (res.statusCode == 200 && res.data is List) {
-        for (final item in (res.data as List)) {
-          if (item is Map<String, dynamic>) {
-            final model = UploadedFileModel.fromMap(item);
-            if (model.publicUrl.isNotEmpty && !seenUrls.contains(model.publicUrl)) {
-              seenUrls.add(model.publicUrl);
-              allFiles.add(model);
-            }
+      final list = parseResponseList(res.data);
+      for (final item in list) {
+        if (item is Map) {
+          final map = Map<String, dynamic>.from(item);
+          final model = UploadedFileModel.fromMap(map);
+          if (model.publicUrl.isNotEmpty && !seenUrls.contains(model.publicUrl)) {
+            seenUrls.add(model.publicUrl);
+            allFiles.add(model);
           }
         }
       }
     } catch (e) {
-      debugPrint('Fetch exams cloud fallback: $e');
+      debugPrint('Fetch exams cloud notice: $e');
     }
 
-    // Fallback Mock Defaults if cloud is empty
+    // 3. Fetch Courses Materials & Lessons
+    try {
+      final res = await ApiClient.instance.dio.get('/api/admin/courses');
+      final list = parseResponseList(res.data);
+      for (final item in list) {
+        if (item is Map) {
+          final map = Map<String, dynamic>.from(item);
+          final model = UploadedFileModel.fromMap(map);
+          if (model.publicUrl.isNotEmpty && !seenUrls.contains(model.publicUrl)) {
+            seenUrls.add(model.publicUrl);
+            allFiles.add(model);
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('Fetch courses cloud notice: $e');
+    }
+
+    // Fallback Mock Defaults if cloud is cold
     if (allFiles.isEmpty) {
       allFiles.addAll([
         UploadedFileModel(
@@ -139,20 +171,28 @@ class UploadedFilesService {
       if (onProgress != null) onProgress(1.0);
 
       if (response.statusCode == 200 && response.data != null) {
-        final data = response.data as Map<String, dynamic>;
-        final cloudUrl = (data['url'] ?? file.path).toString();
+        dynamic data = response.data;
+        if (data is String) {
+          try {
+            data = jsonDecode(data);
+          } catch (_) {}
+        }
+        if (data is Map) {
+          final map = Map<String, dynamic>.from(data);
+          final cloudUrl = (map['url'] ?? file.path).toString();
 
-        return UploadedFileModel(
-          id: DateTime.now().millisecondsSinceEpoch.toString(),
-          title: title,
-          fileName: cleanName,
-          storagePath: cloudUrl,
-          publicUrl: cloudUrl,
-          fileType: extension,
-          fileSize: fileSize,
-          uploadedBy: 'Mobile User',
-          createdAt: DateTime.now(),
-        );
+          return UploadedFileModel(
+            id: DateTime.now().millisecondsSinceEpoch.toString(),
+            title: title,
+            fileName: cleanName,
+            storagePath: cloudUrl,
+            publicUrl: cloudUrl,
+            fileType: extension,
+            fileSize: fileSize,
+            uploadedBy: 'Mobile User',
+            createdAt: DateTime.now(),
+          );
+        }
       }
     } catch (e) {
       debugPrint('Direct cloud upload notice: $e');

@@ -1,4 +1,4 @@
-import 'package:dio/dio.dart';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -196,30 +196,38 @@ class _CoursesLearningScreenState extends State<CoursesLearningScreen> with Sing
     super.dispose();
   }
 
-  Future<void> _fetchCourses() async {
+    Future<void> _fetchCourses() async {
     setState(() => _isLoading = true);
     final List<Map<String, dynamic>> combined = [];
     final Set<String> seenIds = {};
 
+    List<dynamic> parseResponseList(dynamic data) {
+      if (data == null) return [];
+      if (data is List) return data;
+      if (data is String) {
+        try {
+          final parsed = jsonDecode(data);
+          if (parsed is List) return parsed;
+        } catch (_) {}
+      }
+      return [];
+    }
+
     // 1. Fetch from live Vercel Admin Courses API
     try {
-      final vercelDio = Dio(BaseOptions(
-        connectTimeout: const Duration(seconds: 10),
-        receiveTimeout: const Duration(seconds: 10),
-      ));
-      final res = await vercelDio.get('https://project-chi-six-62.vercel.app/api/admin/courses');
-      if (res.data is List) {
-        for (final item in res.data) {
-          if (item is Map<String, dynamic>) {
-            // Strict course validation: Must NOT be an internship, exam, or study note
-            if (item['type'] == 'INTERNSHIP' || item['stipend'] != null || item['eligibleBranches'] != null) {
-              continue;
-            }
-            final id = (item['id'] ?? '').toString();
-            if (id.isNotEmpty && !seenIds.contains(id)) {
-              seenIds.add(id);
-              combined.add(Map<String, dynamic>.from(item));
-            }
+      final res = await ApiClient.instance.dio.get('/api/admin/courses');
+      final list = parseResponseList(res.data);
+      for (final raw in list) {
+        if (raw is Map) {
+          final item = Map<String, dynamic>.from(raw);
+          // Strict course validation: Must NOT be an internship, exam, or study note
+          if (item['type'] == 'INTERNSHIP' || item['stipend'] != null || item['eligibleBranches'] != null) {
+            continue;
+          }
+          final id = (item['id'] ?? '').toString();
+          if (id.isNotEmpty && !seenIds.contains(id)) {
+            seenIds.add(id);
+            combined.add(item);
           }
         }
       }
@@ -227,20 +235,16 @@ class _CoursesLearningScreenState extends State<CoursesLearningScreen> with Sing
 
     // 2. Fetch from live Vercel public courses API
     try {
-      final vercelDio = Dio(BaseOptions(
-        connectTimeout: const Duration(seconds: 10),
-        receiveTimeout: const Duration(seconds: 10),
-      ));
-      final res = await vercelDio.get('https://project-chi-six-62.vercel.app/api/courses');
-      if (res.data is List) {
-        for (final item in res.data) {
-          if (item is Map<String, dynamic>) {
-            if (item['type'] == 'INTERNSHIP' || item['stipend'] != null) continue;
-            final id = (item['id'] ?? '').toString();
-            if (id.isNotEmpty && !seenIds.contains(id)) {
-              seenIds.add(id);
-              combined.add(Map<String, dynamic>.from(item));
-            }
+      final res = await ApiClient.instance.dio.get('/api/courses');
+      final list = parseResponseList(res.data);
+      for (final raw in list) {
+        if (raw is Map) {
+          final item = Map<String, dynamic>.from(raw);
+          if (item['type'] == 'INTERNSHIP' || item['stipend'] != null) continue;
+          final id = (item['id'] ?? '').toString();
+          if (id.isNotEmpty && !seenIds.contains(id)) {
+            seenIds.add(id);
+            combined.add(item);
           }
         }
       }

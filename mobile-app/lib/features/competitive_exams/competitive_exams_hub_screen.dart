@@ -1,4 +1,4 @@
-import 'package:dio/dio.dart';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -19,7 +19,7 @@ class _CompetitiveExamsHubScreenState extends State<CompetitiveExamsHubScreen> w
 
   String _selectedContentType = 'ALL';
   bool _isLoading = true;
-  List<Map<String, dynamic>> _items = [];
+  final List<Map<String, dynamic>> _items = [];
   final Set<String> _bookmarkedIds = {};
 
   final List<Map<String, String>> _categories = [
@@ -184,50 +184,41 @@ class _CompetitiveExamsHubScreenState extends State<CompetitiveExamsHubScreen> w
     };
   }
 
-  Future<void> _loadExams() async {
+    Future<void> _loadExams() async {
     setState(() => _isLoading = true);
     final List<Map<String, dynamic>> combined = [];
     final Set<String> seenIds = {};
 
-    // 1. Fetch from live Render backend
+    List<dynamic> parseResponseList(dynamic data) {
+      if (data == null) return [];
+      if (data is List) return data;
+      if (data is String) {
+        try {
+          final parsed = jsonDecode(data);
+          if (parsed is List) return parsed;
+        } catch (_) {}
+      }
+      return [];
+    }
+
+    // 1. Fetch from live Vercel Next.js Admin API
     try {
-      final res = await ApiClient.instance.dio.get('/exams');
-      if (res.data is List) {
-        for (final item in res.data) {
-          if (item is Map<String, dynamic>) {
-            if (item['type'] == 'COURSE' || item['type'] == 'INTERNSHIP' || item['modulesCount'] != null) continue;
-            final norm = _normalizeExam(item);
-            if (!seenIds.contains(norm['id'])) {
-              seenIds.add(norm['id']);
-              combined.add(norm);
-            }
+      final vRes = await ApiClient.instance.dio.get('/api/admin/competitive-exams');
+      final list = parseResponseList(vRes.data);
+      for (final raw in list) {
+        if (raw is Map) {
+          final item = Map<String, dynamic>.from(raw);
+          if (item['type'] == 'COURSE' || item['type'] == 'INTERNSHIP' || item['modulesCount'] != null) continue;
+          final norm = _normalizeExam(item);
+          if (!seenIds.contains(norm['id'])) {
+            seenIds.add(norm['id']);
+            combined.add(norm);
           }
         }
       }
     } catch (_) {}
 
-    // 2. Fetch from Vercel Next.js Admin API in real-time
-    try {
-      final vercelDio = Dio(BaseOptions(
-        connectTimeout: const Duration(seconds: 10),
-        receiveTimeout: const Duration(seconds: 10),
-      ));
-      final vRes = await vercelDio.get('https://project-chi-six-62.vercel.app/api/admin/competitive-exams');
-      if (vRes.data is List) {
-        for (final item in vRes.data) {
-          if (item is Map<String, dynamic>) {
-            if (item['type'] == 'COURSE' || item['type'] == 'INTERNSHIP' || item['modulesCount'] != null) continue;
-            final norm = _normalizeExam(item);
-            if (!seenIds.contains(norm['id'])) {
-              seenIds.add(norm['id']);
-              combined.add(norm);
-            }
-          }
-        }
-      }
-    } catch (_) {}
-
-    // 3. Add seed exams fallback if not already present
+    // 2. Add seed exams fallback if not already present
     for (final seed in _seedExams) {
       final norm = _normalizeExam(seed);
       final exists = combined.any((c) => c['id'] == norm['id'] || (c['title'] == norm['title'] && c['examName'] == norm['examName']));
@@ -238,7 +229,8 @@ class _CompetitiveExamsHubScreenState extends State<CompetitiveExamsHubScreen> w
 
     if (mounted) {
       setState(() {
-        _items = combined;
+        _items.clear();
+        _items.addAll(combined);
         _isLoading = false;
       });
     }

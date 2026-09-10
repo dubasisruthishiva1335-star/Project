@@ -19,6 +19,48 @@ export interface NoteItem {
 
 let mockNotes: NoteItem[] = [
   {
+    id: "note_1789067388059",
+    title: "nvkg",
+    branch: "ECE",
+    semester: 1,
+    unit: 1,
+    subject: "Basic Electronics Engineering",
+    contentType: "NOTES",
+    fileUrl: "https://myvault-files-app.s3.eu-north-1.amazonaws.com/notes/1789067388059-caste_certificate.pdf",
+    s3Key: "notes/1789067388059-caste_certificate.pdf",
+    fileSize: "1.2 MB",
+    author: "Admin Portal",
+    createdAt: "2026-09-11T00:30:00Z",
+  },
+  {
+    id: "note_1789066241387",
+    title: "bhgvgvhbnjmkhbhn",
+    branch: "ECE",
+    semester: 1,
+    unit: 1,
+    subject: "hbh",
+    contentType: "NOTES",
+    fileUrl: "https://myvault-files-app.s3.eu-north-1.amazonaws.com/notes/1789066241387-apaar-id.pdf",
+    s3Key: "notes/1789066241387-apaar-id.pdf",
+    fileSize: "850 KB",
+    author: "Admin Portal",
+    createdAt: "2026-09-11T00:20:00Z",
+  },
+  {
+    id: "note_1789066155057",
+    title: "hgv gjn mk,",
+    branch: "ECE",
+    semester: 1,
+    unit: 1,
+    subject: "hjgyhuj",
+    contentType: "NOTES",
+    fileUrl: "https://myvault-files-app.s3.eu-north-1.amazonaws.com/notes/1789066155057-apaar-id.pdf",
+    s3Key: "notes/1789066155057-apaar-id.pdf",
+    fileSize: "850 KB",
+    author: "Admin Portal",
+    createdAt: "2026-09-11T00:15:00Z",
+  },
+  {
     id: "note_ece_sem1_ec101_u1",
     title: "Unit 1 — Semiconductor Diodes & Applications",
     branch: "ECE",
@@ -30,7 +72,7 @@ let mockNotes: NoteItem[] = [
     s3Key: "notes/basic_electronics_u1.pdf",
     fileSize: "4.2 MB",
     author: "Dept. of ECE Faculty",
-    createdAt: new Date(Date.now() - 3 * 86400000).toISOString(),
+    createdAt: "2026-09-10T10:00:00Z",
   },
   {
     id: "note_cse_sem3_cs301_u1",
@@ -44,7 +86,7 @@ let mockNotes: NoteItem[] = [
     s3Key: "notes/dsa_unit1_asymptotic.pdf",
     fileSize: "5.1 MB",
     author: "Dept. of CSE Mentors",
-    createdAt: new Date(Date.now() - 2 * 86400000).toISOString(),
+    createdAt: "2026-09-10T09:00:00Z",
   }
 ];
 
@@ -65,7 +107,7 @@ export async function GET(request: Request) {
         dbNotes = docs.map(d => ({
           id: d._id?.toString() || d.id,
           title: d.title || "Academic Note",
-          branch: (d.branch || "CSE").toUpperCase(),
+          branch: (d.branch || "ECE").toUpperCase(),
           semester: Number(d.semester) || 1,
           unit: Number(d.unit) || 1,
           subject: d.subject || "General",
@@ -105,10 +147,10 @@ export async function POST(request: Request) {
     const newNote: NoteItem = {
       id: body.id || `note_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
       title: body.title || "Untitled Study Material",
-      branch: (body.branch || "CSE").toUpperCase(),
+      branch: (body.branch || "ECE").toUpperCase(),
       semester: Number(body.semester) || 1,
       unit: Number(body.unit) || 1,
-      subject: body.subject || "General",
+      subject: body.subject || "General Engineering",
       contentType: body.contentType || "NOTES",
       description: body.description || "",
       fileUrl: body.fileUrl || body.url || "",

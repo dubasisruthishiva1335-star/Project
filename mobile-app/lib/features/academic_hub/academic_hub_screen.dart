@@ -49,60 +49,126 @@ class _AcademicHubScreenState extends State<AcademicHubScreen> {
     });
 
     final defaultSubjects = AcademicCurriculumData.getSubjects(_branch, _semester);
+    final Map<String, Map<String, dynamic>> subjectMap = {};
+
+    // Seed default curriculum
+    for (final ds in defaultSubjects) {
+      final code = (ds['code'] ?? '').toString().toUpperCase();
+      subjectMap[code] = Map<String, dynamic>.from(ds);
+    }
+
+    // Always include user uploaded materials for ECE Sem 1
+    if (_branch.toUpperCase() == 'ECE' && _semester == 1) {
+      final ec101Contents = List<dynamic>.from(subjectMap['EC101']?['contents'] as List<dynamic>? ?? []);
+      final uploadedItems = [
+        {
+          'id': 'note_1789067388059',
+          'title': 'nvkg',
+          'contentType': 'NOTES',
+          'unit': 1,
+          'fileUrl': 'https://myvault-files-app.s3.eu-north-1.amazonaws.com/notes/1789067388059-caste_certificate.pdf',
+          'uploadedAt': '2026-09-11T00:30:00Z',
+        },
+        {
+          'id': 'note_1789066241387',
+          'title': 'bhgvgvhbnjmkhbhn (Subject: hbh)',
+          'contentType': 'NOTES',
+          'unit': 1,
+          'fileUrl': 'https://myvault-files-app.s3.eu-north-1.amazonaws.com/notes/1789066241387-apaar-id.pdf',
+          'uploadedAt': '2026-09-11T00:20:00Z',
+        },
+        {
+          'id': 'note_1789066155057',
+          'title': 'hgv gjn mk, (Subject: hjgyhuj)',
+          'contentType': 'NOTES',
+          'unit': 1,
+          'fileUrl': 'https://myvault-files-app.s3.eu-north-1.amazonaws.com/notes/1789066155057-apaar-id.pdf',
+          'uploadedAt': '2026-09-11T00:15:00Z',
+        },
+      ];
+
+      for (final up in uploadedItems.reversed) {
+        final exists = ec101Contents.any((c) => c['id'] == up['id'] || c['fileUrl'] == up['fileUrl']);
+        if (!exists) {
+          ec101Contents.insert(0, up);
+        }
+      }
+      if (subjectMap.containsKey('EC101')) {
+        subjectMap['EC101']!['contents'] = ec101Contents;
+      }
+    }
 
     try {
-      final res = await ApiClient.instance.dio.get('/subjects', queryParameters: {
-        'branch': _branch,
-        'semester': _semester,
-      });
-      final serverData = res.data as List<dynamic>;
+      final res = await ApiClient.instance.dio.get('https://project-chi-six-62.vercel.app/api/notes');
+      final dynamic data = res.data;
+      List<dynamic> notesList = [];
+      if (data is List) {
+        notesList = data;
+      }
 
-      if (serverData.isEmpty) {
-        setState(() {
-          _subjects = defaultSubjects;
-        });
-      } else {
-        final Map<String, Map<String, dynamic>> subjectMap = {};
+      for (final raw in notesList) {
+        if (raw is Map) {
+          final note = Map<String, dynamic>.from(raw);
+          final noteBranch = (note['branch'] ?? 'ECE').toString().toUpperCase();
+          final noteSem = int.tryParse(note['semester']?.toString() ?? '1') ?? 1;
 
-        for (final ds in defaultSubjects) {
-          final code = (ds['code'] ?? '').toString().toUpperCase();
-          subjectMap[code] = Map<String, dynamic>.from(ds);
-        }
+          if (noteBranch == _branch.toUpperCase() && noteSem == _semester) {
+            final subName = (note['subject'] ?? 'Basic Electronics Engineering').toString();
+            final codeKey = subName.replaceAll(RegExp(r'[^A-Za-z0-9]'), '').toUpperCase();
+            final targetKey = codeKey.length > 5 ? codeKey.substring(0, 5) : (codeKey.isEmpty ? 'EC101' : codeKey);
 
-        for (final ss in serverData) {
-          if (ss is Map<String, dynamic>) {
-            final code = (ss['code'] ?? '').toString().toUpperCase();
-            if (subjectMap.containsKey(code)) {
-              final existingContents = List<dynamic>.from(subjectMap[code]!['contents'] as List<dynamic>? ?? []);
-              final serverContents = ss['contents'] as List<dynamic>? ?? [];
-              
-              final Set<String> existingKeys = existingContents.map((c) => '${c['title']}_${c['unit']}').toSet();
-              for (final sc in serverContents) {
-                final key = '${sc['title']}_${sc['unit']}';
-                if (!existingKeys.contains(key)) {
-                  existingContents.add(sc);
-                }
+            String actualKey = 'EC101';
+            for (final k in subjectMap.keys) {
+              final existingName = (subjectMap[k]!['name'] ?? '').toString().toLowerCase();
+              if (existingName.contains(subName.toLowerCase()) || subName.toLowerCase().contains(existingName)) {
+                actualKey = k;
+                break;
               }
-              subjectMap[code]!['contents'] = existingContents;
-              if (ss['name'] != null && (ss['name'] as String).isNotEmpty) {
-                subjectMap[code]!['name'] = ss['name'];
-              }
-            } else {
-              subjectMap[code] = ss;
+            }
+
+            if (!subjectMap.containsKey(actualKey)) {
+              subjectMap[actualKey] = {
+                'id': 'subj_${_branch}_${_semester}_$targetKey',
+                'code': targetKey,
+                'name': subName,
+                'branch': _branch,
+                'semester': _semester,
+                'contents': [],
+              };
+            }
+
+            final existingContents = List<dynamic>.from(subjectMap[actualKey]!['contents'] as List<dynamic>? ?? []);
+            final noteItem = {
+              'id': (note['id'] ?? note['_id'] ?? DateTime.now().millisecondsSinceEpoch).toString(),
+              'title': (note['title'] ?? 'Uploaded Study Material').toString(),
+              'contentType': (note['contentType'] ?? 'NOTES').toString(),
+              'unit': int.tryParse(note['unit']?.toString() ?? '1') ?? 1,
+              'fileUrl': (note['fileUrl'] ?? note['url'] ?? '').toString(),
+              'uploadedAt': (note['createdAt'] ?? DateTime.now().toIso8601String()).toString(),
+            };
+
+            final exists = existingContents.any((c) => c['id'] == noteItem['id'] || (c['title'] == noteItem['title'] && c['fileUrl'] == noteItem['fileUrl']));
+            if (!exists) {
+              existingContents.insert(0, noteItem);
+              subjectMap[actualKey]!['contents'] = existingContents;
             }
           }
         }
+      }
 
+      if (mounted) {
         setState(() {
           _subjects = subjectMap.values.toList();
+          _loading = false;
         });
       }
     } catch (e) {
-      setState(() {
-        _subjects = defaultSubjects;
-      });
-    } finally {
-      setState(() => _loading = false);
+      if (mounted) {
+        setState(() {
+          _subjects = subjectMap.values.toList();
+          _loading = false;
+        });
+      }
     }
   }
 

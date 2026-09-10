@@ -765,7 +765,7 @@ class _CoursesLearningScreenState extends State<CoursesLearningScreen> with Sing
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text('IN 24-HOUR VERIFICATION QUEUE', style: TextStyle(color: Color(0xFFFFB800), fontWeight: FontWeight.bold, fontSize: 10, letterSpacing: 1.1)),
-                        Text('Certificate Under Audit', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
+                        Text('Certificate Under Audit', style: TextStyle(color: MyVaultColors.textDark, fontWeight: FontWeight.bold, fontSize: 14)),
                       ],
                     ),
                   ],
@@ -779,11 +779,11 @@ class _CoursesLearningScreenState extends State<CoursesLearningScreen> with Sing
             ),
 
             const SizedBox(height: 16),
-            const Text('Registered Recipient:', style: TextStyle(color: Colors.white38, fontSize: 11)),
-            Text(student, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 17)),
+            const Text('Registered Recipient:', style: TextStyle(color: MyVaultColors.textMuted, fontSize: 11)),
+            Text(student, style: const TextStyle(color: MyVaultColors.textDark, fontWeight: FontWeight.bold, fontSize: 17)),
             Text(college, style: const TextStyle(color: MyVaultColors.accentCyan, fontSize: 12)),
             const SizedBox(height: 8),
-            Text('Course: $course', style: const TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.w600)),
+            Text('Course: $course', style: const TextStyle(color: MyVaultColors.textSecondary, fontSize: 12, fontWeight: FontWeight.w600)),
 
             const SizedBox(height: 14),
             Container(
@@ -806,8 +806,8 @@ class _CoursesLearningScreenState extends State<CoursesLearningScreen> with Sing
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Token ID', style: TextStyle(color: Colors.white38, fontSize: 10)),
-                    Text(certId, style: const TextStyle(color: Colors.white, fontFamily: 'monospace', fontSize: 11)),
+                    const Text('Token ID', style: TextStyle(color: MyVaultColors.textMuted, fontSize: 10)),
+                    Text(certId, style: const TextStyle(color: MyVaultColors.textDark, fontFamily: 'monospace', fontSize: 11)),
                   ],
                 ),
                 ElevatedButton(
@@ -873,7 +873,7 @@ class _CoursesLearningScreenState extends State<CoursesLearningScreen> with Sing
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text('MYVAULT OFFICIALLY VERIFIED', style: TextStyle(color: Color(0xFF00E676), fontWeight: FontWeight.bold, fontSize: 10, letterSpacing: 1.2)),
-                      Text('Certificate of Achievement', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+                      Text('Certificate of Achievement', style: TextStyle(color: MyVaultColors.textDark, fontWeight: FontWeight.bold, fontSize: 13)),
                     ],
                   ),
                 ],
@@ -887,15 +887,15 @@ class _CoursesLearningScreenState extends State<CoursesLearningScreen> with Sing
           ),
 
           const SizedBox(height: 18),
-          const Text('This is to certify that', style: TextStyle(color: Colors.white38, fontSize: 11)),
-          Text(student, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
-          Text(college, style: const TextStyle(color: Colors.white54, fontSize: 12)),
+          const Text('This is to certify that', style: TextStyle(color: MyVaultColors.textMuted, fontSize: 11)),
+          Text(student, style: const TextStyle(color: MyVaultColors.textDark, fontWeight: FontWeight.bold, fontSize: 18)),
+          Text(college, style: const TextStyle(color: MyVaultColors.textSecondary, fontSize: 12)),
           const SizedBox(height: 6),
-          const Text('has successfully completed the comprehensive curriculum & examinations in', style: TextStyle(color: Colors.white54, fontSize: 11)),
+          const Text('has successfully completed the comprehensive curriculum & examinations in', style: TextStyle(color: MyVaultColors.textSecondary, fontSize: 11)),
           Text(course, style: const TextStyle(color: MyVaultColors.accentCyan, fontWeight: FontWeight.bold, fontSize: 14)),
 
           const SizedBox(height: 18),
-          const Divider(color: Colors.white10),
+          const Divider(color: Color(0xFFE2E8F0)),
           const SizedBox(height: 12),
 
           Row(
@@ -904,10 +904,10 @@ class _CoursesLearningScreenState extends State<CoursesLearningScreen> with Sing
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Certificate ID', style: TextStyle(color: Colors.white38, fontSize: 10)),
-                  Text(certId, style: const TextStyle(color: Colors.white, fontFamily: 'monospace', fontWeight: FontWeight.bold, fontSize: 11)),
+                  const Text('Certificate ID', style: TextStyle(color: MyVaultColors.textMuted, fontSize: 10)),
+                  Text(certId, style: const TextStyle(color: MyVaultColors.textDark, fontFamily: 'monospace', fontWeight: FontWeight.bold, fontSize: 11)),
                   const SizedBox(height: 4),
-                  Text('Issued on $date', style: const TextStyle(color: Colors.white38, fontSize: 10)),
+                  Text('Issued on $date', style: const TextStyle(color: MyVaultColors.textMuted, fontSize: 10)),
                 ],
               ),
               ElevatedButton.icon(
@@ -977,7 +977,7 @@ class _CoursesLearningScreenState extends State<CoursesLearningScreen> with Sing
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(4)))),
+              Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: const Color(0xFFCBD5E1), borderRadius: BorderRadius.circular(4)))),
               const SizedBox(height: 14),
 
               Row(
@@ -992,8 +992,8 @@ class _CoursesLearningScreenState extends State<CoursesLearningScreen> with Sing
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Student Certificate Registration', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
-                        Text('Details will be permanently engraved on your certificate', style: TextStyle(color: Colors.white54, fontSize: 11)),
+                        Text('Student Certificate Registration', style: TextStyle(color: MyVaultColors.textDark, fontWeight: FontWeight.bold, fontSize: 16)),
+                        Text('Details will be permanently engraved on your certificate', style: TextStyle(color: MyVaultColors.textSecondary, fontSize: 11)),
                       ],
                     ),
                   ),
@@ -1084,15 +1084,15 @@ class _CoursesLearningScreenState extends State<CoursesLearningScreen> with Sing
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.w600)),
+        Text(label, style: const TextStyle(color: MyVaultColors.textSecondary, fontSize: 11, fontWeight: FontWeight.w600)),
         const SizedBox(height: 4),
         Container(
-          decoration: BoxDecoration(color: const Color(0xFF141824), borderRadius: BorderRadius.circular(10), border: Border.all(color: Colors.white12)),
+          decoration: BoxDecoration(color: const Color(0xFFF8FAFC), borderRadius: BorderRadius.circular(10), border: Border.all(color: const Color(0xFFE2E8F0))),
           child: TextField(
             controller: ctrl,
-            style: const TextStyle(color: Colors.white, fontSize: 12),
+            style: const TextStyle(color: MyVaultColors.textDark, fontSize: 12),
             decoration: InputDecoration(
-              prefixIcon: Icon(icon, color: Colors.white38, size: 16),
+              prefixIcon: Icon(icon, color: MyVaultColors.textMuted, size: 16),
               border: InputBorder.none,
               contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
               isDense: true,
@@ -1199,7 +1199,7 @@ class _CourseDetailsSheet extends StatelessWidget {
           ),
           child: Column(
             children: [
-              Container(margin: const EdgeInsets.symmetric(vertical: 10), width: 40, height: 4, decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(4))),
+              Container(margin: const EdgeInsets.symmetric(vertical: 10), width: 40, height: 4, decoration: BoxDecoration(color: const Color(0xFFCBD5E1), borderRadius: BorderRadius.circular(4))),
 
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
@@ -1209,17 +1209,17 @@ class _CourseDetailsSheet extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(title, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+                          Text(title, style: const TextStyle(color: MyVaultColors.textDark, fontSize: 18, fontWeight: FontWeight.bold)),
                           Text('Instructor: $instructor • Enrolled as: $studentName', style: const TextStyle(color: MyVaultColors.accentCyan, fontSize: 12)),
                         ],
                       ),
                     ),
-                    IconButton(icon: const Icon(Icons.close, color: Colors.white54), onPressed: () => Navigator.pop(context)),
+                    IconButton(icon: const Icon(Icons.close, color: MyVaultColors.textSecondary), onPressed: () => Navigator.pop(context)),
                   ],
                 ),
               ),
 
-              const Divider(color: Colors.white10),
+              const Divider(color: Color(0xFFE2E8F0)),
 
               Expanded(
                 child: ListView(
@@ -1242,12 +1242,12 @@ class _CourseDetailsSheet extends StatelessWidget {
                     ),
 
                     const SizedBox(height: 20),
-                    const Text('About this Course', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
+                    const Text('About this Course', style: TextStyle(color: MyVaultColors.textDark, fontWeight: FontWeight.bold, fontSize: 15)),
                     const SizedBox(height: 6),
-                    Text(desc, style: const TextStyle(color: Colors.white70, fontSize: 13, height: 1.5)),
+                    Text(desc, style: const TextStyle(color: MyVaultColors.textSecondary, fontSize: 13, height: 1.5)),
 
                     const SizedBox(height: 20),
-                    const Text('Skills You Will Master', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
+                    const Text('Skills You Will Master', style: TextStyle(color: MyVaultColors.textDark, fontWeight: FontWeight.bold, fontSize: 15)),
                     const SizedBox(height: 10),
                     Wrap(
                       spacing: 8,
@@ -1260,7 +1260,7 @@ class _CourseDetailsSheet extends StatelessWidget {
                     ),
 
                     const SizedBox(height: 24),
-                    const Text('24-Hour Certification Protocol', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
+                    const Text('24-Hour Certification Protocol', style: TextStyle(color: MyVaultColors.textDark, fontWeight: FontWeight.bold, fontSize: 15)),
                     const SizedBox(height: 10),
                     _buildCriteriaItem('1. Register full legal name and college before starting'),
                     _buildCriteriaItem('2. Watch 100% of video lecture modules'),
@@ -1275,7 +1275,7 @@ class _CourseDetailsSheet extends StatelessWidget {
 
               Container(
                 padding: const EdgeInsets.all(16),
-                decoration: const BoxDecoration(color: Color(0xFF141824), border: Border(top: BorderSide(color: Colors.white10))),
+                decoration: const BoxDecoration(color: Color(0xFF141824), border: Border(top: BorderSide(color: Color(0xFFE2E8F0)))),
                 child: Row(
                   children: [
                     Expanded(
@@ -1320,7 +1320,7 @@ class _CourseDetailsSheet extends StatelessWidget {
         children: [
           const Icon(Icons.check_circle_rounded, color: Color(0xFF00E676), size: 14),
           const SizedBox(width: 8),
-          Expanded(child: Text(text, style: const TextStyle(color: Colors.white70, fontSize: 12))),
+          Expanded(child: Text(text, style: const TextStyle(color: MyVaultColors.textSecondary, fontSize: 12))),
         ],
       ),
     );
@@ -1439,7 +1439,7 @@ class _VideoLessonPlayerSheetState extends State<_VideoLessonPlayerSheet> {
           ),
           child: Column(
             children: [
-              Container(margin: const EdgeInsets.symmetric(vertical: 10), width: 40, height: 4, decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(4))),
+              Container(margin: const EdgeInsets.symmetric(vertical: 10), width: 40, height: 4, decoration: BoxDecoration(color: const Color(0xFFCBD5E1), borderRadius: BorderRadius.circular(4))),
 
               // Video Player Container
               Container(
@@ -1449,7 +1449,7 @@ class _VideoLessonPlayerSheetState extends State<_VideoLessonPlayerSheet> {
                 decoration: BoxDecoration(
                   color: Colors.black,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Colors.white10),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
                 ),
                 child: Stack(
                   alignment: Alignment.center,
@@ -1477,7 +1477,7 @@ class _VideoLessonPlayerSheetState extends State<_VideoLessonPlayerSheet> {
                           children: [
                             Icon(Icons.hd_rounded, color: MyVaultColors.accentCyan, size: 14),
                             SizedBox(width: 4),
-                            Text('1080p HD Video', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                            Text('1080p HD Video', style: TextStyle(color: MyVaultColors.textDark, fontSize: 10, fontWeight: FontWeight.bold)),
                           ],
                         ),
                       ),
@@ -1488,7 +1488,7 @@ class _VideoLessonPlayerSheetState extends State<_VideoLessonPlayerSheet> {
                       right: 12,
                       child: Row(
                         children: [
-                          Text('12:40 / ${currentLesson['duration']}', style: const TextStyle(color: Colors.white70, fontSize: 10)),
+                          Text('12:40 / ${currentLesson['duration']}', style: const TextStyle(color: MyVaultColors.textSecondary, fontSize: 10)),
                           const SizedBox(width: 8),
                           const Expanded(
                             child: ClipRRect(
@@ -1498,7 +1498,7 @@ class _VideoLessonPlayerSheetState extends State<_VideoLessonPlayerSheet> {
                           ),
                           const SizedBox(width: 8),
                           IconButton(
-                            icon: const Icon(Icons.open_in_new_rounded, color: Colors.white70, size: 18),
+                            icon: const Icon(Icons.open_in_new_rounded, color: MyVaultColors.textSecondary, size: 18),
                             onPressed: () async {
                               final videoUrl = currentLesson['videoUrl'] ?? '';
                               if (videoUrl.isNotEmpty) {
@@ -1526,7 +1526,7 @@ class _VideoLessonPlayerSheetState extends State<_VideoLessonPlayerSheet> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(currentLesson['title'], style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
+                          Text(currentLesson['title'], style: const TextStyle(color: MyVaultColors.textDark, fontWeight: FontWeight.bold, fontSize: 15)),
                           Text('Topic: ${currentLesson['topic'] ?? 'Technical Lecture'}', style: const TextStyle(color: MyVaultColors.accentCyan, fontSize: 11)),
                         ],
                       ),
@@ -1552,7 +1552,7 @@ class _VideoLessonPlayerSheetState extends State<_VideoLessonPlayerSheet> {
                             borderRadius: BorderRadius.circular(10),
                           ),
                           alignment: Alignment.center,
-                          child: const Text('🎥 Video & Notes', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
+                          child: const Text('🎥 Video & Notes', style: TextStyle(color: MyVaultColors.textDark, fontWeight: FontWeight.bold, fontSize: 12)),
                         ),
                       ),
                     ),
@@ -1570,12 +1570,12 @@ class _VideoLessonPlayerSheetState extends State<_VideoLessonPlayerSheet> {
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              const Text('⚡ Video AI Quiz', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
+                              const Text('⚡ Video AI Quiz', style: TextStyle(color: MyVaultColors.textDark, fontWeight: FontWeight.bold, fontSize: 12)),
                               const SizedBox(width: 4),
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-                                decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(10)),
-                                child: Text('${quizQuestions.length}', style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                                decoration: BoxDecoration(color: const Color(0xFFCBD5E1), borderRadius: BorderRadius.circular(10)),
+                                child: Text('${quizQuestions.length}', style: const TextStyle(color: MyVaultColors.textDark, fontSize: 10, fontWeight: FontWeight.bold)),
                               ),
                             ],
                           ),
@@ -1586,7 +1586,7 @@ class _VideoLessonPlayerSheetState extends State<_VideoLessonPlayerSheet> {
                 ),
               ),
 
-              const Divider(color: Colors.white10, height: 20),
+              const Divider(color: Color(0xFFE2E8F0), height: 20),
 
               // Sub-Tab Content
               Expanded(
@@ -1618,8 +1618,8 @@ class _VideoLessonPlayerSheetState extends State<_VideoLessonPlayerSheet> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(currentLesson['pdf'] ?? 'Lecture_Notes.pdf', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
-                    const Text('Attached Lecture Cheat Sheet • PDF (1.4 MB)', style: TextStyle(color: Colors.white38, fontSize: 10)),
+                    Text(currentLesson['pdf'] ?? 'Lecture_Notes.pdf', style: const TextStyle(color: MyVaultColors.textDark, fontWeight: FontWeight.bold, fontSize: 12)),
+                    const Text('Attached Lecture Cheat Sheet • PDF (1.4 MB)', style: TextStyle(color: MyVaultColors.textMuted, fontSize: 10)),
                   ],
                 ),
               ),
@@ -1634,7 +1634,7 @@ class _VideoLessonPlayerSheetState extends State<_VideoLessonPlayerSheet> {
         ),
 
         const SizedBox(height: 18),
-        const Text('Course Video Playlist', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
+        const Text('Course Video Playlist', style: TextStyle(color: MyVaultColors.textDark, fontWeight: FontWeight.bold, fontSize: 14)),
         const SizedBox(height: 10),
 
         ..._lessons.asMap().entries.map((entry) {
@@ -1653,8 +1653,8 @@ class _VideoLessonPlayerSheetState extends State<_VideoLessonPlayerSheet> {
               dense: true,
               leading: Icon(isActive ? Icons.play_circle_filled_rounded : Icons.video_library_rounded, color: isActive ? MyVaultColors.accentCyan : Colors.white38),
               title: Text(les['title'], style: TextStyle(color: isActive ? Colors.white : Colors.white70, fontWeight: isActive ? FontWeight.bold : FontWeight.normal, fontSize: 12)),
-              subtitle: Text(les['duration'], style: const TextStyle(color: Colors.white38, fontSize: 10)),
-              trailing: const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white24, size: 12),
+              subtitle: Text(les['duration'], style: const TextStyle(color: MyVaultColors.textMuted, fontSize: 10)),
+              trailing: const Icon(Icons.arrow_forward_ios_rounded, color: Color(0xFFCBD5E1), size: 12),
               onTap: () {
                 setState(() {
                   _activeLessonIdx = idx;
@@ -1689,9 +1689,9 @@ class _VideoLessonPlayerSheetState extends State<_VideoLessonPlayerSheet> {
           children: [
             const Icon(Icons.quiz_outlined, color: Colors.white30, size: 48),
             const SizedBox(height: 12),
-            const Text('Auto-Generating Video Quiz...', style: TextStyle(color: Colors.white70, fontSize: 14, fontWeight: FontWeight.bold)),
+            const Text('Auto-Generating Video Quiz...', style: TextStyle(color: MyVaultColors.textSecondary, fontSize: 14, fontWeight: FontWeight.bold)),
             const SizedBox(height: 6),
-            Text('The AI engine generates questions from "${currentLesson['topic'] ?? currentLesson['title']}"', textAlign: TextAlign.center, style: const TextStyle(color: Colors.white38, fontSize: 12)),
+            Text('The AI engine generates questions from "${currentLesson['topic'] ?? currentLesson['title']}"', textAlign: TextAlign.center, style: const TextStyle(color: MyVaultColors.textMuted, fontSize: 12)),
           ],
         ),
       );
@@ -1713,7 +1713,7 @@ class _VideoLessonPlayerSheetState extends State<_VideoLessonPlayerSheet> {
               const Icon(Icons.auto_awesome_rounded, color: Color(0xFF7C3AFF), size: 20),
               const SizedBox(width: 8),
               Expanded(
-                child: Text('AI Video Quiz: Grounded in "${currentLesson['title']}"', style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+                child: Text('AI Video Quiz: Grounded in "${currentLesson['title']}"', style: const TextStyle(color: MyVaultColors.textDark, fontSize: 12, fontWeight: FontWeight.bold)),
               ),
             ],
           ),
@@ -1734,12 +1734,12 @@ class _VideoLessonPlayerSheetState extends State<_VideoLessonPlayerSheet> {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: Colors.white10),
+              border: Border.all(color: const Color(0xFFE2E8F0)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('${qIdx + 1}. ${q['question'] ?? q['q']}', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+                Text('${qIdx + 1}. ${q['question'] ?? q['q']}', style: const TextStyle(color: MyVaultColors.textDark, fontWeight: FontWeight.bold, fontSize: 13)),
                 const SizedBox(height: 10),
 
                 ...options.map((opt) {
@@ -1796,7 +1796,7 @@ class _VideoLessonPlayerSheetState extends State<_VideoLessonPlayerSheet> {
                 if (_quizSubmitted && q['explanation'] != null)
                   Padding(
                     padding: const EdgeInsets.only(top: 6),
-                    child: Text('💡 ${q['explanation']}', style: const TextStyle(color: Colors.white54, fontSize: 11)),
+                    child: Text('💡 ${q['explanation']}', style: const TextStyle(color: MyVaultColors.textSecondary, fontSize: 11)),
                   ),
               ],
             ),
@@ -1843,7 +1843,7 @@ class _VideoLessonPlayerSheetState extends State<_VideoLessonPlayerSheet> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text('Quiz Completed! Score: $_quizScore%', style: const TextStyle(color: Color(0xFF00E676), fontWeight: FontWeight.bold, fontSize: 13)),
-                    const Text('Lesson marked complete • Ready for next video', style: TextStyle(color: Colors.white70, fontSize: 11)),
+                    const Text('Lesson marked complete • Ready for next video', style: TextStyle(color: MyVaultColors.textSecondary, fontSize: 11)),
                   ],
                 ),
                 if (_activeLessonIdx < _lessons.length - 1)
@@ -1983,18 +1983,18 @@ class _FinalExamSheetState extends State<_FinalExamSheet> {
           children: [
             Icon(Icons.hourglass_top_rounded, color: Color(0xFFFFB800), size: 28),
             SizedBox(width: 10),
-            Text('Submitted for 24h Review ⏳', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 17)),
+            Text('Submitted for 24h Review ⏳', style: TextStyle(color: MyVaultColors.textDark, fontWeight: FontWeight.bold, fontSize: 17)),
           ],
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Congratulations ${widget.studentName}! You passed the final exam with 88%.', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+            Text('Congratulations ${widget.studentName}! You passed the final exam with 88%.', style: const TextStyle(color: MyVaultColors.textDark, fontWeight: FontWeight.bold, fontSize: 13)),
             const SizedBox(height: 10),
             const Text(
               'Your course completion and exam results are now in the 24-Hour Academic Verification Queue. Your official QR-verified certificate will be minted in your name within 24 hours.',
-              style: TextStyle(color: Colors.white70, fontSize: 12, height: 1.4),
+              style: TextStyle(color: MyVaultColors.textSecondary, fontSize: 12, height: 1.4),
             ),
             const SizedBox(height: 14),
             Container(
@@ -2003,10 +2003,10 @@ class _FinalExamSheetState extends State<_FinalExamSheet> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Registered Name:', style: TextStyle(color: Colors.white38, fontSize: 10)),
-                  Text(widget.studentName, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+                  const Text('Registered Name:', style: TextStyle(color: MyVaultColors.textMuted, fontSize: 10)),
+                  Text(widget.studentName, style: const TextStyle(color: MyVaultColors.textDark, fontWeight: FontWeight.bold, fontSize: 13)),
                   const SizedBox(height: 4),
-                  const Text('Certificate Token:', style: TextStyle(color: Colors.white38, fontSize: 10)),
+                  const Text('Certificate Token:', style: TextStyle(color: MyVaultColors.textMuted, fontSize: 10)),
                   Text(cert['certificateId'] ?? '', style: const TextStyle(color: Color(0xFFFFB800), fontFamily: 'monospace', fontWeight: FontWeight.bold, fontSize: 12)),
                 ],
               ),
@@ -2042,7 +2042,7 @@ class _FinalExamSheetState extends State<_FinalExamSheet> {
           ),
           child: Column(
             children: [
-              Container(margin: const EdgeInsets.symmetric(vertical: 10), width: 40, height: 4, decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(4))),
+              Container(margin: const EdgeInsets.symmetric(vertical: 10), width: 40, height: 4, decoration: BoxDecoration(color: const Color(0xFFCBD5E1), borderRadius: BorderRadius.circular(4))),
 
               // Top Bar
               Padding(
@@ -2057,12 +2057,12 @@ class _FinalExamSheetState extends State<_FinalExamSheet> {
                         Text('28:45 Remaining', style: TextStyle(color: Color(0xFFFFB800), fontWeight: FontWeight.bold, fontSize: 12)),
                       ],
                     ),
-                    Text('Question ${_currentIdx + 1} of ${_examQuestions.length}', style: const TextStyle(color: Colors.white54, fontSize: 12)),
+                    Text('Question ${_currentIdx + 1} of ${_examQuestions.length}', style: const TextStyle(color: MyVaultColors.textSecondary, fontSize: 12)),
                   ],
                 ),
               ),
 
-              const Divider(color: Colors.white10),
+              const Divider(color: Color(0xFFE2E8F0)),
 
               // Question Body
               Expanded(
@@ -2070,7 +2070,7 @@ class _FinalExamSheetState extends State<_FinalExamSheet> {
                   controller: scrollCtrl,
                   padding: const EdgeInsets.all(20),
                   children: [
-                    Text(q['question'], style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16, height: 1.3)),
+                    Text(q['question'], style: const TextStyle(color: MyVaultColors.textDark, fontWeight: FontWeight.bold, fontSize: 16, height: 1.3)),
                     const SizedBox(height: 20),
 
                     ...options.map((opt) {
@@ -2108,14 +2108,14 @@ class _FinalExamSheetState extends State<_FinalExamSheet> {
               // Bottom Nav
               Container(
                 padding: const EdgeInsets.all(16),
-                decoration: const BoxDecoration(color: Color(0xFF141824), border: Border(top: BorderSide(color: Colors.white10))),
+                decoration: const BoxDecoration(color: Color(0xFF141824), border: Border(top: BorderSide(color: Color(0xFFE2E8F0)))),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     if (_currentIdx > 0)
                       OutlinedButton(
                         onPressed: () => setState(() => _currentIdx--),
-                        style: OutlinedButton.styleFrom(foregroundColor: Colors.white70, side: const BorderSide(color: Colors.white24)),
+                        style: OutlinedButton.styleFrom(foregroundColor: Colors.white70, side: const BorderSide(color: Color(0xFFCBD5E1))),
                         child: const Text('Previous'),
                       )
                     else

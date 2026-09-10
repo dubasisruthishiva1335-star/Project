@@ -631,12 +631,12 @@ class _InternshipHubScreenState extends State<InternshipHubScreen> with SingleTi
                     children: [
                       Text(
                         'AI Recommendation Match: 98%',
-                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+                        style: TextStyle(color: MyVaultColors.textDark, fontWeight: FontWeight.bold, fontSize: 14),
                       ),
                       SizedBox(height: 2),
                       Text(
                         'Campus verified openings matched with your branch & full-stack development skills.',
-                        style: TextStyle(color: Colors.white70, fontSize: 11),
+                        style: TextStyle(color: MyVaultColors.textSecondary, fontSize: 11),
                       ),
                     ],
                   ),
@@ -976,9 +976,9 @@ class _InternshipHubScreenState extends State<InternshipHubScreen> with SingleTi
                             child: const Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(Icons.email_outlined, color: Colors.white70, size: 12),
+                                Icon(Icons.email_outlined, color: MyVaultColors.textSecondary, size: 12),
                                 SizedBox(width: 4),
-                                Text('Email', style: TextStyle(color: Colors.white70, fontSize: 10)),
+                                Text('Email', style: TextStyle(color: MyVaultColors.textSecondary, fontSize: 10)),
                               ],
                             ),
                           ),
@@ -1000,9 +1000,9 @@ class _InternshipHubScreenState extends State<InternshipHubScreen> with SingleTi
                             child: const Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(Icons.phone_outlined, color: Colors.white70, size: 12),
+                                Icon(Icons.phone_outlined, color: MyVaultColors.textSecondary, size: 12),
                                 SizedBox(width: 4),
-                                Text('Call HR', style: TextStyle(color: Colors.white70, fontSize: 10)),
+                                Text('Call HR', style: TextStyle(color: MyVaultColors.textSecondary, fontSize: 10)),
                               ],
                             ),
                           ),
@@ -1171,9 +1171,9 @@ class _InternshipHubScreenState extends State<InternshipHubScreen> with SingleTi
                 ],
               ),
               const SizedBox(height: 10),
-              Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+              Text(title, style: const TextStyle(color: MyVaultColors.textDark, fontWeight: FontWeight.bold, fontSize: 16)),
               const SizedBox(height: 2),
-              Text('$company • Applied $appliedDate', style: const TextStyle(color: Colors.white54, fontSize: 12)),
+              Text('$company • Applied $appliedDate', style: const TextStyle(color: MyVaultColors.textSecondary, fontSize: 12)),
               const SizedBox(height: 18),
 
               // Multi-stage tracker visual
@@ -1185,7 +1185,7 @@ class _InternshipHubScreenState extends State<InternshipHubScreen> with SingleTi
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.white10),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
                 ),
                 child: Row(
                   children: [
@@ -1194,7 +1194,7 @@ class _InternshipHubScreenState extends State<InternshipHubScreen> with SingleTi
                     Expanded(
                       child: Text(
                         nextStep,
-                        style: const TextStyle(color: Colors.white70, fontSize: 12),
+                        style: const TextStyle(color: MyVaultColors.textSecondary, fontSize: 12),
                       ),
                     ),
                   ],
@@ -1241,7 +1241,7 @@ class _InternshipHubScreenState extends State<InternshipHubScreen> with SingleTi
                 alignment: Alignment.center,
                 child: isDone
                     ? const Icon(Icons.check, size: 12, color: Colors.black)
-                    : Text('$stepIndex', style: const TextStyle(color: Colors.white38, fontSize: 10)),
+                    : Text('$stepIndex', style: const TextStyle(color: MyVaultColors.textMuted, fontSize: 10)),
               ),
               const SizedBox(height: 4),
               Text(
@@ -1360,7 +1360,7 @@ class _InternshipDetailsSheet extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(title, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+                          Text(title, style: const TextStyle(color: MyVaultColors.textDark, fontSize: 18, fontWeight: FontWeight.bold)),
                           const SizedBox(height: 2),
                           Text('$company • $location', style: const TextStyle(color: MyVaultColors.accentCyan, fontSize: 13)),
                         ],
@@ -1377,7 +1377,7 @@ class _InternshipDetailsSheet extends StatelessWidget {
                 ),
               ),
 
-              const Divider(color: Colors.white10),
+              const Divider(color: Color(0xFFE2E8F0)),
 
               // Body Content
               Expanded(
@@ -1426,7 +1426,7 @@ class _InternshipDetailsSheet extends StatelessWidget {
                             children: [
                               Icon(Icons.auto_awesome, color: Color(0xFF00E676), size: 18),
                               SizedBox(width: 8),
-                              Text('AI Profile Compatibility: 98%', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
+                              Text('AI Profile Compatibility: 98%', style: TextStyle(color: MyVaultColors.textDark, fontWeight: FontWeight.bold, fontSize: 14)),
                             ],
                           ),
                           const SizedBox(height: 10),
@@ -1440,27 +1440,27 @@ class _InternshipDetailsSheet extends StatelessWidget {
                     const SizedBox(height: 20),
 
                     // Description
-                    const Text('About the Role', style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold)),
+                    const Text('About the Role', style: TextStyle(color: MyVaultColors.textDark, fontSize: 15, fontWeight: FontWeight.bold)),
                     const SizedBox(height: 8),
-                    Text(description, style: const TextStyle(color: Colors.white70, fontSize: 13, height: 1.5)),
+                    Text(description, style: const TextStyle(color: MyVaultColors.textSecondary, fontSize: 13, height: 1.5)),
 
                     if (responsibilities.isNotEmpty) ...[
                       const SizedBox(height: 20),
-                      const Text('Key Responsibilities', style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold)),
+                      const Text('Key Responsibilities', style: TextStyle(color: MyVaultColors.textDark, fontSize: 15, fontWeight: FontWeight.bold)),
                       const SizedBox(height: 10),
                       ...responsibilities.map((r) => _buildBulletPoint(r.toString())),
                     ],
 
                     if (requirements.isNotEmpty) ...[
                       const SizedBox(height: 20),
-                      const Text('Eligibility & Requirements', style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold)),
+                      const Text('Eligibility & Requirements', style: TextStyle(color: MyVaultColors.textDark, fontSize: 15, fontWeight: FontWeight.bold)),
                       const SizedBox(height: 10),
                       ...requirements.map((req) => _buildBulletPoint(req.toString())),
                     ],
 
                     if (skills.isNotEmpty) ...[
                       const SizedBox(height: 20),
-                      const Text('Required Skills', style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold)),
+                      const Text('Required Skills', style: TextStyle(color: MyVaultColors.textDark, fontSize: 15, fontWeight: FontWeight.bold)),
                       const SizedBox(height: 10),
                       Wrap(
                         spacing: 8,
@@ -1479,7 +1479,7 @@ class _InternshipDetailsSheet extends StatelessWidget {
 
                     if (perks.isNotEmpty) ...[
                       const SizedBox(height: 20),
-                      const Text('Perks & Benefits', style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold)),
+                      const Text('Perks & Benefits', style: TextStyle(color: MyVaultColors.textDark, fontSize: 15, fontWeight: FontWeight.bold)),
                       const SizedBox(height: 10),
                       ...perks.map((p) => _buildPerkItem(p.toString())),
                     ],
@@ -1489,7 +1489,7 @@ class _InternshipDetailsSheet extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF131826),
+                        color: const Color(0xFFF8FAFC),
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(color: MyVaultColors.accentCyan.withValues(alpha: 0.3)),
                       ),
@@ -1502,7 +1502,7 @@ class _InternshipDetailsSheet extends StatelessWidget {
                               SizedBox(width: 8),
                               Text(
                                 'Company Portals & Direct Contacts',
-                                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+                                style: TextStyle(color: MyVaultColors.textDark, fontWeight: FontWeight.bold, fontSize: 14),
                               ),
                             ],
                           ),
@@ -1516,9 +1516,9 @@ class _InternshipDetailsSheet extends StatelessWidget {
                                 backgroundColor: Color(0xFF1E2638),
                                 child: Icon(Icons.language_rounded, color: MyVaultColors.accentCyan, size: 16),
                               ),
-                              title: const Text('Official Company Website', style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold)),
+                              title: const Text('Official Company Website', style: TextStyle(color: MyVaultColors.textDark, fontSize: 13, fontWeight: FontWeight.bold)),
                               subtitle: Text(companyWebsite, style: const TextStyle(color: MyVaultColors.accentCyan, fontSize: 11)),
-                              trailing: const Icon(Icons.open_in_new_rounded, color: Colors.white38, size: 16),
+                              trailing: const Icon(Icons.open_in_new_rounded, color: MyVaultColors.textMuted, size: 16),
                               onTap: () async {
                                 final uri = Uri.parse(companyWebsite);
                                 if (await canLaunchUrl(uri)) launchUrl(uri, mode: LaunchMode.externalApplication);
@@ -1533,7 +1533,7 @@ class _InternshipDetailsSheet extends StatelessWidget {
                                 backgroundColor: Color(0xFF1E2638),
                                 child: Icon(Icons.link_rounded, color: Color(0xFF00E676), size: 16),
                               ),
-                              title: const Text('Direct Job Application Portal', style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold)),
+                              title: const Text('Direct Job Application Portal', style: TextStyle(color: MyVaultColors.textDark, fontSize: 13, fontWeight: FontWeight.bold)),
                               subtitle: Text(applyUrl, style: const TextStyle(color: Color(0xFF00E676), fontSize: 11), overflow: TextOverflow.ellipsis),
                               trailing: const Icon(Icons.open_in_new_rounded, color: Color(0xFF00E676), size: 16),
                               onTap: () async {
@@ -1548,11 +1548,11 @@ class _InternshipDetailsSheet extends StatelessWidget {
                               leading: const CircleAvatar(
                                 radius: 16,
                                 backgroundColor: Color(0xFF1E2638),
-                                child: Icon(Icons.mail_outline_rounded, color: Colors.white70, size: 16),
+                                child: Icon(Icons.mail_outline_rounded, color: MyVaultColors.textSecondary, size: 16),
                               ),
-                              title: const Text('Recruiter Contact Email', style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold)),
-                              subtitle: Text(contactEmail, style: const TextStyle(color: Colors.white70, fontSize: 11)),
-                              trailing: const Icon(Icons.send_rounded, color: Colors.white38, size: 16),
+                              title: const Text('Recruiter Contact Email', style: TextStyle(color: MyVaultColors.textDark, fontSize: 13, fontWeight: FontWeight.bold)),
+                              subtitle: Text(contactEmail, style: const TextStyle(color: MyVaultColors.textSecondary, fontSize: 11)),
+                              trailing: const Icon(Icons.send_rounded, color: MyVaultColors.textMuted, size: 16),
                               onTap: () async {
                                 final uri = Uri.parse('mailto:$contactEmail');
                                 if (await canLaunchUrl(uri)) launchUrl(uri);
@@ -1567,7 +1567,7 @@ class _InternshipDetailsSheet extends StatelessWidget {
                                 backgroundColor: Color(0xFF1E2638),
                                 child: Icon(Icons.phone_in_talk_rounded, color: Color(0xFFFFB800), size: 16),
                               ),
-                              title: const Text('HR / Campus Support Line', style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold)),
+                              title: const Text('HR / Campus Support Line', style: TextStyle(color: MyVaultColors.textDark, fontSize: 13, fontWeight: FontWeight.bold)),
                               subtitle: Text(contactPhone, style: const TextStyle(color: Color(0xFFFFB800), fontSize: 11)),
                               trailing: const Icon(Icons.call_rounded, color: Color(0xFFFFB800), size: 16),
                               onTap: () async {
@@ -1589,7 +1589,7 @@ class _InternshipDetailsSheet extends StatelessWidget {
                 padding: const EdgeInsets.all(16),
                 decoration: const BoxDecoration(
                   color: Color(0xFF141824),
-                  border: Border(top: BorderSide(color: Colors.white10)),
+                  border: Border(top: BorderSide(color: Color(0xFFE2E8F0))),
                 ),
                 child: Row(
                   children: [
@@ -1597,8 +1597,8 @@ class _InternshipDetailsSheet extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text('Application Deadline', style: TextStyle(color: Colors.white38, fontSize: 11)),
-                          Text(deadline.isNotEmpty ? deadline : 'Rolling Review', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+                          const Text('Application Deadline', style: TextStyle(color: MyVaultColors.textMuted, fontSize: 11)),
+                          Text(deadline.isNotEmpty ? deadline : 'Rolling Review', style: const TextStyle(color: MyVaultColors.textDark, fontWeight: FontWeight.bold, fontSize: 13)),
                         ],
                       ),
                     ),
@@ -1661,8 +1661,8 @@ class _InternshipDetailsSheet extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(label, style: const TextStyle(color: Colors.white38, fontSize: 10)),
-              Text(value, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12), overflow: TextOverflow.ellipsis),
+              Text(label, style: const TextStyle(color: MyVaultColors.textMuted, fontSize: 10)),
+              Text(value, style: const TextStyle(color: MyVaultColors.textDark, fontWeight: FontWeight.bold, fontSize: 12), overflow: TextOverflow.ellipsis),
             ],
           ),
         ),
@@ -1677,7 +1677,7 @@ class _InternshipDetailsSheet extends StatelessWidget {
         children: [
           const Icon(Icons.check_circle_rounded, color: Color(0xFF00E676), size: 14),
           const SizedBox(width: 8),
-          Expanded(child: Text(text, style: const TextStyle(color: Colors.white70, fontSize: 12))),
+          Expanded(child: Text(text, style: const TextStyle(color: MyVaultColors.textSecondary, fontSize: 12))),
         ],
       ),
     );
@@ -1694,7 +1694,7 @@ class _InternshipDetailsSheet extends StatelessWidget {
             child: Icon(Icons.circle, color: MyVaultColors.accentCyan, size: 6),
           ),
           const SizedBox(width: 10),
-          Expanded(child: Text(text, style: const TextStyle(color: Colors.white70, fontSize: 13, height: 1.4))),
+          Expanded(child: Text(text, style: const TextStyle(color: MyVaultColors.textSecondary, fontSize: 13, height: 1.4))),
         ],
       ),
     );
@@ -1707,7 +1707,7 @@ class _InternshipDetailsSheet extends StatelessWidget {
         children: [
           const Icon(Icons.card_giftcard_rounded, color: Color(0xFFFFB800), size: 16),
           const SizedBox(width: 10),
-          Expanded(child: Text(text, style: const TextStyle(color: Colors.white70, fontSize: 13))),
+          Expanded(child: Text(text, style: const TextStyle(color: MyVaultColors.textSecondary, fontSize: 13))),
         ],
       ),
     );
@@ -1778,13 +1778,13 @@ class _ApplicationWizardSheetState extends State<_ApplicationWizardSheet> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Apply: $title', style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis),
+                          Text('Apply: $title', style: const TextStyle(color: MyVaultColors.textDark, fontSize: 16, fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis),
                           Text('$company', style: const TextStyle(color: MyVaultColors.accentCyan, fontSize: 12)),
                         ],
                       ),
                     ),
                     IconButton(
-                      icon: const Icon(Icons.close, color: Colors.white54),
+                      icon: const Icon(Icons.close, color: MyVaultColors.textSecondary),
                       onPressed: () => Navigator.pop(context),
                     ),
                   ],
@@ -1814,7 +1814,7 @@ class _ApplicationWizardSheetState extends State<_ApplicationWizardSheet> {
                 ),
               ),
 
-              const Divider(color: Colors.white10),
+              const Divider(color: Color(0xFFE2E8F0)),
 
               // Form Content
               Expanded(
@@ -1835,7 +1835,7 @@ class _ApplicationWizardSheetState extends State<_ApplicationWizardSheet> {
                 padding: const EdgeInsets.all(16),
                 decoration: const BoxDecoration(
                   color: Color(0xFF141824),
-                  border: Border(top: BorderSide(color: Colors.white10)),
+                  border: Border(top: BorderSide(color: Color(0xFFE2E8F0))),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1843,7 +1843,7 @@ class _ApplicationWizardSheetState extends State<_ApplicationWizardSheet> {
                     if (_currentStep > 0)
                       TextButton(
                         onPressed: () => setState(() => _currentStep--),
-                        child: const Text('Back', style: TextStyle(color: Colors.white70)),
+                        child: const Text('Back', style: TextStyle(color: MyVaultColors.textSecondary)),
                       )
                     else
                       const SizedBox.shrink(),
@@ -1893,7 +1893,7 @@ class _ApplicationWizardSheetState extends State<_ApplicationWizardSheet> {
       children: [
         const Text('Step 1 of 4: Candidate Information', style: TextStyle(color: MyVaultColors.accentCyan, fontWeight: FontWeight.bold, fontSize: 13)),
         const SizedBox(height: 4),
-        const Text('Verify your academic & contact credentials', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
+        const Text('Verify your academic & contact credentials', style: TextStyle(color: MyVaultColors.textDark, fontWeight: FontWeight.bold, fontSize: 18)),
         const SizedBox(height: 16),
         _buildTextField('Full Name', _fullNameCtrl, Icons.person_outline),
         const SizedBox(height: 12),
@@ -1914,9 +1914,9 @@ class _ApplicationWizardSheetState extends State<_ApplicationWizardSheet> {
       children: [
         const Text('Step 2 of 4: Resume & Profiles', style: TextStyle(color: MyVaultColors.accentCyan, fontWeight: FontWeight.bold, fontSize: 13)),
         const SizedBox(height: 4),
-        const Text('Attach your documents', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
+        const Text('Attach your documents', style: TextStyle(color: MyVaultColors.textDark, fontWeight: FontWeight.bold, fontSize: 18)),
         const SizedBox(height: 16),
-        const Text('Selected Resume from Vault', style: TextStyle(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.w600)),
+        const Text('Selected Resume from Vault', style: TextStyle(color: MyVaultColors.textSecondary, fontSize: 13, fontWeight: FontWeight.w600)),
         const SizedBox(height: 8),
         Container(
           padding: const EdgeInsets.all(14),
@@ -1933,8 +1933,8 @@ class _ApplicationWizardSheetState extends State<_ApplicationWizardSheet> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(_selectedResume, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
-                    const Text('Verified • Stored in Documents Vault', style: TextStyle(color: Colors.white38, fontSize: 11)),
+                    Text(_selectedResume, style: const TextStyle(color: MyVaultColors.textDark, fontWeight: FontWeight.bold, fontSize: 13)),
+                    const Text('Verified • Stored in Documents Vault', style: TextStyle(color: MyVaultColors.textMuted, fontSize: 11)),
                   ],
                 ),
               ),
@@ -1956,17 +1956,17 @@ class _ApplicationWizardSheetState extends State<_ApplicationWizardSheet> {
       children: [
         const Text('Step 3 of 4: Motivation & Projects', style: TextStyle(color: MyVaultColors.accentCyan, fontWeight: FontWeight.bold, fontSize: 13)),
         const SizedBox(height: 4),
-        const Text('Tell the recruiters why you are a fit', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
+        const Text('Tell the recruiters why you are a fit', style: TextStyle(color: MyVaultColors.textDark, fontWeight: FontWeight.bold, fontSize: 18)),
         const SizedBox(height: 16),
-        const Text('Why are you interested in this internship?', style: TextStyle(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.w600)),
+        const Text('Why are you interested in this internship?', style: TextStyle(color: MyVaultColors.textSecondary, fontSize: 13, fontWeight: FontWeight.w600)),
         const SizedBox(height: 8),
         TextField(
           controller: _pitchCtrl,
           maxLines: 4,
-          style: const TextStyle(color: Colors.white, fontSize: 13),
+          style: const TextStyle(color: MyVaultColors.textDark, fontSize: 13),
           decoration: InputDecoration(
             hintText: 'Highlight your relevant technical projects, hackathon wins, or key passion for this domain...',
-            hintStyle: const TextStyle(color: Colors.white38, fontSize: 12),
+            hintStyle: const TextStyle(color: MyVaultColors.textMuted, fontSize: 12),
             filled: true,
             fillColor: MyVaultColors.glassFill,
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
@@ -1984,7 +1984,7 @@ class _ApplicationWizardSheetState extends State<_ApplicationWizardSheet> {
       children: [
         const Text('Step 4 of 4: Review & Submit', style: TextStyle(color: MyVaultColors.accentCyan, fontWeight: FontWeight.bold, fontSize: 13)),
         const SizedBox(height: 4),
-        const Text('Ready to send your application?', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
+        const Text('Ready to send your application?', style: TextStyle(color: MyVaultColors.textDark, fontWeight: FontWeight.bold, fontSize: 18)),
         const SizedBox(height: 16),
         Container(
           padding: const EdgeInsets.all(16),
@@ -2012,7 +2012,7 @@ class _ApplicationWizardSheetState extends State<_ApplicationWizardSheet> {
             Expanded(
               child: Text(
                 'Your application will be routed directly to the campus recruiting dashboard.',
-                style: TextStyle(color: Colors.white54, fontSize: 11),
+                style: TextStyle(color: MyVaultColors.textSecondary, fontSize: 11),
               ),
             ),
           ],
@@ -2027,8 +2027,8 @@ class _ApplicationWizardSheetState extends State<_ApplicationWizardSheet> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(width: 100, child: Text(label, style: const TextStyle(color: Colors.white38, fontSize: 12))),
-          Expanded(child: Text(value, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 12))),
+          SizedBox(width: 100, child: Text(label, style: const TextStyle(color: MyVaultColors.textMuted, fontSize: 12))),
+          Expanded(child: Text(value, style: const TextStyle(color: MyVaultColors.textDark, fontWeight: FontWeight.w600, fontSize: 12))),
         ],
       ),
     );
@@ -2038,13 +2038,13 @@ class _ApplicationWizardSheetState extends State<_ApplicationWizardSheet> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.w600)),
+        Text(label, style: const TextStyle(color: MyVaultColors.textSecondary, fontSize: 12, fontWeight: FontWeight.w600)),
         const SizedBox(height: 6),
         TextField(
           controller: ctrl,
-          style: const TextStyle(color: Colors.white, fontSize: 13),
+          style: const TextStyle(color: MyVaultColors.textDark, fontSize: 13),
           decoration: InputDecoration(
-            prefixIcon: Icon(icon, color: Colors.white54, size: 18),
+            prefixIcon: Icon(icon, color: MyVaultColors.textSecondary, size: 18),
             filled: true,
             fillColor: MyVaultColors.glassFill,
             contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),

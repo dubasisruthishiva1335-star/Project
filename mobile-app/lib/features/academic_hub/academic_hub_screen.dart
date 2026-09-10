@@ -193,90 +193,101 @@ class _AcademicHubScreenState extends State<AcademicHubScreen> {
         if (!didPop) context.go('/home');
       },
       child: Scaffold(
-        backgroundColor: MyVaultColors.obsidian,
+        backgroundColor: MyVaultColors.backgroundWhite,
         appBar: AppBar(
-          backgroundColor: MyVaultColors.obsidian,
+          backgroundColor: Colors.white,
           elevation: 0,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white70),
+            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: MyVaultColors.metalBlack),
             onPressed: () => context.go('/home'),
           ),
-          title: ShaderMask(
-            shaderCallback: (b) => MyVaultColors.accentGradient.createShader(b),
-            child: const Text(
-              'Academic Study Repository',
-              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 18),
-            ),
+          title: const Text(
+            'Academic Study Repository',
+            style: TextStyle(fontWeight: FontWeight.bold, color: MyVaultColors.metalBlack, fontSize: 18),
+          ),
+          bottom: const PreferredSize(
+            preferredSize: Size.fromHeight(1),
+            child: Divider(height: 1, color: Color(0xFFE2E8F0)),
           ),
         ),
-        body: SafeArea(
-          child: Column(
-            children: [
-              // Branch & Semester Selectors
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: Row(
-                  children: [
-                    // Branch Selector
-                    Expanded(
-                      flex: 3,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(12),
-                          color: MyVaultColors.glassFill,
-                          border: Border.all(color: MyVaultColors.glassBorder),
-                        ),
-                        child: DropdownButtonHideUnderline(
-                          child: DropdownButton<String>(
-                            value: _branch,
-                            dropdownColor: const Color(0xFF141722),
-                            icon: const Icon(Icons.keyboard_arrow_down_rounded, color: MyVaultColors.accentCyan),
-                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
-                            items: _branches.map((b) => DropdownMenuItem(value: b, child: Text(b))).toList(),
-                            onChanged: (v) {
-                              if (v != null) {
-                                setState(() => _branch = v);
-                                _load();
-                              }
-                            },
+        body: Container(
+          decoration: const BoxDecoration(
+            gradient: MyVaultColors.whiteShadingGradient,
+          ),
+          child: SafeArea(
+            child: Column(
+              children: [
+                // Branch & Semester Selectors
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  child: Row(
+                    children: [
+                      // Branch Selector
+                      Expanded(
+                        flex: 3,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(14),
+                            color: Colors.white,
+                            border: Border.all(color: const Color(0xFFCBD5E1)),
+                            boxShadow: const [
+                              BoxShadow(color: Color(0x08000000), blurRadius: 6, offset: Offset(0, 2)),
+                            ],
+                          ),
+                          child: DropdownButtonHideUnderline(
+                            child: DropdownButton<String>(
+                              value: _branch,
+                              dropdownColor: Colors.white,
+                              icon: const Icon(Icons.keyboard_arrow_down_rounded, color: MyVaultColors.metalBlack),
+                              style: const TextStyle(color: MyVaultColors.textDark, fontWeight: FontWeight.bold, fontSize: 13),
+                              items: _branches.map((b) => DropdownMenuItem(value: b, child: Text(b))).toList(),
+                              onChanged: (v) {
+                                if (v != null) {
+                                  setState(() => _branch = v);
+                                  _load();
+                                }
+                              },
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 10),
-                    // Semester Selector (Sem 1 - 8)
-                    Expanded(
-                      flex: 4,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(12),
-                          color: MyVaultColors.glassFill,
-                          border: Border.all(color: MyVaultColors.glassBorder),
-                        ),
-                        child: DropdownButtonHideUnderline(
-                          child: DropdownButton<int>(
-                            value: _semester,
-                            dropdownColor: const Color(0xFF141722),
-                            icon: const Icon(Icons.keyboard_arrow_down_rounded, color: MyVaultColors.accentCyan),
-                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
-                            items: List.generate(8, (i) => i + 1)
-                                .map((s) => DropdownMenuItem(value: s, child: Text('Sem $s (${(s + 1) ~/ 2} Year)')))
-                                .toList(),
-                            onChanged: (v) {
-                              if (v != null) {
-                                setState(() => _semester = v);
-                                _load();
-                              }
-                            },
+                      const SizedBox(width: 10),
+                      // Semester Selector (Sem 1 - 8)
+                      Expanded(
+                        flex: 4,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(14),
+                            color: Colors.white,
+                            border: Border.all(color: const Color(0xFFCBD5E1)),
+                            boxShadow: const [
+                              BoxShadow(color: Color(0x08000000), blurRadius: 6, offset: Offset(0, 2)),
+                            ],
+                          ),
+                          child: DropdownButtonHideUnderline(
+                            child: DropdownButton<int>(
+                              value: _semester,
+                              dropdownColor: Colors.white,
+                              icon: const Icon(Icons.keyboard_arrow_down_rounded, color: MyVaultColors.metalBlack),
+                              style: const TextStyle(color: MyVaultColors.textDark, fontWeight: FontWeight.bold, fontSize: 13),
+                              items: List.generate(8, (i) => i + 1)
+                                  .map((s) => DropdownMenuItem(value: s, child: Text('Sem $s (${(s + 1) ~/ 2} Year)')))
+                                  .toList(),
+                              onChanged: (v) {
+                                if (v != null) {
+                                  setState(() => _semester = v);
+                                  _load();
+                                }
+                              },
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
 
               // Unit Selector Chips (All Units, Unit 1-5)
               SizedBox(
@@ -293,11 +304,11 @@ class _AcademicHubScreenState extends State<AcademicHubScreen> {
                         label: Text(label),
                         selected: selected,
                         onSelected: (_) => setState(() => _selectedUnit = u),
-                        selectedColor: MyVaultColors.accentBlue,
-                        backgroundColor: MyVaultColors.glassFill,
-                        side: BorderSide(color: selected ? MyVaultColors.accentBlue : MyVaultColors.glassBorder),
+                        selectedColor: MyVaultColors.metalBlack,
+                        backgroundColor: Colors.white,
+                        side: BorderSide(color: selected ? MyVaultColors.metalBlack : const Color(0xFFCBD5E1)),
                         labelStyle: TextStyle(
-                          color: selected ? Colors.white : Colors.white60,
+                          color: selected ? Colors.white : MyVaultColors.textSecondary,
                           fontSize: 12,
                           fontWeight: selected ? FontWeight.bold : FontWeight.normal,
                         ),
@@ -323,15 +334,15 @@ class _AcademicHubScreenState extends State<AcademicHubScreen> {
                         label: Text(cat['label']!),
                         selected: selected,
                         onSelected: (_) => setState(() => _selectedCategory = cat['key']!),
-                        selectedColor: MyVaultColors.accentCyan.withValues(alpha: 0.25),
-                        backgroundColor: MyVaultColors.glassFill,
-                        side: BorderSide(color: selected ? MyVaultColors.accentCyan : MyVaultColors.glassBorder),
+                        selectedColor: const Color(0xFFE2E8F0),
+                        backgroundColor: Colors.white,
+                        side: BorderSide(color: selected ? MyVaultColors.metalBlack : const Color(0xFFCBD5E1)),
                         labelStyle: TextStyle(
-                          color: selected ? MyVaultColors.accentCyan : Colors.white54,
+                          color: selected ? MyVaultColors.metalBlack : MyVaultColors.textSecondary,
                           fontSize: 12,
                           fontWeight: selected ? FontWeight.bold : FontWeight.normal,
                         ),
-                        checkmarkColor: MyVaultColors.accentCyan,
+                        checkmarkColor: MyVaultColors.metalBlack,
                       ),
                     );
                   }).toList(),
@@ -348,8 +359,8 @@ class _AcademicHubScreenState extends State<AcademicHubScreen> {
                       ),
                       TextButton.icon(
                         onPressed: _load,
-                        icon: const Icon(Icons.refresh_rounded, size: 14, color: MyVaultColors.accentCyan),
-                        label: const Text('Retry', style: TextStyle(color: MyVaultColors.accentCyan, fontSize: 12)),
+                        icon: const Icon(Icons.refresh_rounded, size: 14, color: MyVaultColors.metalBlack),
+                        label: const Text('Retry', style: TextStyle(color: MyVaultColors.metalBlack, fontSize: 12)),
                       ),
                     ],
                   ),
@@ -360,10 +371,10 @@ class _AcademicHubScreenState extends State<AcademicHubScreen> {
               // Main List
               Expanded(
                 child: _loading
-                    ? const Center(child: CircularProgressIndicator(color: MyVaultColors.accentCyan))
+                    ? const Center(child: CircularProgressIndicator(color: MyVaultColors.metalBlack))
                     : RefreshIndicator(
                         onRefresh: _load,
-                        color: MyVaultColors.accentCyan,
+                        color: MyVaultColors.metalBlack,
                         child: _subjects.isEmpty
                             ? LayoutBuilder(
                                 builder: (context, constraints) => SingleChildScrollView(
@@ -374,11 +385,11 @@ class _AcademicHubScreenState extends State<AcademicHubScreen> {
                                       child: Column(
                                         mainAxisAlignment: MainAxisAlignment.center,
                                         children: [
-                                          const Icon(Icons.folder_open_rounded, color: Colors.white12, size: 64),
+                                          const Icon(Icons.folder_open_rounded, color: Color(0xFF94A3B8), size: 64),
                                           const SizedBox(height: 16),
                                           Text(
                                             'No subjects found for $_branch (Sem $_semester)',
-                                            style: const TextStyle(color: Colors.white38, fontSize: 14),
+                                            style: const TextStyle(color: MyVaultColors.textMuted, fontSize: 14),
                                           ),
                                           const SizedBox(height: 12),
                                           ElevatedButton.icon(
@@ -386,9 +397,8 @@ class _AcademicHubScreenState extends State<AcademicHubScreen> {
                                             icon: const Icon(Icons.refresh_rounded, size: 16),
                                             label: const Text('Refresh', style: TextStyle(fontSize: 12)),
                                             style: ElevatedButton.styleFrom(
-                                              backgroundColor: MyVaultColors.glassFill,
-                                              foregroundColor: MyVaultColors.accentCyan,
-                                              side: const BorderSide(color: MyVaultColors.glassBorder),
+                                              backgroundColor: MyVaultColors.metalBlack,
+                                              foregroundColor: Colors.white,
                                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                                             ),
                                           ),
@@ -399,203 +409,217 @@ class _AcademicHubScreenState extends State<AcademicHubScreen> {
                                 ),
                               )
                             : ListView.builder(
-                              padding: const EdgeInsets.all(16),
-                              itemCount: _subjects.length,
-                              itemBuilder: (context, i) {
-                                final subject = _subjects[i] as Map<String, dynamic>;
-                                var contents = (subject['contents'] as List<dynamic>? ?? []);
+                                padding: const EdgeInsets.all(16),
+                                itemCount: _subjects.length,
+                                itemBuilder: (context, i) {
+                                  final subject = _subjects[i] as Map<String, dynamic>;
+                                  var contents = (subject['contents'] as List<dynamic>? ?? []);
 
-                                // Apply Unit filter
-                                if (_selectedUnit > 0) {
-                                  contents = contents.where((c) => (c['unit'] ?? 1) == _selectedUnit).toList();
-                                }
+                                  // Apply Unit filter
+                                  if (_selectedUnit > 0) {
+                                    contents = contents.where((c) => (c['unit'] ?? 1) == _selectedUnit).toList();
+                                  }
 
-                                // Apply Category filter
-                                if (_selectedCategory != 'ALL') {
-                                  contents = contents.where((c) => c['contentType'].toString().toUpperCase() == _selectedCategory).toList();
-                                }
+                                  // Apply Category filter
+                                  if (_selectedCategory != 'ALL') {
+                                    contents = contents.where((c) => c['contentType'].toString().toUpperCase() == _selectedCategory).toList();
+                                  }
 
-                                return Container(
-                                  margin: const EdgeInsets.only(bottom: 16),
-                                  padding: const EdgeInsets.all(16),
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(16),
-                                    color: MyVaultColors.glassFill,
-                                    border: Border.all(color: MyVaultColors.glassBorder),
-                                  ),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      // Subject Header
-                                      Row(
-                                        children: [
-                                          Container(
-                                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                                            decoration: BoxDecoration(
-                                              borderRadius: BorderRadius.circular(8),
-                                              color: MyVaultColors.accentBlue.withValues(alpha: 0.2),
-                                              border: Border.all(color: MyVaultColors.accentBlue.withValues(alpha: 0.4)),
-                                            ),
-                                            child: Text(
-                                              subject['code'] ?? 'SUBJ',
-                                              style: const TextStyle(
-                                                color: MyVaultColors.accentCyan,
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 12,
-                                              ),
-                                            ),
-                                          ),
-                                          const SizedBox(width: 10),
-                                          Expanded(
-                                            child: Text(
-                                              subject['name'] ?? 'Untitled Subject',
-                                              style: const TextStyle(
-                                                color: Colors.white,
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 16,
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-
-                                      const SizedBox(height: 14),
-
-                                      // Uploaded Files List
-                                      if (contents.isNotEmpty) ...[
-                                        ...contents.map((c) {
-                                          final item = c as Map<String, dynamic>;
-                                          final type = item['contentType'] as String?;
-                                          final title = item['title'] as String? ?? _formatContentType(type);
-                                          final fileUrl = item['fileUrl'] as String?;
-                                          final unitNum = item['unit'] ?? 1;
-                                          final icon = _getContentIcon(type);
-
-                                          return Container(
-                                            margin: const EdgeInsets.only(bottom: 10),
-                                            padding: const EdgeInsets.all(12),
-                                            decoration: BoxDecoration(
-                                              borderRadius: BorderRadius.circular(12),
-                                              color: Colors.white.withValues(alpha: 0.03),
-                                              border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
-                                            ),
-                                            child: Column(
-                                              crossAxisAlignment: CrossAxisAlignment.start,
-                                              children: [
-                                                Row(
-                                                  children: [
-                                                    Icon(icon, color: MyVaultColors.accentCyan, size: 22),
-                                                    const SizedBox(width: 10),
-                                                    Expanded(
-                                                      child: Column(
-                                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                                        children: [
-                                                          Text(
-                                                            title,
-                                                            style: const TextStyle(
-                                                              color: Colors.white,
-                                                              fontWeight: FontWeight.w600,
-                                                              fontSize: 14,
-                                                            ),
-                                                          ),
-                                                          const SizedBox(height: 2),
-                                                          Row(
-                                                            children: [
-                                                              Container(
-                                                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                                                decoration: BoxDecoration(
-                                                                  borderRadius: BorderRadius.circular(4),
-                                                                  color: MyVaultColors.accentBlue.withValues(alpha: 0.2),
-                                                                ),
-                                                                child: Text(
-                                                                  'Unit $unitNum',
-                                                                  style: const TextStyle(color: MyVaultColors.accentCyan, fontSize: 10, fontWeight: FontWeight.bold),
-                                                                ),
-                                                              ),
-                                                              const SizedBox(width: 6),
-                                                              Text(
-                                                                _formatContentType(type),
-                                                                style: const TextStyle(
-                                                                  color: Colors.white54,
-                                                                  fontSize: 11,
-                                                                ),
-                                                              ),
-                                                            ],
-                                                          ),
-                                                        ],
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                                const SizedBox(height: 12),
-                                                // View & Download Actions
-                                                Row(
-                                                  children: [
-                                                    Expanded(
-                                                      child: ElevatedButton.icon(
-                                                        onPressed: () => _viewPdfInApp(title, fileUrl),
-                                                        icon: Icon(
-                                                          type == 'VIDEO_LECTURE' ? Icons.play_arrow_rounded : Icons.picture_as_pdf_rounded,
-                                                          size: 15,
-                                                        ),
-                                                        label: Text(type == 'VIDEO_LECTURE' ? 'Watch' : 'View PDF'),
-                                                        style: ElevatedButton.styleFrom(
-                                                          backgroundColor: MyVaultColors.accentBlue,
-                                                          foregroundColor: Colors.white,
-                                                          padding: const EdgeInsets.symmetric(vertical: 8),
-                                                          shape: RoundedRectangleBorder(
-                                                            borderRadius: BorderRadius.circular(8),
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ),
-                                                    const SizedBox(width: 8),
-                                                    Expanded(
-                                                      child: OutlinedButton.icon(
-                                                        onPressed: () => _downloadFile(fileUrl),
-                                                        icon: const Icon(Icons.download_rounded, size: 15),
-                                                        label: const Text('Download'),
-                                                        style: OutlinedButton.styleFrom(
-                                                          foregroundColor: MyVaultColors.accentCyan,
-                                                          side: BorderSide(color: MyVaultColors.accentCyan.withValues(alpha: 0.5)),
-                                                          padding: const EdgeInsets.symmetric(vertical: 8),
-                                                          shape: RoundedRectangleBorder(
-                                                            borderRadius: BorderRadius.circular(8),
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ],
-                                            ),
-                                          );
-                                        }),
-                                      ] else ...[
-                                        Container(
-                                          width: double.infinity,
-                                          padding: const EdgeInsets.all(12),
-                                          decoration: BoxDecoration(
-                                            borderRadius: BorderRadius.circular(10),
-                                            color: Colors.white.withValues(alpha: 0.02),
-                                          ),
-                                          child: const Text(
-                                            'No uploaded resources available for this filter.',
-                                            style: TextStyle(color: Colors.white30, fontSize: 12),
-                                          ),
+                                  return Container(
+                                    margin: const EdgeInsets.only(bottom: 16),
+                                    padding: const EdgeInsets.all(16),
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(20),
+                                      color: Colors.white,
+                                      border: Border.all(color: const Color(0xFFE2E8F0)),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: const Color(0xFF0F172A).withValues(alpha: 0.04),
+                                          blurRadius: 10,
+                                          offset: const Offset(0, 4),
                                         ),
                                       ],
-                                    ],
-                                  ),
-                                );
-                              },
-                            ),
-                          ),
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        // Subject Header
+                                        Row(
+                                          children: [
+                                            Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                              decoration: BoxDecoration(
+                                                borderRadius: BorderRadius.circular(8),
+                                                gradient: MyVaultColors.metalGradient,
+                                              ),
+                                              child: Text(
+                                                subject['code'] ?? 'SUBJ',
+                                                style: const TextStyle(
+                                                  color: Colors.white,
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 12,
+                                                ),
+                                              ),
+                                            ),
+                                            const SizedBox(width: 10),
+                                            Expanded(
+                                              child: Text(
+                                                subject['name'] ?? 'Untitled Subject',
+                                                style: const TextStyle(
+                                                  color: MyVaultColors.textDark,
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 15,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+
+                                        const SizedBox(height: 14),
+
+                                        // Uploaded Files List
+                                        if (contents.isNotEmpty) ...[
+                                          ...contents.map((c) {
+                                            final item = c as Map<String, dynamic>;
+                                            final type = item['contentType'] as String?;
+                                            final title = item['title'] as String? ?? _formatContentType(type);
+                                            final fileUrl = item['fileUrl'] as String?;
+                                            final unitNum = item['unit'] ?? 1;
+                                            final icon = _getContentIcon(type);
+
+                                            return Container(
+                                              margin: const EdgeInsets.only(bottom: 10),
+                                              padding: const EdgeInsets.all(12),
+                                              decoration: BoxDecoration(
+                                                borderRadius: BorderRadius.circular(12),
+                                                color: const Color(0xFFF8FAFC),
+                                                border: Border.all(color: const Color(0xFFE2E8F0)),
+                                              ),
+                                              child: Column(
+                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                                children: [
+                                                  Row(
+                                                    children: [
+                                                      Container(
+                                                        padding: const EdgeInsets.all(6),
+                                                        decoration: BoxDecoration(
+                                                          color: Colors.white,
+                                                          borderRadius: BorderRadius.circular(8),
+                                                          border: Border.all(color: const Color(0xFFE2E8F0)),
+                                                        ),
+                                                        child: Icon(icon, color: MyVaultColors.metalBlack, size: 18),
+                                                      ),
+                                                      const SizedBox(width: 10),
+                                                      Expanded(
+                                                        child: Column(
+                                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                                          children: [
+                                                            Text(
+                                                              title,
+                                                              style: const TextStyle(
+                                                                color: MyVaultColors.textDark,
+                                                                fontWeight: FontWeight.w600,
+                                                                fontSize: 13,
+                                                              ),
+                                                            ),
+                                                            const SizedBox(height: 2),
+                                                            Row(
+                                                              children: [
+                                                                Container(
+                                                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                                                  decoration: BoxDecoration(
+                                                                    borderRadius: BorderRadius.circular(4),
+                                                                    color: const Color(0xFFE2E8F0),
+                                                                  ),
+                                                                  child: Text(
+                                                                    'Unit $unitNum',
+                                                                    style: const TextStyle(color: MyVaultColors.textDark, fontSize: 10, fontWeight: FontWeight.bold),
+                                                                  ),
+                                                                ),
+                                                                const SizedBox(width: 6),
+                                                                Text(
+                                                                  _formatContentType(type),
+                                                                  style: const TextStyle(
+                                                                    color: MyVaultColors.textMuted,
+                                                                    fontSize: 11,
+                                                                  ),
+                                                                ),
+                                                                if (item['uploadedAt'] != null) ...[
+                                                                  const SizedBox(width: 6),
+                                                                  const Text('•', style: TextStyle(color: MyVaultColors.textLight, fontSize: 10)),
+                                                                  const SizedBox(width: 6),
+                                                                  const Text('Verified', style: TextStyle(color: Color(0xFF059669), fontSize: 10, fontWeight: FontWeight.bold)),
+                                                                ],
+                                                              ],
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  const SizedBox(height: 10),
+                                                  // View & Download Actions
+                                                  Row(
+                                                    children: [
+                                                      Expanded(
+                                                        child: ElevatedButton.icon(
+                                                          onPressed: () => _viewPdfInApp(title, fileUrl),
+                                                          icon: Icon(
+                                                            type == 'VIDEO_LECTURE' ? Icons.play_arrow_rounded : Icons.picture_as_pdf_rounded,
+                                                            size: 15,
+                                                          ),
+                                                          label: Text(type == 'VIDEO_LECTURE' ? 'Watch' : 'View PDF'),
+                                                          style: ElevatedButton.styleFrom(
+                                                            backgroundColor: MyVaultColors.metalBlack,
+                                                            foregroundColor: Colors.white,
+                                                            padding: const EdgeInsets.symmetric(vertical: 8),
+                                                            shape: RoundedRectangleBorder(
+                                                              borderRadius: BorderRadius.circular(8),
+                                                            ),
+                                                            elevation: 0,
+                                                          ),
+                                                        ),
+                                                      ),
+                                                      const SizedBox(width: 8),
+                                                      Expanded(
+                                                        child: OutlinedButton.icon(
+                                                          onPressed: () => _downloadFile(fileUrl),
+                                                          icon: const Icon(Icons.download_rounded, size: 15),
+                                                          label: const Text('Download'),
+                                                          style: OutlinedButton.styleFrom(
+                                                            foregroundColor: MyVaultColors.metalBlack,
+                                                            side: const BorderSide(color: Color(0xFFCBD5E1)),
+                                                            padding: const EdgeInsets.symmetric(vertical: 8),
+                                                            shape: RoundedRectangleBorder(
+                                                              borderRadius: BorderRadius.circular(8),
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ],
+                                              ),
+                                            );
+                                          }),
+                                        ] else ...[
+                                          const Padding(
+                                            padding: EdgeInsets.symmetric(vertical: 8),
+                                            child: Text('No contents uploaded yet.', style: TextStyle(color: MyVaultColors.textMuted, fontSize: 12)),
+                                          ),
+                                        ],
+                                      ],
+                                    ),
+                                  );
+                                },
+                              ),
+                      ),
               ),
             ],
           ),
         ),
       ),
+    ),
     );
   }
 }

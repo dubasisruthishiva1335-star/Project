@@ -31,11 +31,11 @@ class MyVaultApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,
-        brightness: Brightness.dark,
-        scaffoldBackgroundColor: MyVaultColors.obsidian,
+        brightness: Brightness.light,
+        scaffoldBackgroundColor: MyVaultColors.backgroundWhite,
         colorScheme: ColorScheme.fromSeed(
-          seedColor: MyVaultColors.accentBlue,
-          brightness: Brightness.dark,
+          seedColor: MyVaultColors.metalBlack,
+          brightness: Brightness.light,
         ),
       ),
       routerConfig: appRouter,

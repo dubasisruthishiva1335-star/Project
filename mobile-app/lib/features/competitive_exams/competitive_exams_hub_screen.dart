@@ -382,11 +382,11 @@ class _CompetitiveExamsHubScreenState extends State<CompetitiveExamsHubScreen> w
                           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(14),
-                            borderSide: const BorderSide(color: const Color(0xFFE2E8F0)),
+                            borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
                           ),
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(14),
-                            borderSide: const BorderSide(color: const Color(0xFFE2E8F0)),
+                            borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(14),
@@ -479,7 +479,7 @@ class _CompetitiveExamsHubScreenState extends State<CompetitiveExamsHubScreen> w
                                 alignment: Alignment.center,
                                 child: const Column(
                                   children: [
-                                    Icon(Icons.search_off_rounded, color: const Color(0xFFCBD5E1), size: 48),
+                                    Icon(Icons.search_off_rounded, color: Color(0xFFCBD5E1), size: 48),
                                     SizedBox(height: 12),
                                     Text('No exam resources found matching filters', style: TextStyle(color: Colors.white54, fontSize: 13)),
                                   ],

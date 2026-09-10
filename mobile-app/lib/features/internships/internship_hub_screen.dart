@@ -648,11 +648,11 @@ class _InternshipHubScreenState extends State<InternshipHubScreen> with SingleTi
               contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(14),
-                borderSide: const BorderSide(color: const Color(0xFFE2E8F0)),
+                borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(14),
-                borderSide: const BorderSide(color: const Color(0xFFE2E8F0)),
+                borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(14),
@@ -714,7 +714,7 @@ class _InternshipHubScreenState extends State<InternshipHubScreen> with SingleTi
               alignment: Alignment.center,
               child: const Column(
                 children: [
-                  Icon(Icons.search_off_rounded, color: const Color(0xFFCBD5E1), size: 48),
+                  Icon(Icons.search_off_rounded, color: Color(0xFFCBD5E1), size: 48),
                   SizedBox(height: 12),
                   Text('No internships found matching filters', style: TextStyle(color: Colors.white60, fontSize: 14)),
                 ],
@@ -815,7 +815,7 @@ class _InternshipHubScreenState extends State<InternshipHubScreen> with SingleTi
                             children: [
                               Text(company, style: const TextStyle(color: MyVaultColors.accentCyan, fontWeight: FontWeight.w600, fontSize: 13)),
                               const SizedBox(width: 6),
-                              const Icon(Icons.circle, color: const Color(0xFFCBD5E1), size: 4),
+                              const Icon(Icons.circle, color: Color(0xFFCBD5E1), size: 4),
                               const SizedBox(width: 6),
                               Flexible(
                                 child: Text(
@@ -1073,7 +1073,7 @@ class _InternshipHubScreenState extends State<InternshipHubScreen> with SingleTi
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.assignment_turned_in_outlined, color: const Color(0xFFCBD5E1), size: 54),
+              const Icon(Icons.assignment_turned_in_outlined, color: Color(0xFFCBD5E1), size: 54),
               const SizedBox(height: 16),
               const Text(
                 'No applications yet',
@@ -1249,7 +1249,7 @@ class _InternshipHubScreenState extends State<InternshipHubScreen> with SingleTi
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.bookmark_border_rounded, color: const Color(0xFFCBD5E1), size: 54),
+              Icon(Icons.bookmark_border_rounded, color: Color(0xFFCBD5E1), size: 54),
               SizedBox(height: 16),
               Text('No saved internships', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
               SizedBox(height: 8),
@@ -1949,8 +1949,8 @@ class _ApplicationWizardSheetState extends State<_ApplicationWizardSheet> {
             hintStyle: const TextStyle(color: Colors.white38, fontSize: 12),
             filled: true,
             fillColor: MyVaultColors.glassFill,
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: const Color(0xFFE2E8F0))),
-            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: const Color(0xFFE2E8F0))),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
+            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
             focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: MyVaultColors.accentCyan)),
           ),
         ),
@@ -2028,8 +2028,8 @@ class _ApplicationWizardSheetState extends State<_ApplicationWizardSheet> {
             filled: true,
             fillColor: MyVaultColors.glassFill,
             contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: const Color(0xFFE2E8F0))),
-            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: const Color(0xFFE2E8F0))),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
+            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
             focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: MyVaultColors.accentCyan)),
           ),
         ),

@@ -319,7 +319,7 @@ class _AddDocumentSheetState extends State<AddDocumentSheet> {
 
             // Category Selector
             DropdownButtonFormField<String>(
-              value: _selectedCategory,
+              initialValue: _selectedCategory,
               dropdownColor: Colors.white,
               style: const TextStyle(color: MyVaultColors.textDark, fontFamily: 'Poppins', fontSize: 14),
               decoration: InputDecoration(

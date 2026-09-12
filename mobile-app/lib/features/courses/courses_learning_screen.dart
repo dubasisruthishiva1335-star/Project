@@ -31,157 +31,6 @@ class _CoursesLearningScreenState extends State<CoursesLearningScreen> with Sing
   final List<Map<String, dynamic>> _myEnrolledCourses = [];
   final List<Map<String, dynamic>> _myCertificates = [];
 
-  final List<Map<String, dynamic>> _seedCourses = [
-    {
-      'id': 'course_fullstack_2026',
-      'title': 'Full Stack Web & Cloud Engineering',
-      'category': 'Web Development',
-      'level': 'Beginner → Advanced',
-      'duration': '45 Hours (42 Lessons)',
-      'instructor': 'MyVault Engineering Academy',
-      'rating': 4.9,
-      'enrolled': 1420,
-      'logoColor': 0xFF3E7BFF,
-      'description': 'Master modern full-stack engineering: HTML/CSS, React, Node.js, Express, PostgreSQL, Docker, Microservices, and Cloud Deployment.',
-      'skills': ['React', 'Node.js', 'PostgreSQL', 'Express', 'Docker', 'REST APIs', 'TypeScript'],
-      'progress': 100,
-      'completedLessons': 31,
-      'totalLessons': 31,
-      'modules': [
-        {
-          'title': 'Module 1: Web Fundamentals & Architecture',
-          'lessons': [
-            {
-              'title': '1.1 Full Stack Architecture & Microservices',
-              'topic': 'Microservices, API Gateway, Distributed Caching',
-              'videoUrl': 'https://www.w3schools.com/html/mov_bbb.mp4',
-              'duration': '18:40',
-              'isCompleted': true,
-              'pdf': 'Architecture_Summary.pdf',
-              'quiz': [
-                {
-                  'question': 'What is the primary role of an API Gateway in microservices?',
-                  'options': ['Compiling CSS', 'Routing, auth & rate limiting', 'Disk cache replacement', 'Querying raw disk sectors'],
-                  'correctAnswer': 'Routing, auth & rate limiting',
-                  'explanation': 'API Gateway routes incoming client traffic and validates authentication headers.'
-                },
-                {
-                  'question': 'Why decouple frontend from backend services?',
-                  'options': ['Independent deployment and modular scaling', 'Slows network queries', 'Requires manual memory management', 'Disables caching'],
-                  'correctAnswer': 'Independent deployment and modular scaling',
-                  'explanation': 'Decoupling enables continuous independent deployment without service downtime.'
-                }
-              ]
-            },
-            {
-              'title': '1.2 Modern Semantic HTML & Responsive CSS',
-              'topic': 'CSS Grid, Flexbox, Mobile-First Layouts',
-              'videoUrl': 'https://www.w3schools.com/html/mov_bbb.mp4',
-              'duration': '24:15',
-              'isCompleted': true,
-              'pdf': 'CSS_Grid_Flexbox.pdf',
-              'quiz': [
-                {
-                  'question': 'Which CSS display mode is ideal for 2D row/column layouts?',
-                  'options': ['display: flex', 'display: grid', 'display: inline', 'display: block'],
-                  'correctAnswer': 'display: grid',
-                  'explanation': 'CSS Grid gives two-dimensional control over both rows and columns.'
-                }
-              ]
-            },
-            {
-              'title': '1.3 JavaScript ES6+ & Asynchronous Engine',
-              'topic': 'Event Loop, Promises, Async/Await, Microtask Queue',
-              'videoUrl': 'https://www.w3schools.com/html/mov_bbb.mp4',
-              'duration': '32:00',
-              'isCompleted': true,
-              'pdf': 'JS_EventLoop.pdf',
-              'quiz': [
-                {
-                  'question': 'In the JS event loop, where are resolved Promise callbacks placed?',
-                  'options': ['Macrotask Queue', 'Microtask Queue', 'Call Stack directly', 'Render Tree'],
-                  'correctAnswer': 'Microtask Queue',
-                  'explanation': 'Promises execute on the high-priority microtask queue.'
-                }
-              ]
-            },
-          ]
-        },
-        {
-          'title': 'Module 2: Frontend Engineering with React',
-          'lessons': [
-            {
-              'title': '2.1 Components, JSX & Props Architecture',
-              'topic': 'Virtual DOM, JSX Transpilation, Unidirectional Data Flow',
-              'videoUrl': 'https://www.w3schools.com/html/mov_bbb.mp4',
-              'duration': '28:10',
-              'isCompleted': true,
-              'pdf': 'React_Props_State.pdf',
-              'quiz': [
-                {
-                  'question': 'How does data flow in standard React component trees?',
-                  'options': ['Unidirectional (top-down)', 'Bidirectional', 'Random access', 'Peer-to-peer'],
-                  'correctAnswer': 'Unidirectional (top-down)',
-                  'explanation': 'Props flow downward from parent to child components.'
-                }
-              ]
-            },
-            {
-              'title': '2.2 Advanced React Hooks & Custom State',
-              'topic': 'useEffect, useMemo, useCallback, Custom Hooks',
-              'videoUrl': 'https://www.w3schools.com/html/mov_bbb.mp4',
-              'duration': '35:20',
-              'isCompleted': true,
-              'pdf': 'Hooks_DeepDive.pdf',
-              'quiz': [
-                {
-                  'question': 'When is useMemo primarily utilized?',
-                  'options': ['To cache expensive calculation results', 'To trigger DOM mutations', 'To write CSS', 'To make HTTP requests'],
-                  'correctAnswer': 'To cache expensive calculation results',
-                  'explanation': 'useMemo recalculates only when specified dependency items change.'
-                }
-              ]
-            },
-          ]
-        }
-      ]
-    },
-    {
-      'id': 'course_python_ai_2026',
-      'title': 'Python Programming & AI/ML Mastery',
-      'category': 'AI & Machine Learning',
-      'level': 'Beginner → Advanced',
-      'duration': '38 Hours (35 Lessons)',
-      'instructor': 'AI Research Labs',
-      'rating': 4.8,
-      'enrolled': 980,
-      'logoColor': 0xFF7C3AFF,
-      'description': 'Comprehensive hands-on AI curriculum: Python data structures, NumPy, Pandas, Scikit-Learn, PyTorch neural networks, and LLM fine-tuning.',
-      'skills': ['Python', 'PyTorch', 'NumPy', 'Pandas', 'Machine Learning', 'Deep Learning'],
-      'progress': 100,
-      'completedLessons': 35,
-      'totalLessons': 35,
-      'modules': []
-    },
-    {
-      'id': 'course_cloud_devops_2026',
-      'title': 'Cloud Computing & AWS Architecture',
-      'category': 'Cloud & DevOps',
-      'level': 'Intermediate',
-      'duration': '30 Hours (28 Lessons)',
-      'instructor': 'Cloud Solutions Architects',
-      'rating': 4.9,
-      'enrolled': 650,
-      'logoColor': 0xFF00D9F5,
-      'description': 'Master AWS Cloud: EC2, S3, RDS, Lambda serverless, VPC networking, CloudFront CDN, and CI/CD pipelines with Terraform & Docker.',
-      'skills': ['AWS', 'Docker', 'Kubernetes', 'Terraform', 'CI/CD', 'Serverless'],
-      'progress': 45,
-      'completedLessons': 12,
-      'totalLessons': 28,
-      'modules': []
-    }
-  ];
-
   @override
   void initState() {
     super.initState();
@@ -249,58 +98,19 @@ class _CoursesLearningScreenState extends State<CoursesLearningScreen> with Sing
       }
     } catch (_) {}
 
-    // 3. Fallback / Merge with seed courses
-    for (final seed in _seedCourses) {
-      final id = seed['id']?.toString() ?? '';
-      if (!seenIds.contains(id)) {
-        seenIds.add(id);
-        combined.add(Map<String, dynamic>.from(seed));
-      }
-    }
-
-    setState(() {
-      _courses = combined;
-      _myEnrolledCourses.clear();
-
-      // Populate enrolled courses matching enrolled IDs, or default to all top courses
-      for (final c in _courses) {
-        final cid = c['id']?.toString() ?? '';
-        if (_enrolledCourseIds.contains(cid)) {
-          _myEnrolledCourses.add(c);
+    if (mounted) {
+      setState(() {
+        _courses = combined;
+        _myEnrolledCourses.clear();
+        for (final c in _courses) {
+          final cid = c['id']?.toString() ?? '';
+          if (_enrolledCourseIds.contains(cid)) {
+            _myEnrolledCourses.add(c);
+          }
         }
-      }
-
-      // If no enrolled courses found from set, add top available courses
-      if (_myEnrolledCourses.isEmpty && _courses.isNotEmpty) {
-        _myEnrolledCourses.add(_courses[0]);
-        if (_courses.length > 1) _myEnrolledCourses.add(_courses[1]);
-      }
-
-      _myCertificates.clear();
-      _myCertificates.add({
-        'certificateId': 'MYV-CERT-2026-482910',
-        'courseTitle': 'Full Stack Web & Cloud Engineering',
-        'studentName': _studentName,
-        'college': _studentCollege,
-        'score': 88,
-        'status': 'PENDING_24H_REVIEW',
-        'submittedAt': '2 Hours ago',
-        'readyIn': '22 Hours Remaining',
-        'verificationUrl': 'https://project-chi-six-62.vercel.app/verify/MYV-CERT-2026-482910',
+        _isLoading = false;
       });
-      _myCertificates.add({
-        'certificateId': 'MYV-CERT-2026-773129',
-        'courseTitle': 'Python Programming & AI/ML Mastery',
-        'studentName': _studentName,
-        'college': _studentCollege,
-        'score': 94,
-        'status': 'EARNED',
-        'issuedDate': 'September 7, 2026',
-        'verificationUrl': 'https://project-chi-six-62.vercel.app/verify/MYV-CERT-2026-773129',
-      });
-
-      _isLoading = false;
-    });
+    }
   }
 
   @override

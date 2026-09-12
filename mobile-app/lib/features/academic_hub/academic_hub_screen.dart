@@ -57,46 +57,7 @@ class _AcademicHubScreenState extends State<AcademicHubScreen> {
       subjectMap[code] = Map<String, dynamic>.from(ds);
     }
 
-    // Always include user uploaded materials for ECE Sem 1
-    if (_branch.toUpperCase() == 'ECE' && _semester == 1) {
-      final ec101Contents = List<dynamic>.from(subjectMap['EC101']?['contents'] as List<dynamic>? ?? []);
-      final uploadedItems = [
-        {
-          'id': 'note_1789067388059',
-          'title': 'nvkg',
-          'contentType': 'NOTES',
-          'unit': 1,
-          'fileUrl': 'https://myvault-files-app.s3.eu-north-1.amazonaws.com/notes/1789067388059-caste_certificate.pdf',
-          'uploadedAt': '2026-09-11T00:30:00Z',
-        },
-        {
-          'id': 'note_1789066241387',
-          'title': 'bhgvgvhbnjmkhbhn (Subject: hbh)',
-          'contentType': 'NOTES',
-          'unit': 1,
-          'fileUrl': 'https://myvault-files-app.s3.eu-north-1.amazonaws.com/notes/1789066241387-apaar-id.pdf',
-          'uploadedAt': '2026-09-11T00:20:00Z',
-        },
-        {
-          'id': 'note_1789066155057',
-          'title': 'hgv gjn mk, (Subject: hjgyhuj)',
-          'contentType': 'NOTES',
-          'unit': 1,
-          'fileUrl': 'https://myvault-files-app.s3.eu-north-1.amazonaws.com/notes/1789066155057-apaar-id.pdf',
-          'uploadedAt': '2026-09-11T00:15:00Z',
-        },
-      ];
-
-      for (final up in uploadedItems.reversed) {
-        final exists = ec101Contents.any((c) => c['id'] == up['id'] || c['fileUrl'] == up['fileUrl']);
-        if (!exists) {
-          ec101Contents.insert(0, up);
-        }
-      }
-      if (subjectMap.containsKey('EC101')) {
-        subjectMap['EC101']!['contents'] = ec101Contents;
-      }
-    }
+    // Dynamic contents loaded from API
 
     try {
       final res = await ApiClient.instance.dio.get('https://project-chi-six-62.vercel.app/api/notes');

@@ -80,28 +80,7 @@ class DocumentsNotifier extends StateNotifier<List<DocumentModel>> {
       } catch (_) {}
     }
 
-    // Default sample student personal credentials
-    state = [
-      DocumentModel(
-        id: 'student_id_card_2026',
-        name: 'College Student ID Card (2026)',
-        category: 'ID Cards',
-        filePath: 'https://myvault-files-app.s3.eu-north-1.amazonaws.com/notes/basic_electronics_u1.pdf',
-        fileSize: '450 KB',
-        addedAt: DateTime.now().subtract(const Duration(days: 5)),
-        description: 'Verified Student Identification • Roll: 2026-ECE-1042',
-      ),
-      DocumentModel(
-        id: 'student_bonafide_cert_2026',
-        name: 'College Bonafide & Study Certificate',
-        category: 'Bonafide',
-        filePath: 'https://myvault-files-app.s3.eu-north-1.amazonaws.com/notes/dsa_unit1_asymptotic.pdf',
-        fileSize: '620 KB',
-        addedAt: DateTime.now().subtract(const Duration(days: 3)),
-        description: 'Academic Year 2025-2026 • Validated by Principal',
-      ),
-    ];
-    await _save();
+    state = [];
   }
 
   Future<void> _save() async {

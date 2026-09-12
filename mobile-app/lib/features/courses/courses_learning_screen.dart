@@ -20,7 +20,7 @@ class _CoursesLearningScreenState extends State<CoursesLearningScreen> with Sing
   bool _isLoading = true;
 
   // Stored Student Details for Certificate Registration
-  String _studentName = "Rahul Kumar";
+  String _studentName = "Student";
   String _studentCollege = "RV College of Engineering";
   String _studentRollNo = "1RV21CS102";
   String _studentEmail = "rahul.k@rvce.edu.in";

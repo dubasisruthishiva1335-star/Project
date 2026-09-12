@@ -151,50 +151,17 @@ export default function AdminCoursesPage() {
       }
     } catch (_) {}
 
-    setGrades([
-      {
-        id: "g1",
-        studentName: "Rahul Kumar",
-        college: "RV College of Engineering (USN: 1RV21CS102)",
-        email: "rahul.k@rvce.edu.in",
-        courseTitle: "Full Stack Web & Cloud Engineering",
-        lessonProgress: 100,
-        quizScore: 88,
-        assignmentScore: 92,
-        finalExamScore: 86,
-        overallScore: 88,
-        certStatus: "PENDING_24H_REVIEW",
-        certNumber: "MYV-CERT-2026-482910",
-        submittedAt: "2 Hours ago",
-      },
-      {
-        id: "g2",
-        studentName: "Priya Sharma",
-        college: "PES University (SRN: PES1UG20CS412)",
-        email: "priya.s@pesu.edu",
-        courseTitle: "Python Programming & AI/ML Mastery",
-        lessonProgress: 100,
-        quizScore: 94,
-        assignmentScore: 90,
-        finalExamScore: 92,
-        overallScore: 92,
-        certStatus: "EARNED",
-        certNumber: "MYV-CERT-2026-773129",
-      },
-      {
-        id: "g3",
-        studentName: "Arjun Reddy",
-        college: "BMS College of Engineering",
-        email: "arjun.reddy@bmsce.ac.in",
-        courseTitle: "Cloud Computing & AWS Architecture",
-        lessonProgress: 75,
-        quizScore: 78,
-        assignmentScore: 80,
-        finalExamScore: 68,
-        overallScore: 74,
-        certStatus: "IN_PROGRESS",
-      },
-    ]);
+    try {
+      const certRes = await fetch("https://project-9zrh.onrender.com/certificates/all").catch(() => null);
+      if (certRes && certRes.ok) {
+        const certData = await certRes.json();
+        setGrades(Array.isArray(certData) ? certData : []);
+      } else {
+        setGrades([]);
+      }
+    } catch (_) {
+      setGrades([]);
+    }
     setLoading(false);
   }
 
@@ -1047,6 +1014,14 @@ export default function AdminCoursesPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5">
+                {grades.length === 0 && (
+                  <tr>
+                    <td colSpan={7} className="py-8 text-center text-white/50">
+                      <p className="text-sm font-semibold text-white/70">No student exam submissions or certificates found.</p>
+                      <p className="text-xs text-white/40 mt-1">When students complete course modules and pass exams on the mobile app, their scores and certificates will appear here.</p>
+                    </td>
+                  </tr>
+                )}
                 {grades.map((g) => (
                   <tr key={g.id} className="hover:bg-white/[0.02]">
                     <td className="py-3 px-4">

@@ -127,45 +127,10 @@ class ResultsService {
         return jsonList.map((j) => ResultRecord.fromJson(j as Map<String, dynamic>)).toList();
       }
     } catch (_) {
-      // Return sample records if offline
+      // Return empty list if offline or no results stored yet
     }
 
-    return [
-      ResultRecord(
-        id: '1',
-        title: 'B.Tech Sem 6 Result (Autonomous)',
-        analysis: ResultAnalysis(
-          studentName: 'Rahul Kumar',
-          rollNumber: '1RV21CS102',
-          semester: 'Semester 6',
-          sgpa: 9.14,
-          cgpa: 8.87,
-          result: 'FIRST CLASS WITH DISTINCTION',
-          aiSummary: 'Outstanding performance in Operating Systems and Distributed Cloud Networks. Demonstrates strong analytical and core computer science fundamentals.',
-          strengths: ['Cloud Computing (100/100)', 'Operating Systems (94/100)', 'System Architecture'],
-          improvementAreas: ['Discrete Mathematics proof structuring'],
-        ),
-        pdfUrl: 'https://myvault-files-app.s3.eu-north-1.amazonaws.com/notes/1786544055523-478f14f9-ade1-411b-882d-5124b5b84967-RADAR_Ashok.pdf',
-        createdAt: DateTime.now().subtract(const Duration(days: 2)),
-      ),
-      ResultRecord(
-        id: '2',
-        title: 'B.Tech Sem 5 Result',
-        analysis: ResultAnalysis(
-          studentName: 'Rahul Kumar',
-          rollNumber: '1RV21CS102',
-          semester: 'Semester 5',
-          sgpa: 8.65,
-          cgpa: 8.78,
-          result: 'FIRST CLASS WITH DISTINCTION',
-          aiSummary: 'Consistent upper-percentile ranking. High marks in Database Management and Software Engineering.',
-          strengths: ['Database Systems', 'Algorithms'],
-          improvementAreas: ['Automata Theory & Computability'],
-        ),
-        pdfUrl: 'https://myvault-files-app.s3.eu-north-1.amazonaws.com/notes/1786544055523-478f14f9-ade1-411b-882d-5124b5b84967-RADAR_Ashok.pdf',
-        createdAt: DateTime.now().subtract(const Duration(days: 90)),
-      ),
-    ];
+    return [];
   }
 }
 

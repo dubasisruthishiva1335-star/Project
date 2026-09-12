@@ -196,7 +196,7 @@ class _CoursesLearningScreenState extends State<CoursesLearningScreen> with Sing
     super.dispose();
   }
 
-    Future<void> _fetchCourses() async {
+  Future<void> _fetchCourses() async {
     setState(() => _isLoading = true);
     final List<Map<String, dynamic>> combined = [];
     final Set<String> seenIds = {};
@@ -220,7 +220,6 @@ class _CoursesLearningScreenState extends State<CoursesLearningScreen> with Sing
       for (final raw in list) {
         if (raw is Map) {
           final item = Map<String, dynamic>.from(raw);
-          // Strict course validation: Must NOT be an internship, exam, or study note
           if (item['type'] == 'INTERNSHIP' || item['stipend'] != null || item['eligibleBranches'] != null) {
             continue;
           }
@@ -262,8 +261,20 @@ class _CoursesLearningScreenState extends State<CoursesLearningScreen> with Sing
     setState(() {
       _courses = combined;
       _myEnrolledCourses.clear();
-      if (_courses.isNotEmpty) _myEnrolledCourses.add(_courses[0]);
-      if (_courses.length > 1) _myEnrolledCourses.add(_courses[1]);
+
+      // Populate enrolled courses matching enrolled IDs, or default to all top courses
+      for (final c in _courses) {
+        final cid = c['id']?.toString() ?? '';
+        if (_enrolledCourseIds.contains(cid)) {
+          _myEnrolledCourses.add(c);
+        }
+      }
+
+      // If no enrolled courses found from set, add top available courses
+      if (_myEnrolledCourses.isEmpty && _courses.isNotEmpty) {
+        _myEnrolledCourses.add(_courses[0]);
+        if (_courses.length > 1) _myEnrolledCourses.add(_courses[1]);
+      }
 
       _myCertificates.clear();
       _myCertificates.add({
@@ -292,7 +303,6 @@ class _CoursesLearningScreenState extends State<CoursesLearningScreen> with Sing
     });
   }
 
-
   @override
   Widget build(BuildContext context) {
     return PopScope(
@@ -307,88 +317,113 @@ class _CoursesLearningScreenState extends State<CoursesLearningScreen> with Sing
         }
       },
       child: Scaffold(
-      backgroundColor: MyVaultColors.backgroundWhite,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: MyVaultColors.metalBlack, size: 20),
-          onPressed: () { if (context.canPop()) { context.pop(); } else { context.go('/home'); } },
-        ),
-        title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(6),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(10),
-                gradient: MyVaultColors.metalGradient,
-              ),
-              child: const Icon(Icons.school_rounded, color: Colors.white, size: 18),
-            ),
-            const SizedBox(width: 10),
-            const Text(
-              'Courses & AI Learning',
-              style: TextStyle(color: MyVaultColors.metalBlack, fontWeight: FontWeight.bold, fontSize: 18),
-            ),
-          ],
-        ),
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(48),
-          child: Column(
+        backgroundColor: MyVaultColors.backgroundWhite,
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: MyVaultColors.metalBlack, size: 20),
+            onPressed: () {
+              if (context.canPop()) {
+                context.pop();
+              } else {
+                context.go('/home');
+              }
+            },
+          ),
+          title: Row(
             children: [
-              TabBar(
-                controller: _tabController,
-                indicatorColor: MyVaultColors.metalBlack,
-                indicatorWeight: 3,
-                labelColor: MyVaultColors.metalBlack,
-                unselectedLabelColor: MyVaultColors.textMuted,
-                labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                tabs: [
-                  const Tab(text: 'Explore Courses'),
-                  const Tab(text: 'My Learning'),
-                  Tab(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Text('Certificates'),
-                        const SizedBox(width: 6),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFE2E8F0),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            '${_myCertificates.length}',
-                            style: const TextStyle(color: MyVaultColors.metalBlack, fontSize: 10, fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                  gradient: MyVaultColors.metalGradient,
+                ),
+                child: const Icon(Icons.school_rounded, color: Colors.white, size: 18),
               ),
-              const Divider(height: 1, color: Color(0xFFE2E8F0)),
+              const SizedBox(width: 10),
+              const Text(
+                'Courses & AI Learning',
+                style: TextStyle(color: MyVaultColors.metalBlack, fontWeight: FontWeight.bold, fontSize: 18),
+              ),
             ],
           ),
+          bottom: PreferredSize(
+            preferredSize: const Size.fromHeight(48),
+            child: Column(
+              children: [
+                TabBar(
+                  controller: _tabController,
+                  indicatorColor: MyVaultColors.metalBlack,
+                  indicatorWeight: 3,
+                  labelColor: MyVaultColors.metalBlack,
+                  unselectedLabelColor: MyVaultColors.textMuted,
+                  labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                  tabs: [
+                    const Tab(text: 'Explore Courses'),
+                    Tab(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Text('My Learning'),
+                          const SizedBox(width: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFE2E8F0),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              '${_myEnrolledCourses.length}',
+                              style: const TextStyle(color: MyVaultColors.metalBlack, fontSize: 10, fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Tab(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Text('Certificates'),
+                          const SizedBox(width: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFE2E8F0),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              '${_myCertificates.length}',
+                              style: const TextStyle(color: MyVaultColors.metalBlack, fontSize: 10, fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const Divider(height: 1, color: Color(0xFFE2E8F0)),
+              ],
+            ),
+          ),
+        ),
+        body: Container(
+          decoration: const BoxDecoration(
+            gradient: MyVaultColors.whiteShadingGradient,
+          ),
+          child: _isLoading
+              ? const Center(child: CircularProgressIndicator(color: MyVaultColors.metalBlack))
+              : TabBarView(
+                  controller: _tabController,
+                  children: [
+                    _buildExploreTab(),
+                    _buildMyLearningTab(),
+                    _buildCertificatesTab(),
+                  ],
+                ),
         ),
       ),
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: MyVaultColors.whiteShadingGradient,
-        ),
-        child: _isLoading
-            ? const Center(child: CircularProgressIndicator(color: MyVaultColors.metalBlack))
-            : TabBarView(
-                controller: _tabController,
-                children: [
-                  _buildExploreTab(),
-                  _buildMyLearningTab(),
-                  _buildCertificatesTab(),
-                ],
-              ),
-      ),
-    ),
     );
   }
 
@@ -415,6 +450,9 @@ class _CoursesLearningScreenState extends State<CoursesLearningScreen> with Sing
               color: Colors.white,
               borderRadius: BorderRadius.circular(14),
               border: Border.all(color: const Color(0xFFE2E8F0)),
+              boxShadow: const [
+                BoxShadow(color: Color(0x06000000), blurRadius: 8, offset: Offset(0, 2)),
+              ],
             ),
             child: TextField(
               controller: _searchController,
@@ -426,7 +464,9 @@ class _CoursesLearningScreenState extends State<CoursesLearningScreen> with Sing
                 prefixIcon: const Icon(Icons.search_rounded, color: MyVaultColors.metalBlack, size: 20),
                 border: InputBorder.none,
                 contentPadding: const EdgeInsets.symmetric(vertical: 14),
-                suffixIcon: _searchController.text.isNotEmpty ? IconButton(icon: const Icon(Icons.close_rounded, color: MyVaultColors.metalBlack, size: 18),
+                suffixIcon: _searchController.text.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.close_rounded, color: MyVaultColors.metalBlack, size: 18),
                         onPressed: () {
                           _searchController.clear();
                           setState(() {});
@@ -453,18 +493,16 @@ class _CoursesLearningScreenState extends State<CoursesLearningScreen> with Sing
                     onSelected: (selected) {
                       if (selected) setState(() => _selectedCategory = cat);
                     },
-                    backgroundColor: Colors.white,
                     selectedColor: MyVaultColors.metalBlack,
+                    backgroundColor: Colors.white,
                     labelStyle: TextStyle(
                       color: isSelected ? Colors.white : MyVaultColors.textSecondary,
-                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                      fontWeight: FontWeight.w600,
                       fontSize: 12,
                     ),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                      side: BorderSide(
-                        color: isSelected ? MyVaultColors.metalBlack : const Color(0xFFCBD5E1),
-                      ),
+                      borderRadius: BorderRadius.circular(10),
+                      side: BorderSide(color: isSelected ? MyVaultColors.metalBlack : const Color(0xFFE2E8F0)),
                     ),
                   ),
                 );
@@ -472,25 +510,38 @@ class _CoursesLearningScreenState extends State<CoursesLearningScreen> with Sing
             ),
           ),
 
-          const SizedBox(height: 18),
+          const SizedBox(height: 16),
 
-          // Course Cards
-          ...filtered.map((course) => _buildCourseCard(course)),
+          if (filtered.isEmpty)
+            Container(
+              padding: const EdgeInsets.all(32),
+              alignment: Alignment.center,
+              child: const Column(
+                children: [
+                  Icon(Icons.search_off_rounded, color: MyVaultColors.textMuted, size: 48),
+                  SizedBox(height: 12),
+                  Text('No matching courses found', style: TextStyle(color: MyVaultColors.textDark, fontWeight: FontWeight.bold, fontSize: 15)),
+                  SizedBox(height: 4),
+                  Text('Try searching for Web, AI, Python, or Cloud topics', style: TextStyle(color: MyVaultColors.textSecondary, fontSize: 12)),
+                ],
+              ),
+            )
+          else
+            ...filtered.map((c) => _buildCourseCard(c)),
         ],
       ),
     );
   }
 
   Widget _buildCourseCard(Map<String, dynamic> course) {
-    final courseId = course['id'] ?? '';
     final title = course['title'] ?? 'Course Title';
-    final instructor = course['instructor'] ?? 'MyVault Faculty';
-    final category = course['category'] ?? 'Engineering';
-    final duration = course['duration'] ?? '30 Hours';
-    final rating = (course['rating'] is num) ? course['rating'] : 4.9;
-    final enrolled = course['enrolled'] ?? 1200;
-    final colorVal = (course['logoColor'] is int) ? course['logoColor'] : 0xFF3E7BFF;
-    final isEnrolled = _enrolledCourseIds.contains(courseId);
+    final category = course['category'] ?? 'General';
+    final duration = course['duration'] ?? 'Self-Paced';
+    final instructor = course['instructor'] ?? 'MyVault Academy';
+    final rating = course['rating'] ?? 4.8;
+    final enrolled = course['enrolled'] ?? 1000;
+    final colorVal = course['logoColor'] is int ? course['logoColor'] : 0xFF3E7BFF;
+    final isEnrolled = _enrolledCourseIds.contains(course['id']);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -498,6 +549,9 @@ class _CoursesLearningScreenState extends State<CoursesLearningScreen> with Sing
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: const Color(0xFFE2E8F0)),
+        boxShadow: const [
+          BoxShadow(color: Color(0x06000000), blurRadius: 10, offset: Offset(0, 3)),
+        ],
       ),
       child: Material(
         color: Colors.transparent,
@@ -554,10 +608,10 @@ class _CoursesLearningScreenState extends State<CoursesLearningScreen> with Sing
                   spacing: 8,
                   runSpacing: 8,
                   children: [
-                    _buildTag(category, Icons.category_outlined, const Color(0xFF00D9F5)),
-                    _buildTag(duration, Icons.schedule_rounded, const Color(0xFFFFB800)),
-                    _buildTag('$enrolled Learners', Icons.people_outline_rounded, const Color(0xFF7C3AFF)),
-                    _buildTag('🏆 24h Verified Certificate', Icons.verified_rounded, const Color(0xFF00E676)),
+                    _buildTag(category, Icons.category_outlined, const Color(0xFF0284C7)),
+                    _buildTag(duration, Icons.schedule_rounded, const Color(0xFFD97706)),
+                    _buildTag('$enrolled Learners', Icons.people_outline_rounded, const Color(0xFF7C3AED)),
+                    _buildTag('🏆 24h Verified Certificate', Icons.verified_rounded, const Color(0xFF059669)),
                   ],
                 ),
 
@@ -578,8 +632,8 @@ class _CoursesLearningScreenState extends State<CoursesLearningScreen> with Sing
                     ElevatedButton(
                       onPressed: () => _handleCourseClick(course),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: isEnrolled ? MyVaultColors.accentBlue : const Color(0xFF00E676),
-                        foregroundColor: isEnrolled ? Colors.white : Colors.black,
+                        backgroundColor: isEnrolled ? MyVaultColors.metalBlack : const Color(0xFF059669),
+                        foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                       ),
@@ -602,9 +656,9 @@ class _CoursesLearningScreenState extends State<CoursesLearningScreen> with Sing
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.25)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -618,9 +672,78 @@ class _CoursesLearningScreenState extends State<CoursesLearningScreen> with Sing
   }
 
   Widget _buildMyLearningTab() {
+    if (_myEnrolledCourses.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.school_outlined, color: MyVaultColors.textMuted, size: 54),
+              const SizedBox(height: 16),
+              const Text('No Courses in My Learning', style: TextStyle(color: MyVaultColors.textDark, fontSize: 18, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              const Text('You have not enrolled in any video courses yet. Explore our curriculum and start learning with 24-hour certification.', textAlign: TextAlign.center, style: TextStyle(color: MyVaultColors.textSecondary, fontSize: 13)),
+              const SizedBox(height: 20),
+              ElevatedButton.icon(
+                onPressed: () => _tabController.animateTo(0),
+                icon: const Icon(Icons.explore_rounded, size: 18),
+                label: const Text('Explore Courses ➔', style: TextStyle(fontWeight: FontWeight.bold)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: MyVaultColors.metalBlack,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
+        // Summary Header Card
+        Container(
+          margin: const EdgeInsets.only(bottom: 16),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: const Color(0xFFE2E8F0)),
+            boxShadow: const [
+              BoxShadow(color: Color(0x06000000), blurRadius: 8, offset: Offset(0, 2)),
+            ],
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  gradient: MyVaultColors.metalGradient,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(Icons.auto_stories_rounded, color: Colors.white, size: 22),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Active Scholar: $_studentName', style: const TextStyle(color: MyVaultColors.textDark, fontWeight: FontWeight.bold, fontSize: 14)),
+                    const SizedBox(height: 2),
+                    Text('$_studentCollege • ${_myEnrolledCourses.length} Courses in Progress', style: const TextStyle(color: MyVaultColors.textSecondary, fontSize: 12)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        // Course Cards
         ..._myEnrolledCourses.map((c) {
           final progress = (c['progress'] is num) ? (c['progress'] as num).toInt() : 65;
           final completed = c['completedLessons'] ?? 18;
@@ -633,6 +756,9 @@ class _CoursesLearningScreenState extends State<CoursesLearningScreen> with Sing
               color: Colors.white,
               borderRadius: BorderRadius.circular(20),
               border: Border.all(color: const Color(0xFFE2E8F0)),
+              boxShadow: const [
+                BoxShadow(color: Color(0x06000000), blurRadius: 10, offset: Offset(0, 3)),
+              ],
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -640,11 +766,31 @@ class _CoursesLearningScreenState extends State<CoursesLearningScreen> with Sing
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(c['category'] ?? 'Engineering', style: const TextStyle(color: MyVaultColors.accentCyan, fontWeight: FontWeight.bold, fontSize: 11)),
-                    Text('$progress% Complete', style: const TextStyle(color: Color(0xFF16A34A), fontWeight: FontWeight.bold, fontSize: 12)),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF0284C7).withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        c['category'] ?? 'Engineering',
+                        style: const TextStyle(color: Color(0xFF0284C7), fontWeight: FontWeight.bold, fontSize: 11),
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF059669).withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        '$progress% Complete',
+                        style: const TextStyle(color: Color(0xFF059669), fontWeight: FontWeight.bold, fontSize: 11),
+                      ),
+                    ),
                   ],
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 10),
                 Text(c['title'] ?? 'Course Title', style: const TextStyle(color: MyVaultColors.textDark, fontWeight: FontWeight.bold, fontSize: 16)),
                 const SizedBox(height: 4),
                 Text('Registered to: $_studentName • $_studentCollege', style: const TextStyle(color: MyVaultColors.textSecondary, fontSize: 11)),
@@ -659,7 +805,7 @@ class _CoursesLearningScreenState extends State<CoursesLearningScreen> with Sing
                     value: progress / 100,
                     minHeight: 8,
                     backgroundColor: const Color(0xFFE2E8F0),
-                    valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF16A34A)),
+                    valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF059669)),
                   ),
                 ),
 
@@ -667,17 +813,22 @@ class _CoursesLearningScreenState extends State<CoursesLearningScreen> with Sing
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    TextButton.icon(
+                    OutlinedButton.icon(
                       onPressed: () => _openCourseDetails(c),
-                      icon: const Icon(Icons.list_alt_rounded, size: 16, color: MyVaultColors.textSecondary),
-                      label: const Text('Syllabus & Quizzes', style: TextStyle(color: MyVaultColors.textSecondary, fontSize: 12)),
+                      icon: const Icon(Icons.list_alt_rounded, size: 16, color: MyVaultColors.metalBlack),
+                      label: const Text('Syllabus & Quizzes', style: TextStyle(color: MyVaultColors.metalBlack, fontSize: 12, fontWeight: FontWeight.bold)),
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: Color(0xFFCBD5E1)),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                      ),
                     ),
                     ElevatedButton.icon(
                       onPressed: () => _openLessonPlayer(c),
                       icon: const Icon(Icons.play_arrow_rounded, size: 18),
                       label: const Text('Watch & Learn', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: MyVaultColors.accentBlue,
+                        backgroundColor: MyVaultColors.metalBlack,
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -737,15 +888,11 @@ class _CoursesLearningScreenState extends State<CoursesLearningScreen> with Sing
         margin: const EdgeInsets.only(bottom: 20),
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(24),
-          gradient: const LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFF261D0C), Color(0xFF0F131D)],
-          ),
-          border: Border.all(color: const Color(0xFFFFB800).withValues(alpha: 0.5)),
-          boxShadow: [
-            BoxShadow(color: const Color(0xFFFFB800).withValues(alpha: 0.1), blurRadius: 20, spreadRadius: 2),
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: const Color(0xFFD97706)),
+          boxShadow: const [
+            BoxShadow(color: Color(0x0C000000), blurRadius: 16, offset: Offset(0, 4)),
           ],
         ),
         child: Column(
@@ -759,16 +906,16 @@ class _CoursesLearningScreenState extends State<CoursesLearningScreen> with Sing
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFFFB800).withValues(alpha: 0.2),
+                        color: const Color(0xFFD97706).withValues(alpha: 0.12),
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(Icons.hourglass_top_rounded, color: Color(0xFFFFB800), size: 22),
+                      child: const Icon(Icons.hourglass_top_rounded, color: Color(0xFFD97706), size: 22),
                     ),
                     const SizedBox(width: 10),
                     const Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('IN 24-HOUR VERIFICATION QUEUE', style: TextStyle(color: Color(0xFFFFB800), fontWeight: FontWeight.bold, fontSize: 10, letterSpacing: 1.1)),
+                        Text('IN 24-HOUR VERIFICATION QUEUE', style: TextStyle(color: Color(0xFFD97706), fontWeight: FontWeight.bold, fontSize: 10, letterSpacing: 1.1)),
                         Text('Certificate Under Audit', style: TextStyle(color: MyVaultColors.textDark, fontWeight: FontWeight.bold, fontSize: 14)),
                       ],
                     ),
@@ -776,8 +923,8 @@ class _CoursesLearningScreenState extends State<CoursesLearningScreen> with Sing
                 ),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(color: const Color(0xFFFFB800).withValues(alpha: 0.15), borderRadius: BorderRadius.circular(8)),
-                  child: Text(readyIn, style: const TextStyle(color: Color(0xFFFFB800), fontWeight: FontWeight.bold, fontSize: 10)),
+                  decoration: BoxDecoration(color: const Color(0xFFD97706).withValues(alpha: 0.12), borderRadius: BorderRadius.circular(8)),
+                  child: Text(readyIn, style: const TextStyle(color: Color(0xFFD97706), fontWeight: FontWeight.bold, fontSize: 10)),
                 ),
               ],
             ),
@@ -785,14 +932,14 @@ class _CoursesLearningScreenState extends State<CoursesLearningScreen> with Sing
             const SizedBox(height: 16),
             const Text('Registered Recipient:', style: TextStyle(color: MyVaultColors.textMuted, fontSize: 11)),
             Text(student, style: const TextStyle(color: MyVaultColors.textDark, fontWeight: FontWeight.bold, fontSize: 17)),
-            Text(college, style: const TextStyle(color: MyVaultColors.accentCyan, fontSize: 12)),
+            Text(college, style: const TextStyle(color: MyVaultColors.accentCyan, fontSize: 12, fontWeight: FontWeight.w600)),
             const SizedBox(height: 8),
             Text('Course: $course', style: const TextStyle(color: MyVaultColors.textSecondary, fontSize: 12, fontWeight: FontWeight.w600)),
 
             const SizedBox(height: 14),
             Container(
               padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.4), borderRadius: BorderRadius.circular(12)),
+              decoration: BoxDecoration(color: const Color(0xFFF8FAFC), borderRadius: BorderRadius.circular(12), border: Border.all(color: const Color(0xFFE2E8F0))),
               child: Column(
                 children: [
                   _buildAuditCheck('✓ 100% Video Lecture Hours Completed', true),
@@ -811,7 +958,7 @@ class _CoursesLearningScreenState extends State<CoursesLearningScreen> with Sing
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text('Token ID', style: TextStyle(color: MyVaultColors.textMuted, fontSize: 10)),
-                    Text(certId, style: const TextStyle(color: MyVaultColors.textDark, fontFamily: 'monospace', fontSize: 11)),
+                    Text(certId, style: const TextStyle(color: MyVaultColors.textDark, fontFamily: 'monospace', fontWeight: FontWeight.bold, fontSize: 11)),
                   ],
                 ),
                 ElevatedButton(
@@ -826,8 +973,8 @@ class _CoursesLearningScreenState extends State<CoursesLearningScreen> with Sing
                     );
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFFFB800),
-                    foregroundColor: Colors.black,
+                    backgroundColor: const Color(0xFFD97706),
+                    foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                   ),
@@ -845,15 +992,11 @@ class _CoursesLearningScreenState extends State<CoursesLearningScreen> with Sing
       margin: const EdgeInsets.only(bottom: 20),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF1B2236), Color(0xFF0C101A)],
-        ),
-        border: Border.all(color: const Color(0xFF00E676).withValues(alpha: 0.5)),
-        boxShadow: [
-          BoxShadow(color: const Color(0xFF00E676).withValues(alpha: 0.08), blurRadius: 20, spreadRadius: 2),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFF059669)),
+        boxShadow: const [
+          BoxShadow(color: Color(0x0C000000), blurRadius: 16, offset: Offset(0, 4)),
         ],
       ),
       child: Column(
@@ -867,25 +1010,25 @@ class _CoursesLearningScreenState extends State<CoursesLearningScreen> with Sing
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF00E676).withValues(alpha: 0.15),
+                      color: const Color(0xFF059669).withValues(alpha: 0.12),
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(Icons.emoji_events_rounded, color: Color(0xFF00E676), size: 24),
+                    child: const Icon(Icons.emoji_events_rounded, color: Color(0xFF059669), size: 24),
                   ),
                   const SizedBox(width: 10),
                   const Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('MYVAULT OFFICIALLY VERIFIED', style: TextStyle(color: Color(0xFF00E676), fontWeight: FontWeight.bold, fontSize: 10, letterSpacing: 1.2)),
-                      Text('Certificate of Achievement', style: TextStyle(color: MyVaultColors.textDark, fontWeight: FontWeight.bold, fontSize: 13)),
+                      Text('MYVAULT OFFICIALLY VERIFIED', style: TextStyle(color: Color(0xFF059669), fontWeight: FontWeight.bold, fontSize: 10, letterSpacing: 1.2)),
+                      Text('Certificate of Achievement', style: TextStyle(color: MyVaultColors.textDark, fontWeight: FontWeight.bold, fontSize: 14)),
                     ],
                   ),
                 ],
               ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(color: const Color(0xFF00E676).withValues(alpha: 0.15), borderRadius: BorderRadius.circular(8)),
-                child: Text('Score: $score%', style: const TextStyle(color: Color(0xFF00E676), fontWeight: FontWeight.bold, fontSize: 11)),
+                decoration: BoxDecoration(color: const Color(0xFF059669).withValues(alpha: 0.12), borderRadius: BorderRadius.circular(8)),
+                child: Text('Score: $score%', style: const TextStyle(color: Color(0xFF059669), fontWeight: FontWeight.bold, fontSize: 11)),
               ),
             ],
           ),
@@ -922,8 +1065,8 @@ class _CoursesLearningScreenState extends State<CoursesLearningScreen> with Sing
                 icon: const Icon(Icons.qr_code_2_rounded, size: 16),
                 label: const Text('Verify ↗', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF00E676),
-                  foregroundColor: Colors.black,
+                  backgroundColor: const Color(0xFF059669),
+                  foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 ),
@@ -937,12 +1080,21 @@ class _CoursesLearningScreenState extends State<CoursesLearningScreen> with Sing
 
   Widget _buildAuditCheck(String text, bool isDone) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2),
+      padding: const EdgeInsets.symmetric(vertical: 3),
       child: Row(
         children: [
-          Icon(isDone ? Icons.check_circle_rounded : Icons.pending_rounded, color: isDone ? const Color(0xFF00E676) : const Color(0xFFFFB800), size: 14),
+          Icon(isDone ? Icons.check_circle_rounded : Icons.pending_rounded, color: isDone ? const Color(0xFF059669) : const Color(0xFFD97706), size: 14),
           const SizedBox(width: 8),
-          Text(text, style: TextStyle(color: isDone ? Colors.white70 : const Color(0xFFFFB800), fontSize: 11, fontWeight: isDone ? FontWeight.normal : FontWeight.bold)),
+          Expanded(
+            child: Text(
+              text,
+              style: TextStyle(
+                color: isDone ? MyVaultColors.textDark : const Color(0xFFD97706),
+                fontSize: 11,
+                fontWeight: isDone ? FontWeight.w500 : FontWeight.bold,
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -974,8 +1126,11 @@ class _CoursesLearningScreenState extends State<CoursesLearningScreen> with Sing
         child: Container(
           padding: const EdgeInsets.all(22),
           decoration: const BoxDecoration(
-            color: Color(0xFF0C101A),
+            color: Colors.white,
             borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+            boxShadow: [
+              BoxShadow(color: Color(0x1F000000), blurRadius: 30, offset: Offset(0, -6)),
+            ],
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -988,8 +1143,8 @@ class _CoursesLearningScreenState extends State<CoursesLearningScreen> with Sing
                 children: [
                   Container(
                     padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(color: MyVaultColors.accentBlue.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(10)),
-                    child: const Icon(Icons.badge_rounded, color: MyVaultColors.accentCyan, size: 22),
+                    decoration: BoxDecoration(color: const Color(0xFF0284C7).withValues(alpha: 0.12), borderRadius: BorderRadius.circular(10)),
+                    child: const Icon(Icons.badge_rounded, color: Color(0xFF0284C7), size: 22),
                   ),
                   const SizedBox(width: 12),
                   const Expanded(
@@ -1007,15 +1162,15 @@ class _CoursesLearningScreenState extends State<CoursesLearningScreen> with Sing
               const SizedBox(height: 16),
               Container(
                 padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(color: const Color(0xFFFFB800).withValues(alpha: 0.12), borderRadius: BorderRadius.circular(10)),
+                decoration: BoxDecoration(color: const Color(0xFFD97706).withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
                 child: const Row(
                   children: [
-                    Icon(Icons.info_outline_rounded, color: Color(0xFFFFB800), size: 16),
+                    Icon(Icons.info_outline_rounded, color: Color(0xFFD97706), size: 16),
                     SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         'Please enter your exact legal name & college. Upon completing the course, your verified certificate is minted in these details within 24 hours.',
-                        style: TextStyle(color: Color(0xFFFFB800), fontSize: 11),
+                        style: TextStyle(color: Color(0xFFD97706), fontSize: 11),
                       ),
                     ),
                   ],
@@ -1050,7 +1205,9 @@ class _CoursesLearningScreenState extends State<CoursesLearningScreen> with Sing
                     _studentEmail = emailCtrl.text.trim();
                     _studentPhone = phoneCtrl.text.trim();
                     _enrolledCourseIds.add(course['id'] ?? '');
-                    _myEnrolledCourses.add(course);
+                    if (!_myEnrolledCourses.any((c) => c['id'] == course['id'])) {
+                      _myEnrolledCourses.add(course);
+                    }
                   });
 
                   // Call backend enroll endpoint
@@ -1070,8 +1227,8 @@ class _CoursesLearningScreenState extends State<CoursesLearningScreen> with Sing
                   _openLessonPlayer(course);
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF00E676),
-                  foregroundColor: Colors.black,
+                  backgroundColor: MyVaultColors.metalBlack,
+                  foregroundColor: Colors.white,
                   minimumSize: const Size(double.infinity, 48),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
@@ -1138,7 +1295,7 @@ class _CoursesLearningScreenState extends State<CoursesLearningScreen> with Sing
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('✓ Completed "$lessonTitle" & Passed Video Quiz!'),
-              backgroundColor: const Color(0xFF00E676),
+              backgroundColor: const Color(0xFF059669),
             ),
           );
         },
@@ -1198,8 +1355,11 @@ class _CourseDetailsSheet extends StatelessWidget {
       builder: (ctx, scrollCtrl) {
         return Container(
           decoration: const BoxDecoration(
-            color: Color(0xFF0C101A),
+            color: Colors.white,
             borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+            boxShadow: [
+              BoxShadow(color: Color(0x1F000000), blurRadius: 30, offset: Offset(0, -6)),
+            ],
           ),
           child: Column(
             children: [
@@ -1214,7 +1374,7 @@ class _CourseDetailsSheet extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(title, style: const TextStyle(color: MyVaultColors.textDark, fontSize: 18, fontWeight: FontWeight.bold)),
-                          Text('Instructor: $instructor • Enrolled as: $studentName', style: const TextStyle(color: MyVaultColors.accentCyan, fontSize: 12)),
+                          Text('Instructor: $instructor • Enrolled as: $studentName', style: const TextStyle(color: MyVaultColors.accentCyan, fontSize: 12, fontWeight: FontWeight.w600)),
                         ],
                       ),
                     ),
@@ -1233,7 +1393,7 @@ class _CourseDetailsSheet extends StatelessWidget {
                     // Key Stats
                     Container(
                       padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: const Color(0xFFE2E8F0))),
+                      decoration: BoxDecoration(color: const Color(0xFFF8FAFC), borderRadius: BorderRadius.circular(16), border: Border.all(color: const Color(0xFFE2E8F0))),
                       child: const Row(
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
                         children: [
@@ -1258,8 +1418,8 @@ class _CourseDetailsSheet extends StatelessWidget {
                       runSpacing: 8,
                       children: skills.map((s) => Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8), border: Border.all(color: MyVaultColors.accentCyan.withValues(alpha: 0.3))),
-                        child: Text(s.toString(), style: const TextStyle(color: MyVaultColors.accentCyan, fontSize: 12)),
+                        decoration: BoxDecoration(color: const Color(0xFF0284C7).withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8), border: Border.all(color: const Color(0xFF0284C7).withValues(alpha: 0.25))),
+                        child: Text(s.toString(), style: const TextStyle(color: Color(0xFF0284C7), fontSize: 12, fontWeight: FontWeight.w600)),
                       )).toList(),
                     ),
 
@@ -1279,15 +1439,15 @@ class _CourseDetailsSheet extends StatelessWidget {
 
               Container(
                 padding: const EdgeInsets.all(16),
-                decoration: const BoxDecoration(color: Color(0xFF141824), border: Border(top: BorderSide(color: Color(0xFFE2E8F0)))),
+                decoration: const BoxDecoration(color: Colors.white, border: Border(top: BorderSide(color: Color(0xFFE2E8F0)))),
                 child: Row(
                   children: [
                     Expanded(
                       child: OutlinedButton(
                         onPressed: onTakeExam,
                         style: OutlinedButton.styleFrom(
-                          foregroundColor: const Color(0xFFFFB800),
-                          side: const BorderSide(color: Color(0xFFFFB800)),
+                          foregroundColor: const Color(0xFFD97706),
+                          side: const BorderSide(color: Color(0xFFD97706)),
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         ),
@@ -1299,7 +1459,7 @@ class _CourseDetailsSheet extends StatelessWidget {
                       child: ElevatedButton(
                         onPressed: onStartLearning,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: MyVaultColors.accentBlue,
+                          backgroundColor: MyVaultColors.metalBlack,
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -1322,7 +1482,7 @@ class _CourseDetailsSheet extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 6),
       child: Row(
         children: [
-          const Icon(Icons.check_circle_rounded, color: Color(0xFF00E676), size: 14),
+          const Icon(Icons.check_circle_rounded, color: Color(0xFF059669), size: 14),
           const SizedBox(width: 8),
           Expanded(child: Text(text, style: const TextStyle(color: MyVaultColors.textSecondary, fontSize: 12))),
         ],
@@ -1438,8 +1598,11 @@ class _VideoLessonPlayerSheetState extends State<_VideoLessonPlayerSheet> {
       builder: (ctx, scrollCtrl) {
         return Container(
           decoration: const BoxDecoration(
-            color: Color(0xFF0C101A),
+            color: Colors.white,
             borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+            boxShadow: [
+              BoxShadow(color: Color(0x1F000000), blurRadius: 30, offset: Offset(0, -6)),
+            ],
           ),
           child: Column(
             children: [
@@ -1479,9 +1642,9 @@ class _VideoLessonPlayerSheetState extends State<_VideoLessonPlayerSheet> {
                         decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.6), borderRadius: BorderRadius.circular(6)),
                         child: const Row(
                           children: [
-                            Icon(Icons.hd_rounded, color: MyVaultColors.accentCyan, size: 14),
+                            Icon(Icons.hd_rounded, color: Color(0xFF00D9F5), size: 14),
                             SizedBox(width: 4),
-                            Text('1080p HD Video', style: TextStyle(color: MyVaultColors.textDark, fontSize: 10, fontWeight: FontWeight.bold)),
+                            Text('1080p HD Video', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
                           ],
                         ),
                       ),
@@ -1492,17 +1655,17 @@ class _VideoLessonPlayerSheetState extends State<_VideoLessonPlayerSheet> {
                       right: 12,
                       child: Row(
                         children: [
-                          Text('12:40 / ${currentLesson['duration']}', style: const TextStyle(color: MyVaultColors.textSecondary, fontSize: 10)),
+                          Text('12:40 / ${currentLesson['duration']}', style: const TextStyle(color: Colors.white70, fontSize: 10)),
                           const SizedBox(width: 8),
                           const Expanded(
                             child: ClipRRect(
                               borderRadius: BorderRadius.all(Radius.circular(2)),
-                              child: LinearProgressIndicator(value: 0.65, backgroundColor: Colors.white24, color: MyVaultColors.accentCyan),
+                              child: LinearProgressIndicator(value: 0.65, backgroundColor: Colors.white24, color: Color(0xFF00D9F5)),
                             ),
                           ),
                           const SizedBox(width: 8),
                           IconButton(
-                            icon: const Icon(Icons.open_in_new_rounded, color: MyVaultColors.textSecondary, size: 18),
+                            icon: const Icon(Icons.open_in_new_rounded, color: Colors.white70, size: 18),
                             onPressed: () async {
                               final videoUrl = currentLesson['videoUrl'] ?? '';
                               if (videoUrl.isNotEmpty) {
@@ -1552,11 +1715,19 @@ class _VideoLessonPlayerSheetState extends State<_VideoLessonPlayerSheet> {
                         child: Container(
                           padding: const EdgeInsets.symmetric(vertical: 8),
                           decoration: BoxDecoration(
-                            color: _selectedQuizTab == 0 ? MyVaultColors.accentBlue : Colors.white.withValues(alpha: 0.05),
+                            color: _selectedQuizTab == 0 ? MyVaultColors.metalBlack : const Color(0xFFF1F5F9),
                             borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: _selectedQuizTab == 0 ? MyVaultColors.metalBlack : const Color(0xFFE2E8F0)),
                           ),
                           alignment: Alignment.center,
-                          child: const Text('🎥 Video & Notes', style: TextStyle(color: MyVaultColors.textDark, fontWeight: FontWeight.bold, fontSize: 12)),
+                          child: Text(
+                            '🎥 Video & Notes',
+                            style: TextStyle(
+                              color: _selectedQuizTab == 0 ? Colors.white : MyVaultColors.textSecondary,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                            ),
+                          ),
                         ),
                       ),
                     ),
@@ -1567,19 +1738,37 @@ class _VideoLessonPlayerSheetState extends State<_VideoLessonPlayerSheet> {
                         child: Container(
                           padding: const EdgeInsets.symmetric(vertical: 8),
                           decoration: BoxDecoration(
-                            color: _selectedQuizTab == 1 ? const Color(0xFF7C3AFF) : Colors.white.withValues(alpha: 0.05),
+                            color: _selectedQuizTab == 1 ? const Color(0xFF7C3AED) : const Color(0xFFF1F5F9),
                             borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: _selectedQuizTab == 1 ? const Color(0xFF7C3AED) : const Color(0xFFE2E8F0)),
                           ),
                           alignment: Alignment.center,
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              const Text('⚡ Video AI Quiz', style: TextStyle(color: MyVaultColors.textDark, fontWeight: FontWeight.bold, fontSize: 12)),
+                              Text(
+                                '⚡ Video AI Quiz',
+                                style: TextStyle(
+                                  color: _selectedQuizTab == 1 ? Colors.white : MyVaultColors.textSecondary,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
+                              ),
                               const SizedBox(width: 4),
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-                                decoration: BoxDecoration(color: const Color(0xFFCBD5E1), borderRadius: BorderRadius.circular(10)),
-                                child: Text('${quizQuestions.length}', style: const TextStyle(color: MyVaultColors.textDark, fontSize: 10, fontWeight: FontWeight.bold)),
+                                decoration: BoxDecoration(
+                                  color: _selectedQuizTab == 1 ? Colors.white.withValues(alpha: 0.25) : const Color(0xFFE2E8F0),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Text(
+                                  '${quizQuestions.length}',
+                                  style: TextStyle(
+                                    color: _selectedQuizTab == 1 ? Colors.white : MyVaultColors.textDark,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
                               ),
                             ],
                           ),
@@ -1613,10 +1802,10 @@ class _VideoLessonPlayerSheetState extends State<_VideoLessonPlayerSheet> {
         // Attached PDF Resource Box
         Container(
           padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: const Color(0xFF00E676).withValues(alpha: 0.3))),
+          decoration: BoxDecoration(color: const Color(0xFFF8FAFC), borderRadius: BorderRadius.circular(12), border: Border.all(color: const Color(0xFF059669).withValues(alpha: 0.3))),
           child: Row(
             children: [
-              const Icon(Icons.picture_as_pdf_rounded, color: Color(0xFF00E676), size: 22),
+              const Icon(Icons.picture_as_pdf_rounded, color: Color(0xFF059669), size: 22),
               const SizedBox(width: 10),
               Expanded(
                 child: Column(
@@ -1628,7 +1817,7 @@ class _VideoLessonPlayerSheetState extends State<_VideoLessonPlayerSheet> {
                 ),
               ),
               IconButton(
-                icon: const Icon(Icons.download_rounded, color: Color(0xFF00E676), size: 20),
+                icon: const Icon(Icons.download_rounded, color: Color(0xFF059669), size: 20),
                 onPressed: () {
                   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Downloading PDF Study Guide...')));
                 },
@@ -1649,14 +1838,14 @@ class _VideoLessonPlayerSheetState extends State<_VideoLessonPlayerSheet> {
           return Container(
             margin: const EdgeInsets.only(bottom: 8),
             decoration: BoxDecoration(
-              color: isActive ? MyVaultColors.accentBlue.withValues(alpha: 0.15) : const Color(0xFF0F131D),
+              color: isActive ? const Color(0xFFF1F5F9) : Colors.white,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: isActive ? MyVaultColors.accentCyan : Colors.white10),
+              border: Border.all(color: isActive ? MyVaultColors.metalBlack : const Color(0xFFE2E8F0)),
             ),
             child: ListTile(
               dense: true,
-              leading: Icon(isActive ? Icons.play_circle_filled_rounded : Icons.video_library_rounded, color: isActive ? MyVaultColors.accentCyan : Colors.white38),
-              title: Text(les['title'], style: TextStyle(color: isActive ? Colors.white : Colors.white70, fontWeight: isActive ? FontWeight.bold : FontWeight.normal, fontSize: 12)),
+              leading: Icon(isActive ? Icons.play_circle_filled_rounded : Icons.video_library_rounded, color: isActive ? MyVaultColors.metalBlack : MyVaultColors.textMuted),
+              title: Text(les['title'], style: TextStyle(color: MyVaultColors.textDark, fontWeight: isActive ? FontWeight.bold : FontWeight.normal, fontSize: 12)),
               subtitle: Text(les['duration'], style: const TextStyle(color: MyVaultColors.textMuted, fontSize: 10)),
               trailing: const Icon(Icons.arrow_forward_ios_rounded, color: Color(0xFFCBD5E1), size: 12),
               onTap: () {
@@ -1673,10 +1862,10 @@ class _VideoLessonPlayerSheetState extends State<_VideoLessonPlayerSheet> {
         const SizedBox(height: 16),
         ElevatedButton.icon(
           onPressed: widget.onLaunchExam,
-          icon: const Icon(Icons.emoji_events_rounded, color: Colors.black, size: 18),
-          label: const Text('Take Final Certification Exam 🏆', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+          icon: const Icon(Icons.emoji_events_rounded, color: Colors.white, size: 18),
+          label: const Text('Take Final Certification Exam 🏆', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFFFFB800),
+            backgroundColor: const Color(0xFFD97706),
             padding: const EdgeInsets.symmetric(vertical: 14),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
@@ -1691,7 +1880,7 @@ class _VideoLessonPlayerSheetState extends State<_VideoLessonPlayerSheet> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.quiz_outlined, color: Colors.white30, size: 48),
+            const Icon(Icons.quiz_outlined, color: MyVaultColors.textMuted, size: 48),
             const SizedBox(height: 12),
             const Text('Auto-Generating Video Quiz...', style: TextStyle(color: MyVaultColors.textSecondary, fontSize: 14, fontWeight: FontWeight.bold)),
             const SizedBox(height: 6),
@@ -1708,13 +1897,13 @@ class _VideoLessonPlayerSheetState extends State<_VideoLessonPlayerSheet> {
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: const Color(0xFF7C3AFF).withValues(alpha: 0.15),
+            color: const Color(0xFF7C3AED).withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: const Color(0xFF7C3AFF).withValues(alpha: 0.3)),
+            border: Border.all(color: const Color(0xFF7C3AED).withValues(alpha: 0.25)),
           ),
           child: Row(
             children: [
-              const Icon(Icons.auto_awesome_rounded, color: Color(0xFF7C3AFF), size: 20),
+              const Icon(Icons.auto_awesome_rounded, color: Color(0xFF7C3AED), size: 20),
               const SizedBox(width: 8),
               Expanded(
                 child: Text('AI Video Quiz: Grounded in "${currentLesson['title']}"', style: const TextStyle(color: MyVaultColors.textDark, fontSize: 12, fontWeight: FontWeight.bold)),
@@ -1739,6 +1928,9 @@ class _VideoLessonPlayerSheetState extends State<_VideoLessonPlayerSheet> {
               color: Colors.white,
               borderRadius: BorderRadius.circular(14),
               border: Border.all(color: const Color(0xFFE2E8F0)),
+              boxShadow: const [
+                BoxShadow(color: Color(0x06000000), blurRadius: 6, offset: Offset(0, 2)),
+              ],
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1748,20 +1940,20 @@ class _VideoLessonPlayerSheetState extends State<_VideoLessonPlayerSheet> {
 
                 ...options.map((opt) {
                   final isOptSelected = selected == opt;
-                  Color optBorder = Colors.white12;
-                  Color optBg = Colors.white.withValues(alpha: 0.02);
+                  Color optBorder = const Color(0xFFE2E8F0);
+                  Color optBg = const Color(0xFFF8FAFC);
 
                   if (_quizSubmitted) {
                     if (opt == q['correctAnswer']) {
-                      optBorder = const Color(0xFF00E676);
-                      optBg = const Color(0xFF00E676).withValues(alpha: 0.15);
+                      optBorder = const Color(0xFF059669);
+                      optBg = const Color(0xFF059669).withValues(alpha: 0.1);
                     } else if (isOptSelected && !isCorrect) {
                       optBorder = Colors.redAccent;
-                      optBg = Colors.redAccent.withValues(alpha: 0.15);
+                      optBg = Colors.redAccent.withValues(alpha: 0.1);
                     }
                   } else if (isOptSelected) {
-                    optBorder = MyVaultColors.accentCyan;
-                    optBg = MyVaultColors.accentCyan.withValues(alpha: 0.1);
+                    optBorder = MyVaultColors.metalBlack;
+                    optBg = const Color(0xFFF1F5F9);
                   }
 
                   return InkWell(
@@ -1782,15 +1974,15 @@ class _VideoLessonPlayerSheetState extends State<_VideoLessonPlayerSheet> {
                         children: [
                           Icon(
                             isOptSelected ? Icons.radio_button_checked_rounded : Icons.radio_button_off_rounded,
-                            color: isOptSelected ? MyVaultColors.accentCyan : Colors.white38,
+                            color: isOptSelected ? MyVaultColors.metalBlack : MyVaultColors.textMuted,
                             size: 16,
                           ),
                           const SizedBox(width: 8),
                           Expanded(
-                            child: Text(opt.toString(), style: TextStyle(color: isOptSelected ? Colors.white : Colors.white70, fontSize: 12)),
+                            child: Text(opt.toString(), style: TextStyle(color: MyVaultColors.textDark, fontSize: 12, fontWeight: isOptSelected ? FontWeight.bold : FontWeight.normal)),
                           ),
                           if (_quizSubmitted && opt == q['correctAnswer'])
-                            const Icon(Icons.check_circle_rounded, color: Color(0xFF00E676), size: 16),
+                            const Icon(Icons.check_circle_rounded, color: Color(0xFF059669), size: 16),
                         ],
                       ),
                     ),
@@ -1825,7 +2017,7 @@ class _VideoLessonPlayerSheetState extends State<_VideoLessonPlayerSheet> {
               widget.onLessonComplete(currentLesson['title']);
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF7C3AFF),
+              backgroundColor: const Color(0xFF7C3AED),
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(vertical: 14),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -1836,9 +2028,9 @@ class _VideoLessonPlayerSheetState extends State<_VideoLessonPlayerSheet> {
           Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: const Color(0xFF00E676).withValues(alpha: 0.15),
+              color: const Color(0xFF059669).withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFF00E676)),
+              border: Border.all(color: const Color(0xFF059669)),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1846,7 +2038,7 @@ class _VideoLessonPlayerSheetState extends State<_VideoLessonPlayerSheet> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Quiz Completed! Score: $_quizScore%', style: const TextStyle(color: Color(0xFF00E676), fontWeight: FontWeight.bold, fontSize: 13)),
+                    Text('Quiz Completed! Score: $_quizScore%', style: const TextStyle(color: Color(0xFF059669), fontWeight: FontWeight.bold, fontSize: 13)),
                     const Text('Lesson marked complete • Ready for next video', style: TextStyle(color: MyVaultColors.textSecondary, fontSize: 11)),
                   ],
                 ),
@@ -1861,7 +2053,7 @@ class _VideoLessonPlayerSheetState extends State<_VideoLessonPlayerSheet> {
                       });
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: MyVaultColors.accentBlue,
+                      backgroundColor: MyVaultColors.metalBlack,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -1981,11 +2173,11 @@ class _FinalExamSheetState extends State<_FinalExamSheet> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF0C101A),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24), side: const BorderSide(color: Color(0xFFFFB800))),
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24), side: const BorderSide(color: Color(0xFFE2E8F0))),
         title: const Row(
           children: [
-            Icon(Icons.hourglass_top_rounded, color: Color(0xFFFFB800), size: 28),
+            Icon(Icons.hourglass_top_rounded, color: Color(0xFFD97706), size: 28),
             SizedBox(width: 10),
             Text('Submitted for 24h Review ⏳', style: TextStyle(color: MyVaultColors.textDark, fontWeight: FontWeight.bold, fontSize: 17)),
           ],
@@ -2003,7 +2195,7 @@ class _FinalExamSheetState extends State<_FinalExamSheet> {
             const SizedBox(height: 14),
             Container(
               padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.05), borderRadius: BorderRadius.circular(12)),
+              decoration: BoxDecoration(color: const Color(0xFFF8FAFC), borderRadius: BorderRadius.circular(12), border: Border.all(color: const Color(0xFFE2E8F0))),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -2011,7 +2203,7 @@ class _FinalExamSheetState extends State<_FinalExamSheet> {
                   Text(widget.studentName, style: const TextStyle(color: MyVaultColors.textDark, fontWeight: FontWeight.bold, fontSize: 13)),
                   const SizedBox(height: 4),
                   const Text('Certificate Token:', style: TextStyle(color: MyVaultColors.textMuted, fontSize: 10)),
-                  Text(cert['certificateId'] ?? '', style: const TextStyle(color: Color(0xFFFFB800), fontFamily: 'monospace', fontWeight: FontWeight.bold, fontSize: 12)),
+                  Text(cert['certificateId'] ?? '', style: const TextStyle(color: Color(0xFFD97706), fontFamily: 'monospace', fontWeight: FontWeight.bold, fontSize: 12)),
                 ],
               ),
             ),
@@ -2020,7 +2212,7 @@ class _FinalExamSheetState extends State<_FinalExamSheet> {
         actions: [
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx),
-            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFFB800), foregroundColor: Colors.black),
+            style: ElevatedButton.styleFrom(backgroundColor: MyVaultColors.metalBlack, foregroundColor: Colors.white),
             child: const Text('Track in Certificates Hub', style: TextStyle(fontWeight: FontWeight.bold)),
           ),
         ],
@@ -2041,8 +2233,11 @@ class _FinalExamSheetState extends State<_FinalExamSheet> {
       builder: (ctx, scrollCtrl) {
         return Container(
           decoration: const BoxDecoration(
-            color: Color(0xFF0C101A),
+            color: Colors.white,
             borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+            boxShadow: [
+              BoxShadow(color: Color(0x1F000000), blurRadius: 30, offset: Offset(0, -6)),
+            ],
           ),
           child: Column(
             children: [
@@ -2056,9 +2251,9 @@ class _FinalExamSheetState extends State<_FinalExamSheet> {
                   children: [
                     const Row(
                       children: [
-                        Icon(Icons.timer_outlined, color: Color(0xFFFFB800), size: 18),
+                        Icon(Icons.timer_outlined, color: Color(0xFFD97706), size: 18),
                         SizedBox(width: 6),
-                        Text('28:45 Remaining', style: TextStyle(color: Color(0xFFFFB800), fontWeight: FontWeight.bold, fontSize: 12)),
+                        Text('28:45 Remaining', style: TextStyle(color: Color(0xFFD97706), fontWeight: FontWeight.bold, fontSize: 12)),
                       ],
                     ),
                     Text('Question ${_currentIdx + 1} of ${_examQuestions.length}', style: const TextStyle(color: MyVaultColors.textSecondary, fontSize: 12)),
@@ -2089,16 +2284,19 @@ class _FinalExamSheetState extends State<_FinalExamSheet> {
                           margin: const EdgeInsets.only(bottom: 12),
                           padding: const EdgeInsets.all(14),
                           decoration: BoxDecoration(
-                            color: isSelected ? MyVaultColors.accentCyan.withValues(alpha: 0.15) : const Color(0xFF141824),
+                            color: isSelected ? const Color(0xFFF1F5F9) : Colors.white,
                             borderRadius: BorderRadius.circular(14),
-                            border: Border.all(color: isSelected ? MyVaultColors.accentCyan : Colors.white10),
+                            border: Border.all(color: isSelected ? MyVaultColors.metalBlack : const Color(0xFFE2E8F0)),
+                            boxShadow: const [
+                              BoxShadow(color: Color(0x06000000), blurRadius: 6, offset: Offset(0, 2)),
+                            ],
                           ),
                           child: Row(
                             children: [
-                              Icon(isSelected ? Icons.radio_button_checked_rounded : Icons.radio_button_off_rounded, color: isSelected ? MyVaultColors.accentCyan : Colors.white38, size: 18),
+                              Icon(isSelected ? Icons.radio_button_checked_rounded : Icons.radio_button_off_rounded, color: isSelected ? MyVaultColors.metalBlack : MyVaultColors.textMuted, size: 18),
                               const SizedBox(width: 12),
                               Expanded(
-                                child: Text(opt.toString(), style: TextStyle(color: isSelected ? Colors.white : Colors.white70, fontSize: 13)),
+                                child: Text(opt.toString(), style: TextStyle(color: MyVaultColors.textDark, fontSize: 13, fontWeight: isSelected ? FontWeight.bold : FontWeight.normal)),
                               ),
                             ],
                           ),
@@ -2112,14 +2310,14 @@ class _FinalExamSheetState extends State<_FinalExamSheet> {
               // Bottom Nav
               Container(
                 padding: const EdgeInsets.all(16),
-                decoration: const BoxDecoration(color: Color(0xFF141824), border: Border(top: BorderSide(color: Color(0xFFE2E8F0)))),
+                decoration: const BoxDecoration(color: Colors.white, border: Border(top: BorderSide(color: Color(0xFFE2E8F0)))),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     if (_currentIdx > 0)
                       OutlinedButton(
                         onPressed: () => setState(() => _currentIdx--),
-                        style: OutlinedButton.styleFrom(foregroundColor: Colors.white70, side: const BorderSide(color: Color(0xFFCBD5E1))),
+                        style: OutlinedButton.styleFrom(foregroundColor: MyVaultColors.metalBlack, side: const BorderSide(color: Color(0xFFCBD5E1))),
                         child: const Text('Previous'),
                       )
                     else
@@ -2129,7 +2327,7 @@ class _FinalExamSheetState extends State<_FinalExamSheet> {
                       ElevatedButton(
                         onPressed: () => setState(() => _currentIdx++),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: MyVaultColors.accentBlue,
+                          backgroundColor: MyVaultColors.metalBlack,
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -2140,8 +2338,8 @@ class _FinalExamSheetState extends State<_FinalExamSheet> {
                       ElevatedButton(
                         onPressed: _isEvaluating ? null : _submitExam,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF00E676),
-                          foregroundColor: Colors.black,
+                          backgroundColor: const Color(0xFF059669),
+                          foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         ),

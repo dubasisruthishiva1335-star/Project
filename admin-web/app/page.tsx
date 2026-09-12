@@ -171,20 +171,13 @@ export default function DashboardPage() {
         });
       });
 
-      // Merge with locally persisted uploads for resilient permanent offline/online retention
-      const persisted = getPersistedUploads();
-      const existingIds = new Set(items.map(i => i.id));
-      persisted.forEach(p => {
-        if (!existingIds.has(p.id)) {
-          items.push(p);
-        }
-      });
-
       // Sort newest first
       items.sort((a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime());
 
-      // Persist all active items to local permanent storage
-      items.forEach(item => savePersistedUpload(item));
+      // Update local storage to reflect current active server data cleanly
+      if (typeof window !== "undefined") {
+        localStorage.setItem("myvault_master_uploads_v2", JSON.stringify(items));
+      }
 
       setAllItems(items);
       setStudents(recentRes?.allStudents || []);
@@ -193,11 +186,8 @@ export default function DashboardPage() {
         localStorage.removeItem("myvault_admin_token");
         router.push("/login");
       } else {
-        const persisted = getPersistedUploads();
-        if (persisted.length > 0) {
-          setAllItems(persisted);
-        }
-        setError("Network sync active. Showing permanently stored records.");
+        setAllItems([]);
+        setError("Network sync active. Showing live database records.");
       }
     } finally {
       setIsLoading(false);
@@ -209,7 +199,7 @@ export default function DashboardPage() {
   }, []);
 
   const handleDeleteItem = async (item: UnifiedUploadItem) => {
-    if (!confirm(`Are you sure you want to delete "${item.title}"?\n\nThis will permanently remove it from the Admin Portal and Mobile App.`)) {
+    if (!confirm(`Are you sure you want to delete "${item.title}"?\n\nThis will permanently remove it from MongoDB, Backend Database, Admin Portal, and Mobile App.`)) {
       return;
     }
 
@@ -218,18 +208,31 @@ export default function DashboardPage() {
       // 1. Remove from local permanent cache immediately
       removePersistedUpload(item.id);
 
-      // 2. Remove from backend & Vercel API
+      // 2. Remove from backend & Next.js MongoDB API across all endpoints
       if (item.hubType === "NOTE") {
-        await apiRequest(`/admin/notes/${item.id}`, { method: "DELETE" }).catch(() => {});
-        await fetch(`/api/admin/notes?id=${item.id}`, { method: "DELETE" }).catch(() => {});
+        await Promise.all([
+          apiRequest(`/admin/notes/${item.id}`, { method: "DELETE" }).catch(() => {}),
+          fetch(`/api/notes?id=${item.id}`, { method: "DELETE" }).catch(() => {}),
+          fetch(`/api/admin/notes?id=${item.id}`, { method: "DELETE" }).catch(() => {}),
+        ]);
       } else if (item.hubType === "COMPETITIVE_EXAM") {
-        await fetch(`/api/admin/competitive-exams?id=${item.id}`, { method: "DELETE" }).catch(() => {});
-        await apiRequest(`/admin/exams/${item.id}`, { method: "DELETE" }).catch(() => {});
+        await Promise.all([
+          fetch(`/api/admin/competitive-exams?id=${item.id}`, { method: "DELETE" }).catch(() => {}),
+          fetch(`/api/exams?id=${item.id}`, { method: "DELETE" }).catch(() => {}),
+          apiRequest(`/admin/exams/${item.id}`, { method: "DELETE" }).catch(() => {}),
+        ]);
       } else if (item.hubType === "COURSE") {
-        await fetch(`/api/admin/courses?id=${item.id}`, { method: "DELETE" }).catch(() => {});
+        await Promise.all([
+          fetch(`/api/admin/courses?id=${item.id}`, { method: "DELETE" }).catch(() => {}),
+          fetch(`/api/courses?id=${item.id}`, { method: "DELETE" }).catch(() => {}),
+          apiRequest(`/admin/courses/${item.id}`, { method: "DELETE" }).catch(() => {}),
+        ]);
       } else if (item.hubType === "INTERNSHIP") {
-        await fetch(`/api/admin/internships?id=${item.id}`, { method: "DELETE" }).catch(() => {});
-        await apiRequest(`/admin/internships/${item.id}`, { method: "DELETE" }).catch(() => {});
+        await Promise.all([
+          fetch(`/api/admin/internships?id=${item.id}`, { method: "DELETE" }).catch(() => {}),
+          fetch(`/api/internships?id=${item.id}`, { method: "DELETE" }).catch(() => {}),
+          apiRequest(`/admin/internships/${item.id}`, { method: "DELETE" }).catch(() => {}),
+        ]);
       }
 
       // Refresh list
@@ -238,6 +241,26 @@ export default function DashboardPage() {
       alert("Failed to delete item: " + (err instanceof Error ? err.message : "Unknown error"));
     } finally {
       setDeletingId(null);
+    }
+  };
+
+  const handleWipeAll = async () => {
+    if (!confirm("⚠️ CAUTION: Are you sure you want to permanently WIPE ALL uploaded notes, courses, exams, and internships across MongoDB, Backend, and Mobile App?\n\nThis cannot be undone.")) {
+      return;
+    }
+    setIsLoading(true);
+    try {
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("myvault_master_uploads_v2");
+      }
+      await fetch("/api/admin/wipe-all", { method: "POST" });
+      setAllItems([]);
+      alert("✅ All hub contents and files have been completely wiped clean from all databases and platforms!");
+      fetchAllData();
+    } catch (e: any) {
+      alert("Error wiping data: " + e.message);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -334,6 +357,12 @@ export default function DashboardPage() {
           >
             💼 Post Internship
           </Link>
+          <button
+            onClick={handleWipeAll}
+            className="flex items-center gap-1.5 rounded-xl border border-rose-500/30 bg-rose-500/10 px-3.5 py-2 text-xs font-semibold text-rose-300 transition hover:bg-rose-500/20"
+          >
+            🗑️ Wipe All Hubs
+          </button>
         </div>
       </div>
 

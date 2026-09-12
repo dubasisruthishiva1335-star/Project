@@ -541,7 +541,18 @@ export default function AdminCoursesPage() {
                       onClick={() => { setActiveTab("builder"); setTitle(course.title); setCategory(course.category); }}
                       className="rounded-lg bg-white/10 px-3 py-1.5 text-xs font-semibold text-white hover:bg-white/20"
                     >
-                      Manage Videos & Quizzes
+                      Manage
+                    </button>
+                    <button
+                      onClick={async () => {
+                        if (!confirm(`Delete course "${course.title}" permanently?`)) return;
+                        await fetch(`/api/admin/courses?id=${course.id}`, { method: "DELETE" }).catch(() => {});
+                        await fetch(`/api/courses?id=${course.id}`, { method: "DELETE" }).catch(() => {});
+                        setCourses(prev => prev.filter(c => c.id !== course.id));
+                      }}
+                      className="rounded-lg border border-rose-500/30 bg-rose-500/10 px-2.5 py-1.5 text-xs font-semibold text-rose-300 hover:bg-rose-500/20"
+                    >
+                      🗑️
                     </button>
                   </div>
                 </div>

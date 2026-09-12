@@ -34,130 +34,6 @@ export interface InternshipItem {
   applicantCount: number;
 }
 
-let mockInternships: InternshipItem[] = [
-  {
-    id: "int_google_swe",
-    title: "Software Engineering Intern",
-    company: "Google",
-    logo: "https://upload.wikimedia.org/wikipedia/commons/2/2f/Google_2015_logo.svg",
-    workMode: "HYBRID",
-    location: "Bengaluru, Karnataka",
-    category: "Software Development",
-    openings: 8,
-    duration: "6 Months",
-    stipend: "80,000",
-    isPaid: true,
-    currency: "INR",
-    contactPhone: "+91 80 6721 8000",
-    contactEmail: "university-recruiting-in@google.com",
-    companyWebsite: "https://careers.google.com",
-    applyUrl: "https://careers.google.com/jobs/results/?q=intern",
-    description: "Join Google core engineering teams to build scalable distributed systems, search features, and AI-driven cloud infrastructure.",
-    responsibilities: [
-      "Design, develop, test, and deploy robust software solutions in Python, C++, or Go.",
-      "Collaborate with senior software engineers, product managers, and UX designers.",
-      "Optimize algorithms for low latency and high availability across millions of users."
-    ],
-    requirements: [
-      "Strong foundation in Data Structures, Algorithms, and Object-Oriented Design.",
-      "Proficiency in Python, Java, C++, or Go.",
-      "Knowledge of databases, SQL, and REST APIs."
-    ],
-    skills: ["Python", "C++", "Data Structures", "Algorithms", "System Design"],
-    eligibleBranches: ["CSE", "ECE", "AI_ML", "EEE"],
-    minCgpa: 7.5,
-    eligibleGradYears: [2026, 2027],
-    perks: ["PPO / Full-time Conversion", "Mentorship", "Certificate", "Free Meals & Transport"],
-    questions: [
-      { id: "q1", question: "Describe a challenging technical project you built and the key tradeoffs you made.", type: "textarea", required: true },
-      { id: "q2", question: "Are you available for a full-time 6-month internship starting next semester?", type: "text", required: true }
-    ],
-    status: "PUBLISHED",
-    postedAt: new Date(Date.now() - 2 * 86400000).toISOString(),
-    applicantCount: 142,
-  },
-  {
-    id: "int_msft_ai",
-    title: "AI & Machine Learning Engineering Intern",
-    company: "Microsoft",
-    logo: "https://upload.wikimedia.org/wikipedia/commons/9/96/Microsoft_logo_%282012%29.svg",
-    workMode: "HYBRID",
-    location: "Hyderabad, Telangana",
-    category: "AI & Data Science",
-    openings: 5,
-    duration: "6 Months",
-    stipend: "65,000",
-    isPaid: true,
-    currency: "INR",
-    contactPhone: "+91 40 6694 0000",
-    contactEmail: "ur-india@microsoft.com",
-    companyWebsite: "https://careers.microsoft.com",
-    applyUrl: "https://careers.microsoft.com/students/us/en/ind-internship",
-    description: "Work with Microsoft Azure AI & Cognitive Services teams building enterprise LLM workflows, fine-tuning models, and cloud solutions.",
-    responsibilities: [
-      "Train, fine-tune, and evaluate deep learning and generative AI models on Azure AI Studio.",
-      "Build high-throughput inference pipelines using PyTorch, ONNX, and FastAPI.",
-      "Write unit tests and benchmark model accuracy, latency, and resource utilization."
-    ],
-    requirements: [
-      "Hands-on experience with PyTorch, TensorFlow, Scikit-Learn, or Hugging Face.",
-      "Understanding of Transformer architectures, embeddings, and vector databases.",
-      "Solid Python programming and Git workflow skills."
-    ],
-    skills: ["Python", "PyTorch", "Generative AI", "Azure", "NLP", "Machine Learning"],
-    eligibleBranches: ["CSE", "AI_ML", "ECE"],
-    minCgpa: 7.0,
-    eligibleGradYears: [2025, 2026, 2027],
-    perks: ["PPO Opportunity", "Azure Cloud Credits", "Certificate", "Tech Conferences Access"],
-    questions: [
-      { id: "q1", question: "What AI/ML models or frameworks have you worked with recently?", type: "textarea", required: true }
-    ],
-    status: "PUBLISHED",
-    postedAt: new Date(Date.now() - 4 * 86400000).toISOString(),
-    applicantCount: 98,
-  },
-  {
-    id: "int_amazon_sde",
-    title: "SDE Cloud Intern (AWS)",
-    company: "Amazon Web Services",
-    logo: "https://upload.wikimedia.org/wikipedia/commons/9/93/Amazon_Web_Services_Logo.svg",
-    workMode: "HYBRID",
-    location: "Bengaluru, Karnataka",
-    category: "Cloud Infrastructure",
-    openings: 6,
-    duration: "6 Months",
-    stipend: "75,000",
-    isPaid: true,
-    currency: "INR",
-    contactPhone: "+91 80 4151 5000",
-    contactEmail: "india-campus-hiring@amazon.com",
-    companyWebsite: "https://amazon.jobs",
-    applyUrl: "https://amazon.jobs/en/teams/internships-for-students",
-    description: "Build robust distributed cloud services powering AWS S3, DynamoDB, and Serverless event brokers with high uptime guarantees.",
-    responsibilities: [
-      "Architect and implement REST / gRPC microservices in Java or Rust.",
-      "Design zero-downtime database migrations and automated scaling policies.",
-      "Work with AWS security champions to maintain strict compliance."
-    ],
-    requirements: [
-      "Proficiency in Java, C++, or Go with strong OOP and concurrency principles.",
-      "Experience with Docker, Linux CLI, and CI/CD pipelines.",
-      "Strong analytical and root-cause debugging skills."
-    ],
-    skills: ["Java", "AWS", "Distributed Systems", "Docker", "Microservices"],
-    eligibleBranches: ["CSE", "ECE", "AI_ML"],
-    minCgpa: 7.0,
-    eligibleGradYears: [2026, 2027],
-    perks: ["PPO Conversion", "Relocation Allowance", "Certificate", "AWS Certifications Voucher"],
-    questions: [
-      { id: "q1", question: "Describe a project where you solved high concurrency or scale bottlenecks.", type: "textarea", required: true }
-    ],
-    status: "PUBLISHED",
-    postedAt: new Date(Date.now() - 6 * 86400000).toISOString(),
-    applicantCount: 115,
-  }
-];
-
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "https://project-9zrh.onrender.com";
 
 export async function GET(request: Request) {
@@ -168,59 +44,13 @@ export async function GET(request: Request) {
 
     let dbInternships: InternshipItem[] = [];
 
-    // 1. Fetch from Render backend (strictly filter out courses)
-    try {
-      const res = await fetch(`${BACKEND_URL}/job-listings?type=INTERNSHIP`, { cache: "no-store" });
-      if (res.ok) {
-        const rows = await res.json();
-        if (Array.isArray(rows)) {
-          dbInternships = rows
-            .filter((r: any) => r.type !== "COURSE" && !r.isLmsEnabled && r.hubType !== "COURSE")
-            .map((r: any) => ({
-              id: r.id,
-              title: r.title,
-              company: r.company || "MyVault",
-              logo: r.logo || "",
-              workMode: r.workMode || (r.work_mode as any) || "HYBRID",
-              location: r.location || "Bengaluru, India",
-              category: r.category || "Software Development",
-              openings: Number(r.openings || r.max_students || 5),
-              startDate: r.start_date || r.startDate,
-              deadline: r.deadline,
-              duration: r.duration || "6 Months",
-              stipend: r.stipend || "₹40,000 / month",
-              isPaid: true,
-              currency: "INR",
-              description: r.description || "",
-              contactPhone: r.contactPhone || r.contact_phone || "",
-              contactEmail: r.contactEmail || r.contact_email || "",
-              companyWebsite: r.companyWebsite || r.company_website || "",
-              applyUrl: r.applyUrl || r.apply_url || "",
-              responsibilities: Array.isArray(r.responsibilities) ? r.responsibilities : (r.responsibilities ? String(r.responsibilities).split("\n") : []),
-              requirements: Array.isArray(r.requirements) ? r.requirements : (r.requirements ? String(r.requirements).split("\n") : []),
-              skills: Array.isArray(r.skills) ? r.skills : (r.skills ? String(r.skills).split(",") : ["Full Stack", "Problem Solving"]),
-              eligibleBranches: Array.isArray(r.eligibleBranches) ? r.eligibleBranches : (r.branch ? [r.branch] : ["ALL"]),
-              minCgpa: Number(r.minCgpa || r.min_cgpa || 6.5),
-              eligibleGradYears: [2025, 2026, 2027],
-              perks: Array.isArray(r.perks) ? r.perks : ["PPO Opportunity", "Mentorship", "Certificate"],
-              questions: [],
-              status: (r.status as any) || "PUBLISHED",
-              postedAt: r.posted_at || r.postedAt || new Date().toISOString(),
-              applicantCount: Number(r.applicantCount || r.enrollment_count || 0),
-            }));
-        }
-      }
-    } catch (e) {
-      console.error("Failed to fetch from backend DB:", e);
-    }
-
-    // 2. Query MongoDB internships collection
+    // 1. Query MongoDB internships collection
     try {
       const db = await connectDB();
       if (db) {
         const rows = await db.collection("internships").find({}).sort({ createdAt: -1 }).toArray();
-        if (Array.isArray(rows)) {
-          const mongoInternships = rows.map((r: any) => ({
+        if (Array.isArray(rows) && rows.length > 0) {
+          dbInternships = rows.map((r: any) => ({
             id: r.id || (r._id ? r._id.toString() : ""),
             title: r.title,
             company: r.company || "MyVault Partner",
@@ -250,25 +80,68 @@ export async function GET(request: Request) {
             postedAt: r.postedAt || (r.createdAt ? new Date(r.createdAt).toISOString() : new Date().toISOString()),
             applicantCount: Number(r.applicantCount || 0),
           }));
-          dbInternships = [...mongoInternships, ...dbInternships];
         }
       }
     } catch (_) {}
 
-    // Merge DB rows with mock list, prioritizing DB rows
-    const dbIds = new Set(dbInternships.map(i => i.id));
-    const combined = [...dbInternships, ...mockInternships.filter(m => !dbIds.has(m.id))];
+    // 2. Fetch from Render backend if MongoDB empty
+    if (dbInternships.length === 0) {
+      try {
+        const res = await fetch(`${BACKEND_URL}/job-listings?type=INTERNSHIP`, { cache: "no-store" });
+        if (res.ok) {
+          const rows = await res.json();
+          if (Array.isArray(rows)) {
+            dbInternships = rows
+              .filter((r: any) => r.type !== "COURSE" && !r.isLmsEnabled && r.hubType !== "COURSE")
+              .map((r: any) => ({
+                id: r.id,
+                title: r.title,
+                company: r.company || "MyVault",
+                logo: r.logo || "",
+                workMode: r.workMode || (r.work_mode as any) || "HYBRID",
+                location: r.location || "Bengaluru, India",
+                category: r.category || "Software Development",
+                openings: Number(r.openings || r.max_students || 5),
+                startDate: r.start_date || r.startDate,
+                deadline: r.deadline,
+                duration: r.duration || "6 Months",
+                stipend: r.stipend || "₹40,000 / month",
+                isPaid: true,
+                currency: "INR",
+                description: r.description || "",
+                contactPhone: r.contactPhone || r.contact_phone || "",
+                contactEmail: r.contactEmail || r.contact_email || "",
+                companyWebsite: r.companyWebsite || r.company_website || "",
+                applyUrl: r.applyUrl || r.apply_url || "",
+                responsibilities: Array.isArray(r.responsibilities) ? r.responsibilities : (r.responsibilities ? String(r.responsibilities).split("\n") : []),
+                requirements: Array.isArray(r.requirements) ? r.requirements : (r.requirements ? String(r.requirements).split("\n") : []),
+                skills: Array.isArray(r.skills) ? r.skills : (r.skills ? String(r.skills).split(",") : ["Full Stack", "Problem Solving"]),
+                eligibleBranches: Array.isArray(r.eligibleBranches) ? r.eligibleBranches : (r.branch ? [r.branch] : ["ALL"]),
+                minCgpa: Number(r.minCgpa || r.min_cgpa || 6.5),
+                eligibleGradYears: [2025, 2026, 2027],
+                perks: Array.isArray(r.perks) ? r.perks : ["PPO Opportunity", "Mentorship", "Certificate"],
+                questions: [],
+                status: (r.status as any) || "PUBLISHED",
+                postedAt: r.posted_at || r.postedAt || new Date().toISOString(),
+                applicantCount: Number(r.applicantCount || r.enrollment_count || 0),
+              }));
+          }
+        }
+      } catch (e) {
+        console.error("Failed to fetch from backend DB:", e);
+      }
+    }
 
     if (id) {
-      const found = combined.find(i => i.id === id);
+      const found = dbInternships.find(i => i.id === id);
       if (!found) return NextResponse.json({ error: "Internship not found" }, { status: 404 });
       return NextResponse.json(found);
     }
     if (status) {
-      return NextResponse.json(combined.filter(i => i.status === status));
+      return NextResponse.json(dbInternships.filter(i => i.status === status));
     }
 
-    return NextResponse.json(combined);
+    return NextResponse.json(dbInternships);
   } catch (error: any) {
     return NextResponse.json({ error: error?.message || "Internal server error" }, { status: 500 });
   }
@@ -310,14 +183,13 @@ export async function POST(request: Request) {
       applicantCount: 0,
     };
 
-    mockInternships.unshift(newInternship);
-
     // Save to MongoDB
     try {
       const db = await connectDB();
       if (db) {
         await db.collection("internships").insertOne({
           ...newInternship,
+          _id: newInternship.id as any,
           createdAt: new Date(),
         });
       }
@@ -328,30 +200,7 @@ export async function POST(request: Request) {
       await fetch(`${BACKEND_URL}/admin/job-listings/confirm`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          id: newInternship.id,
-          title: newInternship.title,
-          company: newInternship.company,
-          type: "INTERNSHIP",
-          workMode: newInternship.workMode,
-          category: newInternship.category,
-          branch: newInternship.eligibleBranches.join(", "),
-          stipend: newInternship.stipend,
-          location: newInternship.location,
-          deadline: newInternship.deadline,
-          duration: newInternship.duration,
-          maxStudents: newInternship.openings,
-          description: newInternship.description,
-          applyUrl: newInternship.applyUrl,
-          contactPhone: newInternship.contactPhone,
-          contactEmail: newInternship.contactEmail,
-          companyWebsite: newInternship.companyWebsite,
-          responsibilities: newInternship.responsibilities,
-          requirements: newInternship.requirements,
-          skills: newInternship.skills,
-          minCgpa: newInternship.minCgpa,
-          perks: newInternship.perks,
-        }),
+        body: JSON.stringify(newInternship),
       });
     } catch (err) {
       console.error("Failed to forward internship to Render backend:", err);
@@ -369,12 +218,10 @@ export async function DELETE(request: Request) {
     const id = searchParams.get("id");
     if (!id) return NextResponse.json({ error: "ID required" }, { status: 400 });
 
-    mockInternships = mockInternships.filter(i => i.id !== id);
-
     try {
       const db = await connectDB();
       if (db) {
-        await db.collection("internships").deleteOne({ id });
+        await db.collection("internships").deleteMany({ $or: [{ id }, { _id: id as any }] });
       }
     } catch (_) {}
 

@@ -48,16 +48,7 @@ class _AcademicHubScreenState extends State<AcademicHubScreen> {
       _error = null;
     });
 
-    final defaultSubjects = AcademicCurriculumData.getSubjects(_branch, _semester);
     final Map<String, Map<String, dynamic>> subjectMap = {};
-
-    // Seed default curriculum
-    for (final ds in defaultSubjects) {
-      final code = (ds['code'] ?? '').toString().toUpperCase();
-      subjectMap[code] = Map<String, dynamic>.from(ds);
-    }
-
-    // Dynamic contents loaded from API
 
     try {
       final res = await ApiClient.instance.dio.get('https://project-chi-six-62.vercel.app/api/notes');
@@ -74,11 +65,11 @@ class _AcademicHubScreenState extends State<AcademicHubScreen> {
           final noteSem = int.tryParse(note['semester']?.toString() ?? '1') ?? 1;
 
           if (noteBranch == _branch.toUpperCase() && noteSem == _semester) {
-            final subName = (note['subject'] ?? 'Basic Electronics Engineering').toString();
+            final subName = (note['subject'] ?? 'Engineering Study Material').toString();
             final codeKey = subName.replaceAll(RegExp(r'[^A-Za-z0-9]'), '').toUpperCase();
-            final targetKey = codeKey.length > 5 ? codeKey.substring(0, 5) : (codeKey.isEmpty ? 'EC101' : codeKey);
+            final targetKey = codeKey.length > 5 ? codeKey.substring(0, 5) : (codeKey.isEmpty ? 'SUB101' : codeKey);
 
-            String actualKey = 'EC101';
+            String actualKey = targetKey;
             for (final k in subjectMap.keys) {
               final existingName = (subjectMap[k]!['name'] ?? '').toString().toLowerCase();
               if (existingName.contains(subName.toLowerCase()) || subName.toLowerCase().contains(existingName)) {
@@ -89,8 +80,8 @@ class _AcademicHubScreenState extends State<AcademicHubScreen> {
 
             if (!subjectMap.containsKey(actualKey)) {
               subjectMap[actualKey] = {
-                'id': 'subj_${_branch}_${_semester}_$targetKey',
-                'code': targetKey,
+                'id': 'subj_${_branch}_${_semester}_$actualKey',
+                'code': actualKey,
                 'name': subName,
                 'branch': _branch,
                 'semester': _semester,
@@ -119,14 +110,14 @@ class _AcademicHubScreenState extends State<AcademicHubScreen> {
 
       if (mounted) {
         setState(() {
-          _subjects = subjectMap.values.toList();
+          _subjects = subjectMap.values.where((s) => (s['contents'] as List<dynamic>?)?.isNotEmpty == true).toList();
           _loading = false;
         });
       }
     } catch (e) {
       if (mounted) {
         setState(() {
-          _subjects = subjectMap.values.toList();
+          _subjects = subjectMap.values.where((s) => (s['contents'] as List<dynamic>?)?.isNotEmpty == true).toList();
           _loading = false;
         });
       }
@@ -412,11 +403,21 @@ class _AcademicHubScreenState extends State<AcademicHubScreen> {
                                       child: Column(
                                         mainAxisAlignment: MainAxisAlignment.center,
                                         children: [
-                                          const Icon(Icons.folder_open_rounded, color: Color(0xFF94A3B8), size: 64),
+                                          const Icon(Icons.menu_book_outlined, color: Color(0xFF94A3B8), size: 64),
                                           const SizedBox(height: 16),
                                           Text(
-                                            'No subjects found for $_branch (Sem $_semester)',
-                                            style: const TextStyle(color: MyVaultColors.textMuted, fontSize: 14),
+                                              'No Study Materials Uploaded for $_branch Sem $_semester',
+                                              style: const TextStyle(color: MyVaultColors.metalBlack, fontWeight: FontWeight.bold, fontSize: 15),
+                                              textAlign: TextAlign.center,
+                                          ),
+                                          const SizedBox(height: 6),
+                                          const Padding(
+                                            padding: EdgeInsets.symmetric(horizontal: 32),
+                                            child: Text(
+                                              'Materials and notes uploaded via the Admin Portal will automatically appear here in real time.',
+                                              style: TextStyle(color: MyVaultColors.textSecondary, fontSize: 12),
+                                              textAlign: TextAlign.center,
+                                            ),
                                           ),
                                           const SizedBox(height: 12),
                                           ElevatedButton.icon(

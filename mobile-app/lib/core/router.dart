@@ -8,6 +8,9 @@ import '../features/ai_interview/ai_interview_screen.dart';
 import '../features/internships/internship_hub_screen.dart';
 import '../features/courses/courses_learning_screen.dart';
 import '../features/competitive_exams/competitive_exams_hub_screen.dart';
+import '../features/offline_vault/offline_vault_screen.dart';
+import '../features/global_search/global_search_screen.dart';
+import '../features/bookmarks/bookmarks_screen.dart';
 
 /// App router — opens directly to /home with all active feature routes wired up.
 final GoRouter appRouter = GoRouter(
@@ -22,5 +25,8 @@ final GoRouter appRouter = GoRouter(
     GoRoute(path: '/uploaded-files',    builder: (context, state) => const UploadedFilesScreen()),
     GoRoute(path: '/ai-interview',      builder: (context, state) => const AiInterviewScreen()),
     GoRoute(path: '/results',           builder: (context, state) => const ResultsScreen()),
+    GoRoute(path: '/offline-vault',     builder: (context, state) => const OfflineVaultScreen()),
+    GoRoute(path: '/global-search',     builder: (context, state) => const GlobalSearchScreen()),
+    GoRoute(path: '/bookmarks',         builder: (context, state) => const BookmarksScreen()),
   ],
 );

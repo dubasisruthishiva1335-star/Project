@@ -1,3 +1,4 @@
+import '../../widgets/study_heatmap_widget.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -13,7 +14,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _navIndex = 0;
-  String _searchQuery = '';
+  final String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
   List<dynamic> _announcements = [];
   bool _loadingAnnouncements = true;
@@ -444,14 +445,24 @@ class _HomeScreenState extends State<HomeScreen> {
                     // 1. Premium Metallic Profile Card
                     _buildProfileCard(),
 
+                    const SizedBox(height: 14),
+
+                    // 2. Liquid Glassy Global Search Bar
+                    _buildSearchBar(),
+
+                    const SizedBox(height: 14),
+
+                    // 3. Quick Features (Offline Vault & Bookmarks)
+                    _buildQuickFeatureBar(),
+
                     const SizedBox(height: 16),
 
-                    // 2. Liquid Glassy Search Bar
-                    _buildSearchBar(),
+                    // 4. Daily Study Heatmap & Performance Dashboard
+                    const StudyHeatmapWidget(),
 
                     const SizedBox(height: 18),
 
-                    // 3. Section Title: "Hubs & Repositories"
+                    // 5. Section Title: "Hubs & Repositories"
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -637,38 +648,130 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // ─── 2. Liquid Glassy Search Bar ────────────────────────────────────────────
   Widget _buildSearchBar() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x0A000000),
-            blurRadius: 12,
-            offset: Offset(0, 3),
-          ),
-        ],
+    return InkWell(
+      onTap: () => context.push('/global-search'),
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFE2E8F0)),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x0A000000),
+              blurRadius: 12,
+              offset: Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.search_rounded, color: MyVaultColors.metalBlack, size: 20),
+            const SizedBox(width: 12),
+            const Expanded(
+              child: Text(
+                'Universal Search across all hubs, notes & exams...',
+                style: TextStyle(color: MyVaultColors.textMuted, fontSize: 13),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF1F5F9),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: const Text(
+                'Global',
+                style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: MyVaultColors.textSecondary),
+              ),
+            ),
+          ],
+        ),
       ),
-      child: TextField(
-        controller: _searchController,
-        onChanged: (val) => setState(() => _searchQuery = val),
-        style: const TextStyle(color: MyVaultColors.textDark, fontSize: 14),
-        decoration: InputDecoration(
-          hintText: 'Search notes, courses, exams, vault...',
-          hintStyle: const TextStyle(color: MyVaultColors.textMuted, fontSize: 13),
-          prefixIcon: const Icon(Icons.search_rounded, color: MyVaultColors.metalBlack, size: 20),
-          suffixIcon: _searchQuery.isNotEmpty
-              ? IconButton(
-                  icon: const Icon(Icons.clear_rounded, color: MyVaultColors.textMuted, size: 18),
-                  onPressed: () {
-                    _searchController.clear();
-                    setState(() => _searchQuery = '');
-                  },
-                )
-              : null,
-          border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+    );
+  }
+
+  Widget _buildQuickFeatureBar() {
+    return Row(
+      children: [
+        Expanded(
+          child: _quickActionButton(
+            icon: Icons.download_done_rounded,
+            title: 'Offline Vault',
+            subtitle: 'Cached PDFs',
+            accent: const Color(0xFF0284C7),
+            onTap: () => context.push('/offline-vault'),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: _quickActionButton(
+            icon: Icons.bookmark_rounded,
+            title: 'Bookmarks',
+            subtitle: 'Saved Items',
+            accent: const Color(0xFFD97706),
+            onTap: () => context.push('/bookmarks'),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _quickActionButton({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required Color accent,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFE2E8F0)),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF0F172A).withValues(alpha: 0.03),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: accent.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(icon, color: accent, size: 20),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: MyVaultColors.textDark),
+                  ),
+                  Text(
+                    subtitle,
+                    style: const TextStyle(fontSize: 10, color: MyVaultColors.textMuted),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.arrow_forward_ios_rounded, size: 12, color: Color(0xFF94A3B8)),
+          ],
         ),
       ),
     );
@@ -803,10 +906,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 icon: Icons.search_rounded,
                 label: 'Search',
                 isSelected: _navIndex == 1,
-                onTap: () {
-                  setState(() => _navIndex = 1);
-                  FocusScope.of(context).requestFocus();
-                },
+                onTap: () => context.push('/global-search'),
               ),
               // 3. Middle Item: Document Vault (➕ / 🗄️)
               _buildMiddleVaultButton(),

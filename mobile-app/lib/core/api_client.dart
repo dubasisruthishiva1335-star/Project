@@ -1,7 +1,9 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'network_retry_interceptor.dart';
 
-/// Central Dio client configured for live Vercel & AWS S3 cloud production backend.
+/// Central Dio client configured for live Vercel & AWS S3 cloud production backend
+/// with automatic retry resilience and secure token injection.
 class ApiClient {
   ApiClient._internal();
   static final ApiClient instance = ApiClient._internal();
@@ -22,6 +24,8 @@ class ApiClient {
         'Content-Type': 'application/json',
       },
     ));
+
+    // 1. JWT Header Interceptor
     d.interceptors.add(InterceptorsWrapper(
       onRequest: (options, handler) async {
         options.baseUrl = defaultBaseUrl;
@@ -32,6 +36,10 @@ class ApiClient {
         handler.next(options);
       },
     ));
+
+    // 2. Exponential Backoff Retry Interceptor
+    d.interceptors.add(NetworkRetryInterceptor(dio: d, maxRetries: 3));
+
     return d;
   }
 

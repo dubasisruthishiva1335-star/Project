@@ -264,7 +264,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             _profileInfoTile(Icons.account_balance_outlined, 'Institution', _college),
             _profileInfoTile(Icons.cloud_done_rounded, 'Cloud Storage', 'AWS S3 Permanent (0 Expiry)'),
             _profileInfoTile(Icons.security_rounded, 'Vault Security', 'End-to-End Encrypted'),
-            const SizedBox(height: 24),
+            _profileInfoTile(Icons.verified_user_rounded, 'Firebase Auth', 'Linked (myvault-9d7f3)'),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              height: 42,
+              child: OutlinedButton.icon(
+                onPressed: () {
+                  Navigator.pop(ctx);
+                  context.push('/auth');
+                },
+                icon: const Icon(Icons.switch_account_rounded, size: 16),
+                label: const Text('Switch Account / Firebase Login', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+              ),
+            ),
+            const SizedBox(height: 14),
             SizedBox(
               width: double.infinity,
               height: 48,

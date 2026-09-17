@@ -1,4 +1,4 @@
-// File generated for Firebase project: myvault-9d7f3
+// File generated for Firebase project: myvault-9d7f3 (abhimanyu.com)
 import 'package:firebase_core/firebase_core.dart' show FirebaseOptions;
 import 'package:flutter/foundation.dart'
     show defaultTargetPlatform, kIsWeb, TargetPlatform;
@@ -19,25 +19,25 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyA_myvault_9d7f3_android_client_key',
-    appId: '1:104298172938:android:82390a8df9e82103',
-    messagingSenderId: '104298172938',
+    apiKey: 'AIzaSyDmMl4y1OmXSSDhmhxM-cYnB-xAXg-sJ3s',
+    appId: '1:438209489105:android:24f8630cce3933f509fdf0',
+    messagingSenderId: '438209489105',
     projectId: 'myvault-9d7f3',
     storageBucket: 'myvault-9d7f3.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyA_myvault_9d7f3_ios_client_key',
-    appId: '1:104298172938:ios:82390a8df9e82104',
-    messagingSenderId: '104298172938',
+    apiKey: 'AIzaSyDmMl4y1OmXSSDhmhxM-cYnB-xAXg-sJ3s',
+    appId: '1:438209489105:ios:24f8630cce3933f509fdf0',
+    messagingSenderId: '438209489105',
     projectId: 'myvault-9d7f3',
     storageBucket: 'myvault-9d7f3.firebasestorage.app',
   );
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyA_myvault_9d7f3_web_client_key',
-    appId: '1:104298172938:web:82390a8df9e82105',
-    messagingSenderId: '104298172938',
+    apiKey: 'AIzaSyDmMl4y1OmXSSDhmhxM-cYnB-xAXg-sJ3s',
+    appId: '1:438209489105:web:24f8630cce3933f509fdf0',
+    messagingSenderId: '438209489105',
     projectId: 'myvault-9d7f3',
     authDomain: 'myvault-9d7f3.firebaseapp.com',
     storageBucket: 'myvault-9d7f3.firebasestorage.app',

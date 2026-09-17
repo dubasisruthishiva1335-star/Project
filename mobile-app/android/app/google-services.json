@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "438209489105",
+    "project_id": "myvault-9d7f3",
+    "storage_bucket": "myvault-9d7f3.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:438209489105:android:24f8630cce3933f509fdf0",
+        "android_client_info": {
+          "package_name": "abhimanyu.com"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDmMl4y1OmXSSDhmhxM-cYnB-xAXg-sJ3s"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

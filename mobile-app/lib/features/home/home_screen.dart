@@ -384,6 +384,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         accentColor: const Color(0xFF7C3AED),
       ),
       _HubCardData(
+        title: 'Quiz Arena & Live Ranks',
+        subtitle: 'Timed GATE, Coding & Subject Leaderboard',
+        category: 'QUIZ',
+        icon: Icons.emoji_events_rounded,
+        badgeText: 'Live Arena',
+        route: '/quiz-arena',
+        accentColor: const Color(0xFF06B6D4),
+      ),
+      _HubCardData(
         title: 'Results & CGPA Analyzer',
         subtitle: 'SGPA Forecast, Credit Tracker & Analytics',
         category: 'ACADEMIC',

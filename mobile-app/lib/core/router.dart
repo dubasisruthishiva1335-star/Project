@@ -11,6 +11,7 @@ import '../features/competitive_exams/competitive_exams_hub_screen.dart';
 import '../features/offline_vault/offline_vault_screen.dart';
 import '../features/global_search/global_search_screen.dart';
 import '../features/bookmarks/bookmarks_screen.dart';
+import '../features/quiz_arena/quiz_arena_screen.dart';
 
 /// App router — opens directly to /home with all active feature routes wired up.
 final GoRouter appRouter = GoRouter(
@@ -28,5 +29,6 @@ final GoRouter appRouter = GoRouter(
     GoRoute(path: '/offline-vault',     builder: (context, state) => const OfflineVaultScreen()),
     GoRoute(path: '/global-search',     builder: (context, state) => const GlobalSearchScreen()),
     GoRoute(path: '/bookmarks',         builder: (context, state) => const BookmarksScreen()),
+    GoRoute(path: '/quiz-arena',        builder: (context, state) => const QuizArenaScreen()),
   ],
 );

@@ -1,9 +1,10 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
-import '../../core/colors.dart';
 import '../../services/offline_vault_service.dart';
 import '../../services/study_activity_service.dart';
+
+enum AnnotationMode { none, highlight, inkPencil, stickyNote }
 
 class PdfViewerScreen extends StatefulWidget {
   final String title;
@@ -31,10 +32,15 @@ class PdfViewerScreen extends StatefulWidget {
 }
 
 class _PdfViewerScreenState extends State<PdfViewerScreen> {
+  final PdfViewerController _pdfViewerController = PdfViewerController();
   bool _isDownloading = false;
   double _downloadProgress = 0.0;
   bool _isSavedOffline = false;
   DateTime? _openedAt;
+
+  AnnotationMode _activeMode = AnnotationMode.none;
+  Color _selectedColor = const Color(0xFFFFD54F); // Highlighting Yellow
+  final List<String> _notesList = [];
 
   @override
   void initState() {
@@ -45,6 +51,7 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
 
   @override
   void dispose() {
+    _pdfViewerController.dispose();
     if (_openedAt != null) {
       final duration = DateTime.now().difference(_openedAt!);
       final mins = (duration.inSeconds / 60).ceil();
@@ -104,64 +111,163 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
     }
   }
 
+  void _addStickyNote() {
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        final ctrl = TextEditingController();
+        return AlertDialog(
+          title: const Text('Add Sticky Note', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          content: TextField(
+            controller: ctrl,
+            maxLines: 3,
+            decoration: const InputDecoration(hintText: 'Type your study note / bookmark...'),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+            ElevatedButton(
+              onPressed: () {
+                if (ctrl.text.trim().isNotEmpty) {
+                  setState(() => _notesList.add('Page ${_pdfViewerController.pageNumber}: ${ctrl.text.trim()}'));
+                }
+                Navigator.pop(ctx);
+              },
+              child: const Text('Save Note'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final local = widget.resolvedLocalPath;
     final remote = widget.resolvedRemoteUrl;
 
     return Scaffold(
-      backgroundColor: MyVaultColors.backgroundWhite,
       appBar: AppBar(
-        backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: MyVaultColors.metalBlack, size: 20),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
           widget.title,
-          style: const TextStyle(color: MyVaultColors.metalBlack, fontWeight: FontWeight.bold, fontSize: 16),
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
         actions: [
+          // Annotation Mode Switchers
+          IconButton(
+            icon: Icon(
+              Icons.highlight_rounded,
+              color: _activeMode == AnnotationMode.highlight ? Colors.amber : null,
+            ),
+            tooltip: 'Highlight Tool',
+            onPressed: () {
+              setState(() {
+                _activeMode = _activeMode == AnnotationMode.highlight ? AnnotationMode.none : AnnotationMode.highlight;
+              });
+            },
+          ),
+          IconButton(
+            icon: Icon(
+              Icons.draw_rounded,
+              color: _activeMode == AnnotationMode.inkPencil ? const Color(0xFF06B6D4) : null,
+            ),
+            tooltip: 'Ink Pencil Tool',
+            onPressed: () {
+              setState(() {
+                _activeMode = _activeMode == AnnotationMode.inkPencil ? AnnotationMode.none : AnnotationMode.inkPencil;
+              });
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.note_add_outlined),
+            tooltip: 'Add Note',
+            onPressed: _addStickyNote,
+          ),
           if (_isDownloading)
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 14),
               child: Center(
                 child: SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(
-                    value: _downloadProgress > 0 ? _downloadProgress : null,
-                    color: MyVaultColors.metalBlack,
-                    strokeWidth: 2.5,
-                  ),
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(value: _downloadProgress > 0 ? _downloadProgress : null, strokeWidth: 2),
                 ),
               ),
             )
           else if (_isSavedOffline)
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 14),
-              child: Icon(Icons.offline_pin_rounded, color: Colors.green, size: 24),
+              child: Icon(Icons.offline_pin_rounded, color: Color(0xFF10B981), size: 22),
             )
           else if (remote != null && remote.isNotEmpty)
             IconButton(
-              icon: const Icon(Icons.download_for_offline_outlined, color: MyVaultColors.metalBlack),
-              tooltip: 'Save to Offline Vault',
+              icon: const Icon(Icons.download_for_offline_outlined),
+              tooltip: 'Save Offline',
               onPressed: _downloadOffline,
             ),
         ],
-        bottom: const PreferredSize(
-          preferredSize: Size.fromHeight(1),
-          child: Divider(height: 1, color: Color(0xFFE2E8F0)),
+        bottom: PreferredSize(
+          preferredSize: Size.fromHeight(_activeMode != AnnotationMode.none ? 44 : 1),
+          child: _activeMode != AnnotationMode.none
+              ? Container(
+                  height: 44,
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  color: const Color(0xFF06B6D4).withValues(alpha: 0.1),
+                  child: Row(
+                    children: [
+                      Text(
+                        _activeMode == AnnotationMode.highlight ? '🖍️ Highlighting Active' : '✏️ Freehand Drawing Active',
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Color(0xFF06B6D4)),
+                      ),
+                      const Spacer(),
+                      _colorDot(const Color(0xFFFFD54F)),
+                      const SizedBox(width: 8),
+                      _colorDot(const Color(0xFF80D8FF)),
+                      const SizedBox(width: 8),
+                      _colorDot(const Color(0xFFA7F3D0)),
+                      const SizedBox(width: 8),
+                      _colorDot(const Color(0xFFFCA5A5)),
+                    ],
+                  ),
+                )
+              : const Divider(height: 1),
         ),
       ),
       body: local != null && File(local).existsSync()
-          ? SfPdfViewer.file(File(local))
+          ? SfPdfViewer.file(
+              File(local),
+              controller: _pdfViewerController,
+              enableDoubleTapZooming: true,
+            )
           : (remote != null && remote.isNotEmpty)
-              ? SfPdfViewer.network(remote)
+              ? SfPdfViewer.network(
+                  remote,
+                  controller: _pdfViewerController,
+                  enableDoubleTapZooming: true,
+                )
               : const Center(child: Text('Document source unavailable.')),
+    );
+  }
+
+  Widget _colorDot(Color c) {
+    final isSel = _selectedColor == c;
+    return GestureDetector(
+      onTap: () => setState(() => _selectedColor = c),
+      child: Container(
+        width: 20,
+        height: 20,
+        decoration: BoxDecoration(
+          color: c,
+          shape: BoxShape.circle,
+          border: Border.all(color: isSel ? Colors.black : Colors.transparent, width: 2),
+        ),
+      ),
     );
   }
 }

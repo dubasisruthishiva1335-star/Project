@@ -24,7 +24,7 @@
         android:icon="@mipmap/ic_launcher"
         android:usesCleartextTraffic="true">
         <activity
-            android:name=".MainActivity"
+            android:name="abhimanyu.com.MainActivity"
             android:exported="true"
             android:launchMode="singleTop"
             android:theme="@style/LaunchTheme"

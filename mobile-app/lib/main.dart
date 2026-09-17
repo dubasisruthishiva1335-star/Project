@@ -12,11 +12,19 @@ import 'widgets/global_error_boundary.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // 1. Initialize Firebase (Graceful fallback if no google-services config)
+  // 1. Bulletproof Zero-Crash Firebase Initialization
   try {
-    await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+    if (Firebase.apps.isEmpty) {
+      await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+    }
   } catch (e) {
-    debugPrint('Firebase init: $e');
+    try {
+      if (Firebase.apps.isEmpty) {
+        await Firebase.initializeApp();
+      }
+    } catch (e2) {
+      debugPrint('Firebase init safe fallback: $e2');
+    }
   }
 
   // 2. Initialize Push & Local Notification Service

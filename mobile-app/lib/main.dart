@@ -1,3 +1,4 @@
+import 'firebase_options.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -13,7 +14,7 @@ void main() async {
 
   // 1. Initialize Firebase (Graceful fallback if no google-services config)
   try {
-    await Firebase.initializeApp();
+    await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   } catch (e) {
     debugPrint('Firebase init: $e');
   }

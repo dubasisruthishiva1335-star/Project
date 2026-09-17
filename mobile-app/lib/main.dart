@@ -1,72 +1,66 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'core/router.dart';
-import 'core/colors.dart';
-import 'services/push_notification_service.dart';
+import 'core/theme/app_themes.dart';
+import 'core/theme/theme_provider.dart';
 import 'services/crash_telemetry_service.dart';
+import 'services/notification_service.dart';
 import 'widgets/global_error_boundary.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Zero-Crash Global Error Handler
+  // 1. Initialize Firebase (Graceful fallback if no google-services config)
+  try {
+    await Firebase.initializeApp();
+  } catch (e) {
+    debugPrint('Firebase init: $e');
+  }
+
+  // 2. Initialize Push & Local Notification Service
+  try {
+    await NotificationService.instance.initialize();
+  } catch (e) {
+    debugPrint('Notification service init: $e');
+  }
+
+  // 3. Global Crash Telemetry & Error Boundary
   FlutterError.onError = (FlutterErrorDetails details) {
-    FlutterError.presentError(details);
     CrashTelemetryService.instance.logError(
       details.exception,
       details.stack,
-      reason: 'FlutterError Uncaught Exception',
+      reason: 'Uncaught Flutter Framework Error',
     );
+    FlutterError.presentError(details);
   };
-
-  PlatformDispatcher.instance.onError = (error, stack) {
-    CrashTelemetryService.instance.logError(
-      error,
-      stack,
-      reason: 'PlatformDispatcher Uncaught Async Error',
-    );
-    return true; // Handled safely without process abort
-  };
-
-  // Safely initialize push notifications
-  try {
-    await PushNotificationService.instance.initialize(
-      onCircularTapped: (message) {
-        appRouter.go('/academic-hub');
-      },
-    );
-  } catch (e) {
-    debugPrint('Push notifications setup skipped: $e');
-  }
 
   runApp(
     const ProviderScope(
-      child: GlobalErrorBoundary(
-        child: MyVaultApp(),
-      ),
+      child: MyVaultApp(),
     ),
   );
 }
 
-class MyVaultApp extends StatelessWidget {
+class MyVaultApp extends ConsumerWidget {
   const MyVaultApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final themeMode = ref.watch(themeModeProvider);
+
     return MaterialApp.router(
       title: 'MyVault',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        useMaterial3: true,
-        brightness: Brightness.light,
-        scaffoldBackgroundColor: MyVaultColors.backgroundWhite,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: MyVaultColors.metalBlack,
-          brightness: Brightness.light,
-        ),
-      ),
+      theme: AppThemes.lightTheme,
+      darkTheme: AppThemes.darkTheme,
+      themeMode: themeMode,
       routerConfig: appRouter,
+      builder: (context, child) {
+        return GlobalErrorBoundary(
+          child: child ?? const SizedBox.shrink(),
+        );
+      },
     );
   }
 }

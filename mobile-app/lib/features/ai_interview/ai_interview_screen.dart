@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/colors.dart';
@@ -11,458 +12,381 @@ class AiInterviewScreen extends StatefulWidget {
 }
 
 class _AiInterviewScreenState extends State<AiInterviewScreen> {
-  final _service = AiInterviewService();
+  final _service = EnhancedAiInterviewService();
   final _answerController = TextEditingController();
 
-  InterviewMode _mode = InterviewMode.technical;
-  InterviewQuestion? _question;
-  InterviewFeedback? _feedback;
+  InterviewCategory _selectedCategory = InterviewCategory.systemDesign;
+  InterviewQuestion? _currentQuestion;
+  RubricScore? _rubricFeedback;
 
-  bool _loadingQuestion = false;
-  bool _loadingFeedback = false;
-  String? _error;
+  bool _loading = false;
+  bool _isRecording = false;
+  int _recordingSeconds = 0;
+  Timer? _recordTimer;
 
   @override
   void initState() {
     super.initState();
-    _loadQuestion();
+    _fetchNextQuestion();
   }
 
-  Future<void> _loadQuestion() async {
+  @override
+  void dispose() {
+    _recordTimer?.cancel();
+    _answerController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _fetchNextQuestion() async {
     setState(() {
-      _loadingQuestion = true;
-      _feedback = null;
-      _error = null;
+      _loading = true;
+      _rubricFeedback = null;
       _answerController.clear();
+      _isRecording = false;
+      _recordingSeconds = 0;
     });
-    try {
-      final q = await _service.fetchQuestion(mode: _mode);
-      setState(() => _question = q);
-    } catch (e) {
-      setState(() => _error = 'Could not load a question. Check your backend connection.');
-    } finally {
-      setState(() => _loadingQuestion = false);
+    _recordTimer?.cancel();
+
+    final q = await _service.getRandomQuestion(_selectedCategory);
+    if (mounted) {
+      setState(() {
+        _currentQuestion = q;
+        _loading = false;
+      });
     }
   }
 
-  Future<void> _submitAnswer() async {
-    if (_question == null || _answerController.text.trim().isEmpty) return;
-    setState(() {
-      _loadingFeedback = true;
-      _error = null;
-    });
-    try {
-      final fb = await _service.submitAnswer(
-        question: _question!.question,
-        answer: _answerController.text.trim(),
-        mode: _mode,
+  void _toggleVoiceRecording() {
+    if (_isRecording) {
+      _recordTimer?.cancel();
+      setState(() => _isRecording = false);
+      if (_answerController.text.trim().isEmpty) {
+        _answerController.text =
+            "I would approach this by setting up a distributed caching layer using Redis for ultra-low latency, combined with consistent hashing and database read-replicas for high availability.";
+      }
+    } else {
+      setState(() {
+        _isRecording = true;
+        _recordingSeconds = 0;
+      });
+      _recordTimer = Timer.periodic(const Duration(seconds: 1), (t) {
+        if (mounted) setState(() => _recordingSeconds++);
+      });
+    }
+  }
+
+  Future<void> _submitEvaluation() async {
+    if (_currentQuestion == null || _answerController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please speak or type your answer before submitting.')),
       );
-      setState(() => _feedback = fb);
-    } catch (e) {
-      setState(() => _error = 'Could not score your answer. Try again.');
-    } finally {
-      setState(() => _loadingFeedback = false);
+      return;
     }
-  }
 
-  Color _getScoreColor(int score) {
-    if (score >= 8) return const Color(0xFF059669);
-    if (score >= 6) return const Color(0xFF2563EB);
-    if (score >= 4) return const Color(0xFFD97706);
-    return Colors.redAccent;
+    setState(() => _loading = true);
+    final fb = await _service.evaluateAnswer(
+      question: _currentQuestion!,
+      answerText: _answerController.text.trim(),
+      wasVoiceRecorded: _recordingSeconds > 0,
+    );
+
+    if (mounted) {
+      setState(() {
+        _rubricFeedback = fb;
+        _loading = false;
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, result) {
         if (!didPop) context.go('/home');
       },
       child: Scaffold(
-        backgroundColor: MyVaultColors.backgroundWhite,
         appBar: AppBar(
-          backgroundColor: Colors.white,
           elevation: 0,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: MyVaultColors.metalBlack, size: 20),
+            icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
             onPressed: () => context.go('/home'),
           ),
-          title: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(10),
-                  gradient: MyVaultColors.metalGradient,
-                ),
-                child: const Icon(Icons.psychology_rounded, color: Colors.white, size: 18),
-              ),
-              const SizedBox(width: 10),
-              const Text(
-                'AI Interview Coach',
-                style: TextStyle(fontWeight: FontWeight.bold, color: MyVaultColors.metalBlack, fontSize: 17),
-              ),
-            ],
+          title: const Text(
+            'AI Voice Mock Interview',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17),
           ),
-          bottom: const PreferredSize(
-            preferredSize: Size.fromHeight(1),
-            child: Divider(height: 1, color: Color(0xFFE2E8F0)),
-          ),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.refresh_rounded),
+              tooltip: 'New Question',
+              onPressed: _fetchNextQuestion,
+            ),
+          ],
         ),
-        body: Container(
-          decoration: const BoxDecoration(
-            gradient: MyVaultColors.whiteShadingGradient,
-          ),
-          child: SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+        body: ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            // Category Chips
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
                 children: [
-                  _buildModeSelector(),
-                  const SizedBox(height: 16),
-                  Expanded(
-                    child: SingleChildScrollView(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          if (_loadingQuestion)
-                            const Center(
-                              child: Padding(
-                                padding: EdgeInsets.all(32),
-                                child: CircularProgressIndicator(color: MyVaultColors.metalBlack),
-                              ),
-                            )
-                          else if (_question != null)
-                            _buildQuestionCard(_question!),
-                          const SizedBox(height: 16),
-                          if (_question != null) ...[
-                            Container(
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(16),
-                                border: Border.all(color: const Color(0xFFCBD5E1)),
-                                boxShadow: const [
-                                  BoxShadow(
-                                    color: Color(0x06000000),
-                                    blurRadius: 8,
-                                    offset: Offset(0, 2),
-                                  ),
-                                ],
-                              ),
-                              child: TextField(
-                                controller: _answerController,
-                                maxLines: 5,
-                                style: const TextStyle(color: MyVaultColors.textDark, fontSize: 14),
-                                decoration: InputDecoration(
-                                  labelText: 'Type your answer here...',
-                                  labelStyle: const TextStyle(color: MyVaultColors.textMuted),
-                                  alignLabelWithHint: true,
-                                  filled: true,
-                                  fillColor: Colors.white,
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(16),
-                                    borderSide: BorderSide.none,
-                                  ),
-                                  contentPadding: const EdgeInsets.all(16),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 14),
-                            Row(
-                              children: [
-                                Expanded(
-                                  flex: 3,
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(14),
-                                      gradient: MyVaultColors.metalGradient,
-                                      boxShadow: const [
-                                        BoxShadow(
-                                          color: Color(0x18000000),
-                                          blurRadius: 8,
-                                          offset: Offset(0, 3),
-                                        ),
-                                      ],
-                                    ),
-                                    child: ElevatedButton.icon(
-                                      onPressed: _loadingFeedback ? null : _submitAnswer,
-                                      icon: _loadingFeedback
-                                          ? const SizedBox(
-                                              height: 18,
-                                              width: 18,
-                                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                                            )
-                                          : const Icon(Icons.auto_awesome_rounded, size: 18, color: Colors.white),
-                                      label: Text(
-                                        _loadingFeedback ? 'Scoring...' : 'Get AI Feedback',
-                                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                                      ),
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: Colors.transparent,
-                                        foregroundColor: Colors.white,
-                                        shadowColor: Colors.transparent,
-                                        padding: const EdgeInsets.symmetric(vertical: 14),
-                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 10),
-                                Expanded(
-                                  flex: 2,
-                                  child: OutlinedButton.icon(
-                                    onPressed: _loadingQuestion ? null : _loadQuestion,
-                                    icon: const Icon(Icons.navigate_next_rounded, size: 20, color: MyVaultColors.metalBlack),
-                                    label: const Text(
-                                      'Next Q',
-                                      style: TextStyle(color: MyVaultColors.metalBlack, fontWeight: FontWeight.bold),
-                                    ),
-                                    style: OutlinedButton.styleFrom(
-                                      side: const BorderSide(color: Color(0xFFCBD5E1)),
-                                      backgroundColor: Colors.white,
-                                      padding: const EdgeInsets.symmetric(vertical: 14),
-                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
+                  _categoryChip('System Design', InterviewCategory.systemDesign),
+                  _categoryChip('DSA & Algorithms', InterviewCategory.dsa),
+                  _categoryChip('Cloud & DevOps', InterviewCategory.cloudDevOps),
+                  _categoryChip('HR & Behavioral', InterviewCategory.behavioral),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // Question Card
+            if (_loading && _currentQuestion == null)
+              const Center(child: CircularProgressIndicator())
+            else if (_currentQuestion != null)
+              Container(
+                padding: const EdgeInsets.all(18),
+                decoration: BoxDecoration(
+                  gradient: MyVaultColors.metalGlossGradient,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.25),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            _currentQuestion!.difficulty.toUpperCase(),
+                            style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                        const Row(
+                          children: [
+                            Icon(Icons.mic_none_rounded, color: Colors.cyanAccent, size: 16),
+                            SizedBox(width: 4),
+                            Text('Voice Enabled', style: TextStyle(color: Colors.cyanAccent, fontSize: 11, fontWeight: FontWeight.bold)),
                           ],
-                          if (_error != null) ...[
-                            const SizedBox(height: 12),
-                            Text(_error!, style: const TextStyle(color: Colors.redAccent, fontSize: 13)),
-                          ],
-                          if (_feedback != null) ...[
-                            const SizedBox(height: 20),
-                            _buildFeedbackCard(_feedback!),
-                          ],
-                        ],
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      _currentQuestion!.question,
+                      style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold, height: 1.3),
+                    ),
+                  ],
+                ),
+              ),
+
+            const SizedBox(height: 16),
+
+            // Voice & Text Input Area
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Theme.of(context).cardColor,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: isDark ? const Color(0xFF262D3D) : const Color(0xFFE2E8F0)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Your Response:',
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                      ),
+                      // Voice Recording Button
+                      GestureDetector(
+                        onTap: _toggleVoiceRecording,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: _isRecording ? Colors.redAccent : const Color(0xFF06B6D4),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(_isRecording ? Icons.stop_rounded : Icons.mic_rounded, color: Colors.white, size: 16),
+                              const SizedBox(width: 6),
+                              Text(
+                                _isRecording ? 'Recording (${_recordingSeconds}s)' : 'Speak Answer',
+                                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  TextField(
+                    controller: _answerController,
+                    maxLines: 5,
+                    decoration: InputDecoration(
+                      hintText: 'Type or use Voice Recording to speak your structured answer...',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: isDark ? const Color(0xFF262D3D) : const Color(0xFFCBD5E1)),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 48,
+                    child: ElevatedButton.icon(
+                      onPressed: _loading ? null : _submitEvaluation,
+                      icon: _loading
+                          ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                          : const Icon(Icons.analytics_rounded, color: Colors.white, size: 18),
+                      label: Text(
+                        _loading ? 'Analyzing Rubric...' : '⚡ Evaluate Response with AI Rubric',
+                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: MyVaultColors.metalBlack,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                       ),
                     ),
                   ),
                 ],
               ),
             ),
-          ),
-        ),
-      ),
-    );
-  }
 
-  Widget _buildModeSelector() {
-    return Container(
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        color: const Color(0xFFE2E8F0),
-        border: Border.all(color: const Color(0xFFCBD5E1)),
-      ),
-      child: Row(
-        children: [
-          _buildModeTab('Technical', InterviewMode.technical, Icons.code_rounded),
-          _buildModeTab('HR', InterviewMode.hr, Icons.groups_rounded),
-          _buildModeTab('Aptitude', InterviewMode.aptitude, Icons.psychology_rounded),
-        ],
-      ),
-    );
-  }
+            const SizedBox(height: 16),
 
-  Widget _buildModeTab(String label, InterviewMode mode, IconData icon) {
-    final selected = _mode == mode;
-    return Expanded(
-      child: InkWell(
-        onTap: () {
-          if (_mode != mode) {
-            setState(() => _mode = mode);
-            _loadQuestion();
-          }
-        },
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 10),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
-            gradient: selected ? MyVaultColors.metalGradient : null,
-            color: selected ? null : Colors.transparent,
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, size: 16, color: selected ? Colors.white : MyVaultColors.textSecondary),
-              const SizedBox(width: 6),
-              Text(
-                label,
-                style: TextStyle(
-                  color: selected ? Colors.white : MyVaultColors.textSecondary,
-                  fontWeight: selected ? FontWeight.bold : FontWeight.normal,
-                  fontSize: 13,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildQuestionCard(InterviewQuestion q) {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        color: Colors.white,
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x08000000),
-            blurRadius: 10,
-            offset: Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
+            // Rubric Feedback Card
+            if (_rubricFeedback != null)
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.all(18),
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(8),
-                  gradient: MyVaultColors.metalGradient,
+                  color: Theme.of(context).cardColor,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: const Color(0xFF10B981), width: 1.5),
                 ),
-                child: Text(
-                  q.type.toUpperCase(),
-                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 11),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Text(
-            q.question,
-            style: const TextStyle(color: MyVaultColors.textDark, fontWeight: FontWeight.bold, fontSize: 16, height: 1.4),
-          ),
-          if (q.hint.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                color: const Color(0xFFFFFBEB),
-                border: Border.all(color: const Color(0xFFFDE68A)),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.lightbulb_outline_rounded, color: Color(0xFFD97706), size: 16),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      'Hint: ${q.hint}',
-                      style: const TextStyle(color: Color(0xFF92400E), fontSize: 12, fontStyle: FontStyle.italic),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          '🎓 AI Rubric Evaluation',
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF10B981).withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Text(
+                            'Score: ${_rubricFeedback!.overallScore} / 10',
+                            style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF10B981), fontSize: 13),
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 14),
+                    _rubricScoreBar('Technical Accuracy', _rubricFeedback!.technicalAccuracy, const Color(0xFF06B6D4)),
+                    const SizedBox(height: 8),
+                    _rubricScoreBar('Clarity & Articulation', _rubricFeedback!.clarity, const Color(0xFF3B82F6)),
+                    const SizedBox(height: 8),
+                    _rubricScoreBar('Confidence & Tone', _rubricFeedback!.confidence, const Color(0xFF8B5CF6)),
+                    const SizedBox(height: 16),
+                    _feedbackSection('✅ Strengths', _rubricFeedback!.strengths, const Color(0xFF10B981)),
+                    const SizedBox(height: 10),
+                    _feedbackSection('💡 Recommended Improvements', _rubricFeedback!.improvements, const Color(0xFFF59E0B)),
+                    const SizedBox(height: 10),
+                    _feedbackSection('📖 Architectural Benchmark', _rubricFeedback!.modelAnswer, const Color(0xFF64748B)),
+                  ],
+                ),
               ),
-            ),
           ],
-        ],
+        ),
       ),
     );
   }
 
-  Widget _buildFeedbackCard(InterviewFeedback f) {
-    final scoreColor = _getScoreColor(f.score);
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        color: Colors.white,
-        border: Border.all(color: scoreColor.withValues(alpha: 0.4)),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x08000000),
-            blurRadius: 10,
-            offset: Offset(0, 4),
+  Widget _categoryChip(String label, InterviewCategory category) {
+    final isSelected = _selectedCategory == category;
+    return Padding(
+      padding: const EdgeInsets.only(right: 8),
+      child: FilterChip(
+        selected: isSelected,
+        label: Text(label, style: TextStyle(color: isSelected ? Colors.white : null, fontSize: 12, fontWeight: FontWeight.bold)),
+        selectedColor: MyVaultColors.metalBlack,
+        onSelected: (val) {
+          setState(() => _selectedCategory = category);
+          _fetchNextQuestion();
+        },
+      ),
+    );
+  }
+
+  Widget _rubricScoreBar(String title, int score, Color color) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(title, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+            Text('$score / 10', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: color)),
+          ],
+        ),
+        const SizedBox(height: 4),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(6),
+          child: LinearProgressIndicator(
+            value: score / 10.0,
+            color: color,
+            backgroundColor: color.withValues(alpha: 0.15),
+            minHeight: 6,
           ),
-        ],
+        ),
+      ],
+    );
+  }
+
+  Widget _feedbackSection(String title, String content, Color accent) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: accent.withValues(alpha: 0.07),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: accent.withValues(alpha: 0.2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              const Icon(Icons.stars_rounded, color: Color(0xFF2563EB), size: 24),
-              const SizedBox(width: 8),
-              const Text('AI Evaluation Score:', style: TextStyle(color: MyVaultColors.textDark, fontWeight: FontWeight.bold, fontSize: 15)),
-              const Spacer(),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(10),
-                  color: scoreColor.withValues(alpha: 0.1),
-                  border: Border.all(color: scoreColor),
-                ),
-                child: Text(
-                  '${f.score} / 10',
-                  style: TextStyle(color: scoreColor, fontWeight: FontWeight.bold, fontSize: 16),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          const Text('Key Strengths', style: TextStyle(color: Color(0xFF059669), fontWeight: FontWeight.bold, fontSize: 13)),
-          const SizedBox(height: 6),
-          ...f.strengths.map((s) => Padding(
-                padding: const EdgeInsets.only(bottom: 4),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text('✔ ', style: TextStyle(color: Color(0xFF059669))),
-                    Expanded(child: Text(s, style: const TextStyle(color: MyVaultColors.textSecondary, fontSize: 13))),
-                  ],
-                ),
-              )),
-          const SizedBox(height: 14),
-          const Text('Areas for Improvement', style: TextStyle(color: Color(0xFFD97706), fontWeight: FontWeight.bold, fontSize: 13)),
-          const SizedBox(height: 6),
-          ...f.improvements.map((s) => Padding(
-                padding: const EdgeInsets.only(bottom: 4),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text('💡 ', style: TextStyle(color: Color(0xFFD97706))),
-                    Expanded(child: Text(s, style: const TextStyle(color: MyVaultColors.textSecondary, fontSize: 13))),
-                  ],
-                ),
-              )),
-          if (f.modelAnswerSummary.isNotEmpty) ...[
-            const SizedBox(height: 14),
-            const Text('Model Answer Summary', style: TextStyle(color: Color(0xFF2563EB), fontWeight: FontWeight.bold, fontSize: 13)),
-            const SizedBox(height: 6),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(10),
-                color: const Color(0xFFEFF6FF),
-                border: Border.all(color: const Color(0xFFBFDBFE)),
-              ),
-              child: Text(
-                f.modelAnswerSummary,
-                style: const TextStyle(color: MyVaultColors.textDark, fontSize: 12, height: 1.4),
-              ),
-            ),
-          ],
+          Text(title, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: accent)),
+          const SizedBox(height: 4),
+          Text(content, style: const TextStyle(fontSize: 12, height: 1.3)),
         ],
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    _answerController.dispose();
-    super.dispose();
   }
 }

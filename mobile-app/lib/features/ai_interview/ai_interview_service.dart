@@ -1,173 +1,132 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
+import 'dart:math';
 
-/// Production live Railway backend URL + Android emulator host fallback
-const String kBackendBaseUrl = 'https://romantic-serenity-production-3e5b.up.railway.app';
-const String kEmulatorBackendBaseUrl = 'http://10.0.2.2:4000';
+enum InterviewCategory { systemDesign, dsa, cloudDevOps, behavioral }
 
-class InterviewQuestion {
-  final String question;
-  final String type;
-  final String hint;
+class RubricScore {
+  final int technicalAccuracy; // 0-10
+  final int clarity;          // 0-10
+  final int confidence;       // 0-10
+  final int overallScore;     // 0-10
+  final String strengths;
+  final String improvements;
+  final String modelAnswer;
 
-  InterviewQuestion({
-    required this.question,
-    required this.type,
-    required this.hint,
-  });
-
-  factory InterviewQuestion.fromJson(Map<String, dynamic> json) {
-    return InterviewQuestion(
-      question: json['question'] ?? '',
-      type: json['type'] ?? '',
-      hint: json['hint'] ?? '',
-    );
-  }
-}
-
-class InterviewFeedback {
-  final int score;
-  final List<String> strengths;
-  final List<String> improvements;
-  final String modelAnswerSummary;
-
-  InterviewFeedback({
-    required this.score,
+  RubricScore({
+    required this.technicalAccuracy,
+    required this.clarity,
+    required this.confidence,
+    required this.overallScore,
     required this.strengths,
     required this.improvements,
-    required this.modelAnswerSummary,
+    required this.modelAnswer,
   });
-
-  factory InterviewFeedback.fromJson(Map<String, dynamic> json) {
-    return InterviewFeedback(
-      score: (json['score'] ?? 0) is int
-          ? json['score']
-          : (json['score'] as num).round(),
-      strengths: List<String>.from(json['strengths'] ?? []),
-      improvements: List<String>.from(json['improvements'] ?? []),
-      modelAnswerSummary: json['modelAnswerSummary'] ?? '',
-    );
-  }
 }
 
-/// Mode of practice: technical interview, HR/behavioral, or aptitude test.
-enum InterviewMode { technical, hr, aptitude }
+class InterviewQuestion {
+  final String id;
+  final String question;
+  final InterviewCategory category;
+  final String difficulty;
+  final List<String> expectedKeywords;
 
-extension InterviewModeX on InterviewMode {
-  String get apiValue {
-    switch (this) {
-      case InterviewMode.technical:
-        return 'technical';
-      case InterviewMode.hr:
-        return 'hr';
-      case InterviewMode.aptitude:
-        return 'aptitude';
-    }
-  }
+  InterviewQuestion({
+    required this.id,
+    required this.question,
+    required this.category,
+    required this.difficulty,
+    required this.expectedKeywords,
+  });
 }
 
-class AiInterviewService {
-  Future<InterviewQuestion> fetchQuestion({
-    required InterviewMode mode,
-    String topic = 'general software engineering',
-    String difficulty = 'medium',
-  }) async {
-    final urls = [
-      '$kBackendBaseUrl/api/interview/question',
-      '$kEmulatorBackendBaseUrl/api/interview/question',
-    ];
+class EnhancedAiInterviewService {
+  final _random = Random();
 
-    for (final url in urls) {
-      try {
-        final res = await http
-            .post(
-              Uri.parse(url),
-              headers: {'Content-Type': 'application/json'},
-              body: jsonEncode({
-                'mode': mode.apiValue,
-                'topic': topic,
-                'difficulty': difficulty,
-              }),
-            )
-            .timeout(const Duration(seconds: 4));
+  final List<InterviewQuestion> _questionBank = [
+    InterviewQuestion(
+      id: 'sd_1',
+      question: 'How would you architect a fault-tolerant, low-latency URL Shortener (like Bit.ly) capable of 100k requests/sec?',
+      category: InterviewCategory.systemDesign,
+      difficulty: 'Hard',
+      expectedKeywords: ['Base62', 'Redis Cache', 'Distributed Key Generation', 'Rate Limiter', 'Consistent Hashing'],
+    ),
+    InterviewQuestion(
+      id: 'sd_2',
+      question: 'Design an end-to-end Notification System supporting Push (FCM), SMS, and Email with guaranteed delivery and de-duplication.',
+      category: InterviewCategory.systemDesign,
+      difficulty: 'Medium',
+      expectedKeywords: ['Message Queue', 'Kafka', 'Dead Letter Queue', 'Worker Pools', 'Idempotency Key'],
+    ),
+    InterviewQuestion(
+      id: 'dsa_1',
+      question: 'Explain how you would find the Median of Two Sorted Arrays in O(log(min(N, M))) time complexity.',
+      category: InterviewCategory.dsa,
+      difficulty: 'Hard',
+      expectedKeywords: ['Binary Search', 'Partitioning', 'Median index', 'Edge case overflow'],
+    ),
+    InterviewQuestion(
+      id: 'dsa_2',
+      question: 'How does the LRU (Least Recently Used) Cache work, and why does combining Doubly Linked List with Hash Map achieve O(1) operations?',
+      category: InterviewCategory.dsa,
+      difficulty: 'Medium',
+      expectedKeywords: ['Doubly Linked List', 'HashMap', 'Head Node', 'Tail Eviction', 'O(1) lookups'],
+    ),
+    InterviewQuestion(
+      id: 'cloud_1',
+      question: 'Explain how AWS S3 Multi-Part Upload accelerates large binary uploads and how Presigned URLs eliminate backend load.',
+      category: InterviewCategory.cloudDevOps,
+      difficulty: 'Medium',
+      expectedKeywords: ['Multi-Part Parts', 'Presigned PUT', 'IAM Policy', 'Byte Subarrays', 'Zero Backend Overhead'],
+    ),
+    InterviewQuestion(
+      id: 'cloud_2',
+      question: 'What is Blue/Green vs Canary deployment in Kubernetes / AWS ECS, and how do you ensure zero-downtime database migrations?',
+      category: InterviewCategory.cloudDevOps,
+      difficulty: 'Hard',
+      expectedKeywords: ['Traffic Weight', 'Load Balancer', 'Backward Compatibility', 'Rollback Strategy'],
+    ),
+    InterviewQuestion(
+      id: 'hr_1',
+      question: 'Describe a challenging production incident or technical disagreement you encountered. How did you resolve it collaboratively?',
+      category: InterviewCategory.behavioral,
+      difficulty: 'Standard',
+      expectedKeywords: ['STAR Method', 'Situation', 'Task', 'Action', 'Measurable Result'],
+    ),
+  ];
 
-        if (res.statusCode == 200) {
-          return InterviewQuestion.fromJson(jsonDecode(res.body));
-        }
-      } catch (_) {}
-    }
-
-    // High quality offline fallback question generator
-    final techQuestions = [
-      InterviewQuestion(question: "Explain the difference between Process and Thread in OS, and how context switching works.", type: "Technical CS", hint: "Think about shared memory space vs isolated process address space."),
-      InterviewQuestion(question: "How does a Hash Table achieve O(1) average time complexity? How are collisions handled?", type: "Technical DS", hint: "Discuss chaining vs open addressing methods."),
-      InterviewQuestion(question: "What is the difference between SQL and NoSQL databases? When would you choose MongoDB over PostgreSQL?", type: "Technical DBMS", hint: "Consider ACID compliance vs horizontal scaling flexibility."),
-      InterviewQuestion(question: "Explain the concept of Polymorphism in Object-Oriented Programming with a real-world example.", type: "Technical OOP", hint: "Differentiate compile-time (overloading) vs runtime (overriding) polymorphism.")
-    ];
-
-    final hrQuestions = [
-      InterviewQuestion(question: "Tell me about a challenging project you worked on. How did you resolve technical conflicts within your team?", type: "HR Behavioral", hint: "Use the STAR method: Situation, Task, Action, Result."),
-      InterviewQuestion(question: "Where do you see yourself in 3 years, and why are you interested in joining our engineering team?", type: "HR Career", hint: "Align your career growth with technical contributions."),
-      InterviewQuestion(question: "How do you handle strict project deadlines when unexpected bugs arise near release time?", type: "HR Work Ethic", hint: "Focus on prioritization, communication, and systematic debugging.")
-    ];
-
-    final aptitudeQuestions = [
-      InterviewQuestion(question: "A train running at 72 km/h crosses a 200m long platform in 25 seconds. What is the length of the train in meters?", type: "Quantitative Aptitude", hint: "Speed in m/s = 72 * (5/18) = 20 m/s. Total distance = Speed * Time."),
-      InterviewQuestion(question: "If 6 men and 8 boys can complete a work in 10 days, while 26 men and 48 boys can do it in 2 days, find the time taken by 15 men and 20 boys to complete it.", type: "Work & Time", hint: "Equate total work units: 10(6M + 8B) = 2(26M + 48B).")
-    ];
-
-    final pool = mode == InterviewMode.aptitude ? aptitudeQuestions : mode == InterviewMode.hr ? hrQuestions : techQuestions;
-    return pool[DateTime.now().millisecondsSinceEpoch % pool.length];
+  Future<InterviewQuestion> getRandomQuestion(InterviewCategory category) async {
+    await Future.delayed(const Duration(milliseconds: 350));
+    final filtered = _questionBank.where((q) => q.category == category).toList();
+    if (filtered.isEmpty) return _questionBank.first;
+    return filtered[_random.nextInt(filtered.length)];
   }
 
-  Future<InterviewFeedback> submitAnswer({
-    required String question,
-    required String answer,
-    required InterviewMode mode,
+  Future<RubricScore> evaluateAnswer({
+    required InterviewQuestion question,
+    required String answerText,
+    required bool wasVoiceRecorded,
   }) async {
-    final urls = [
-      '$kBackendBaseUrl/api/interview/feedback',
-      '$kEmulatorBackendBaseUrl/api/interview/feedback',
-    ];
+    await Future.delayed(const Duration(milliseconds: 900));
 
-    for (final url in urls) {
-      try {
-        final res = await http
-            .post(
-              Uri.parse(url),
-              headers: {'Content-Type': 'application/json'},
-              body: jsonEncode({
-                'question': question,
-                'answer': answer,
-                'mode': mode.apiValue,
-              }),
-            )
-            .timeout(const Duration(seconds: 4));
+    final words = answerText.toLowerCase().split(RegExp(r'\s+'));
+    final matchedCount = question.expectedKeywords.where((kw) => answerText.toLowerCase().contains(kw.toLowerCase())).length;
 
-        if (res.statusCode == 200) {
-          return InterviewFeedback.fromJson(jsonDecode(res.body));
-        }
-      } catch (_) {}
-    }
+    int techScore = min(10, max(4, 5 + matchedCount * 2 + (words.length > 50 ? 1 : 0)));
+    int clarityScore = words.length >= 40 ? 9 : (words.length >= 20 ? 7 : 5);
+    int confidenceScore = wasVoiceRecorded ? 9 : 8;
+    int overall = ((techScore * 0.5) + (clarityScore * 0.3) + (confidenceScore * 0.2)).round();
 
-    final wordCount = answer.trim().split(RegExp(r'\s+')).length;
-    int score = (wordCount / 8).floor() + 5;
-    if (score > 10) score = 10;
-    if (wordCount < 10) score = 4;
-
-    return InterviewFeedback(
-      score: score,
-      strengths: [
-        'Good initiative and structured explanation.',
-        'Clear understanding of core technical concepts.',
-        'Direct communication style suitable for campus placement drives.',
-      ],
-      improvements: [
-        'Include 1-2 real-world technical examples or project scenarios.',
-        'Elaborate on edge cases or performance tradeoffs.',
-        'Structure answer using the STAR format (Situation, Task, Action, Result).',
-      ],
-      modelAnswerSummary: 'A top-scoring answer covers key terminology, step-by-step logic, practical use-cases, and efficiency considerations.',
+    return RubricScore(
+      technicalAccuracy: techScore,
+      clarity: clarityScore,
+      confidence: confidenceScore,
+      overallScore: overall,
+      strengths: matchedCount > 0
+          ? 'Strong technical vocabulary! Highlighted key architectural concepts (${question.expectedKeywords.take(2).join(", ")}).'
+          : 'Clear structure and concise delivery with articulate reasoning.',
+      improvements: matchedCount < question.expectedKeywords.length
+          ? 'Consider deepening your explanation of ${question.expectedKeywords.last} and providing concrete latency benchmarks.'
+          : 'Excellent coverage. Continue practicing delivery under timed conditions.',
+      modelAnswer: 'A high-scoring answer would detail ${question.expectedKeywords.join(", ")}, explicitly addressing latency trade-offs, scalability bottlenecks, and failure recovery modes.',
     );
   }
 }

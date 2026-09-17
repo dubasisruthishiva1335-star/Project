@@ -5,6 +5,7 @@ const cors = require("cors");
 const { Pool } = require("pg");
 
 const app = express();
+const notificationsRouter = require('./routes/notifications');
 
 app.use(cors());
 app.options("*", cors());

@@ -1,3 +1,5 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/theme/theme_provider.dart';
 import '../../widgets/study_heatmap_widget.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
@@ -5,14 +7,14 @@ import 'package:go_router/go_router.dart';
 import '../../core/colors.dart';
 import '../../core/api_client.dart';
 
-class HomeScreen extends StatefulWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends ConsumerState<HomeScreen> {
   int _navIndex = 0;
   final String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
@@ -74,6 +76,106 @@ class _HomeScreenState extends State<HomeScreen> {
     _tickerController.dispose();
     _searchController.dispose();
     super.dispose();
+  }
+
+  
+  void _showNotificationsModal() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Theme.of(context).cardColor,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 44,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFCBD5E1),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 18),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Row(
+                  children: [
+                    Icon(Icons.campaign_rounded, color: Color(0xFF06B6D4), size: 22),
+                    SizedBox(width: 8),
+                    Text(
+                      'Live Broadcasts & Alerts',
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                    ),
+                  ],
+                ),
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text('Close'),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: const Color(0xFF06B6D4).withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: const Color(0xFF06B6D4).withValues(alpha: 0.2)),
+              ),
+              child: const Row(
+                children: [
+                  Icon(Icons.mark_email_read_rounded, color: Color(0xFF06B6D4), size: 24),
+                  SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('🔔 Real-time Notifications Active', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                        SizedBox(height: 2),
+                        Text('You will receive instant alerts for new syllabus notes, PYQ uploads, exam dates, and live placement drives.', style: TextStyle(fontSize: 11, color: MyVaultColors.textSecondary)),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            ListTile(
+              leading: const Icon(Icons.school_rounded, color: Color(0xFF3B82F6)),
+              title: const Text('New Notes Published', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+              subtitle: const Text('Unit 1-5 notes uploaded across academic hubs.', style: TextStyle(fontSize: 11)),
+              trailing: const Text('Just now', style: TextStyle(fontSize: 10, color: Color(0xFF94A3B8))),
+              onTap: () {
+                Navigator.pop(ctx);
+                context.go('/academic-hub');
+              },
+            ),
+            const Divider(height: 1),
+            ListTile(
+              leading: const Icon(Icons.work_rounded, color: Color(0xFF10B981)),
+              title: const Text('Live Placement & Internship Drive', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+              subtitle: const Text('Check latest requirements and direct application links.', style: TextStyle(fontSize: 11)),
+              trailing: const Text('Today', style: TextStyle(fontSize: 10, color: Color(0xFF94A3B8))),
+              onTap: () {
+                Navigator.pop(ctx);
+                context.go('/internships');
+              },
+            ),
+            const SizedBox(height: 16),
+          ],
+        ),
+      ),
+    );
   }
 
   void _showProfileModal() {
@@ -352,7 +454,32 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                     const Spacer(),
-                    // Top Action: Profile avatar with metallic ring
+                    // 1. Theme Toggle Button (Light/OLED Dark)
+                    IconButton(
+                      icon: Icon(
+                        Theme.of(context).brightness == Brightness.dark
+                            ? Icons.wb_sunny_rounded
+                            : Icons.nightlight_round,
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.amberAccent
+                            : MyVaultColors.metalBlack,
+                        size: 20,
+                      ),
+                      tooltip: 'Toggle Dark/Light Mode',
+                      onPressed: () {
+                        ref.read(themeModeProvider.notifier).toggleTheme(context);
+                      },
+                    ),
+                    // 2. Notification Bell
+                    IconButton(
+                      icon: const Icon(Icons.notifications_none_rounded, color: MyVaultColors.metalBlack, size: 22),
+                      tooltip: 'Notifications & Alerts',
+                      onPressed: () {
+                        _showNotificationsModal();
+                      },
+                    ),
+                    const SizedBox(width: 4),
+                    // 3. Profile Avatar
                     InkWell(
                       onTap: _showProfileModal,
                       borderRadius: BorderRadius.circular(20),

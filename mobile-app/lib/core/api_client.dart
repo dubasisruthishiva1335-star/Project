@@ -1,39 +1,53 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'load_balancer.dart';
 import 'network_retry_interceptor.dart';
 
-/// Central Dio client configured for live Vercel & AWS S3 cloud production backend
-/// with automatic retry resilience and secure token injection.
+/// Central Dio client powered by the Adaptive Multi-Node Load Balancer
+/// with automatic failover, circuit breaking, and retry resilience.
 class ApiClient {
-  ApiClient._internal();
+  ApiClient._internal() {
+    LoadBalancer.instance.startHealthChecks();
+  }
   static final ApiClient instance = ApiClient._internal();
 
   static const _storage = FlutterSecureStorage();
   static const _tokenKey = 'myvault_jwt';
-  static const defaultBaseUrl = 'https://project-chi-six-62.vercel.app';
 
   late final Dio dio = _buildDio();
 
   Dio _buildDio() {
     final d = Dio(BaseOptions(
-      baseUrl: defaultBaseUrl,
-      connectTimeout: const Duration(seconds: 25),
-      receiveTimeout: const Duration(seconds: 25),
+      baseUrl: LoadBalancer.instance.getOptimalBaseUrl(),
+      connectTimeout: const Duration(seconds: 15),
+      receiveTimeout: const Duration(seconds: 15),
       headers: {
         'Accept': 'application/json',
         'Content-Type': 'application/json',
       },
     ));
 
-    // 1. JWT Header Interceptor
+    // 1. Load Balancer & JWT Header Interceptor
     d.interceptors.add(InterceptorsWrapper(
       onRequest: (options, handler) async {
-        options.baseUrl = defaultBaseUrl;
+        final optimalBase = LoadBalancer.instance.getOptimalBaseUrl();
+        options.baseUrl = optimalBase;
+
         final token = await _storage.read(key: _tokenKey);
         if (token != null && token.isNotEmpty) {
           options.headers['Authorization'] = 'Bearer $token';
         }
         handler.next(options);
+      },
+      onResponse: (response, handler) {
+        final uriStr = response.requestOptions.uri.toString();
+        LoadBalancer.instance.recordRequestSuccess(uriStr, 45);
+        handler.next(response);
+      },
+      onError: (err, handler) {
+        final uriStr = err.requestOptions.uri.toString();
+        LoadBalancer.instance.recordRequestFailure(uriStr);
+        handler.next(err);
       },
     ));
 
@@ -43,7 +57,7 @@ class ApiClient {
     return d;
   }
 
-  Future<String> getBaseUrl() async => defaultBaseUrl;
+  Future<String> getBaseUrl() async => LoadBalancer.instance.getOptimalBaseUrl();
   Future<void> setBaseUrl(String url) async {}
 
   Future<void> saveToken(String token) => _storage.write(key: _tokenKey, value: token);

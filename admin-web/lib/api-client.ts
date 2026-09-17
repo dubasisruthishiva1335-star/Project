@@ -1,3 +1,4 @@
+import { webLoadBalancer } from "./load-balancer";
 // lib/api-client.ts
 
 const API_BASE_URL =
@@ -35,11 +36,14 @@ export async function apiRequest<T>(
   }
 
   try {
-    const res = await fetch(`${API_BASE_URL}${path}`, {
+    const targetBase = webLoadBalancer.getActiveUrl();
+    const start = performance.now();
+    const res = await fetch(`${targetBase}${path}`, {
       ...options,
       headers,
     });
 
+    webLoadBalancer.reportSuccess(targetBase, Math.round(performance.now() - start));
     if (res.status === 401) {
       if (typeof window !== "undefined") {
         localStorage.removeItem("myvault_admin_token");

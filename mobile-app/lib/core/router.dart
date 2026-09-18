@@ -1,4 +1,7 @@
 import '../features/auth/firebase_auth_screen.dart';
+import '../features/auth/login_screen.dart';
+import '../features/auth/register_screen.dart';
+import '../features/auth/forgot_password_screen.dart';
 import 'package:go_router/go_router.dart';
 import '../features/home/home_screen.dart';
 import '../features/academic_hub/academic_hub_screen.dart';
@@ -32,5 +35,8 @@ final GoRouter appRouter = GoRouter(
     GoRoute(path: '/bookmarks',         builder: (context, state) => const BookmarksScreen()),
     GoRoute(path: '/quiz-arena',        builder: (context, state) => const QuizArenaScreen()),
     GoRoute(path: '/auth',              builder: (context, state) => const FirebaseAuthScreen()),
+    GoRoute(path: '/login',             builder: (context, state) => const LoginScreen()),
+    GoRoute(path: '/register',          builder: (context, state) => const RegisterScreen()),
+    GoRoute(path: '/forgot-password',   builder: (context, state) => const ForgotPasswordScreen()),
   ],
 );

@@ -249,7 +249,17 @@ class _FirebaseAuthScreenState extends State<FirebaseAuthScreen> with SingleTick
                           border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
                         ),
                       ),
-                      const SizedBox(height: 18),
+                      if (_tabController.index == 0) ...[
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: TextButton(
+                            onPressed: () => context.push('/forgot-password'),
+                            child: const Text('Forgot Password?', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                          ),
+                        ),
+                      ] else ...[
+                        const SizedBox(height: 14),
+                      ],
 
                       // Submit Button
                       SizedBox(

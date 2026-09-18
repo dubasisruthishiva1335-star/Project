@@ -22,7 +22,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   }
 
   Future<void> _redirect() async {
-    await Future.delayed(const Duration(milliseconds: 400));
+    await Future.delayed(const Duration(milliseconds: 600));
     try {
       final token = await ApiClient.instance.readToken().timeout(
             const Duration(seconds: 2),
@@ -32,11 +32,11 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
       if (token != null && token.isNotEmpty) {
         context.go('/home');
       } else {
-        context.go('/home');
+        context.go('/login');
       }
     } catch (_) {
       if (!mounted) return;
-      context.go('/home');
+      context.go('/login');
     }
   }
 

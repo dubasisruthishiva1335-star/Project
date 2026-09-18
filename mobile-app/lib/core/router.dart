@@ -1,3 +1,4 @@
+import '../features/splash/splash_screen.dart';
 import '../features/auth/firebase_auth_screen.dart';
 import '../features/auth/login_screen.dart';
 import '../features/auth/register_screen.dart';
@@ -18,27 +19,28 @@ import '../features/global_search/global_search_screen.dart';
 import '../features/bookmarks/bookmarks_screen.dart';
 import '../features/quiz_arena/quiz_arena_screen.dart';
 
-/// App router — opens directly to /home with all active feature routes wired up.
+/// App router — launches on splash and verifies auth before loading dashboard.
 final GoRouter appRouter = GoRouter(
-  initialLocation: '/home',
+  initialLocation: '/splash',
   routes: [
-    GoRoute(path: '/home',              builder: (context, state) => const HomeScreen()),
-    GoRoute(path: '/courses',           builder: (context, state) => const CoursesLearningScreen()),
+    GoRoute(path: '/splash',           builder: (context, state) => const SplashScreen()),
+    GoRoute(path: '/login',            builder: (context, state) => const LoginScreen()),
+    GoRoute(path: '/register',         builder: (context, state) => const RegisterScreen()),
+    GoRoute(path: '/forgot-password',  builder: (context, state) => const ForgotPasswordScreen()),
+    GoRoute(path: '/auth',             builder: (context, state) => const FirebaseAuthScreen()),
+    GoRoute(path: '/home',             builder: (context, state) => const HomeScreen()),
+    GoRoute(path: '/profile',          builder: (context, state) => const StudentProfileScreen()),
+    GoRoute(path: '/courses',          builder: (context, state) => const CoursesLearningScreen()),
     GoRoute(path: '/competitive-exams', builder: (context, state) => const CompetitiveExamsHubScreen()),
-    GoRoute(path: '/internships',       builder: (context, state) => const InternshipHubScreen()),
-    GoRoute(path: '/academic-hub',      builder: (context, state) => const AcademicHubScreen()),
-    GoRoute(path: '/documents-vault',   builder: (context, state) => const DocumentsVaultScreen()),
-    GoRoute(path: '/uploaded-files',    builder: (context, state) => const UploadedFilesScreen()),
-    GoRoute(path: '/ai-interview',      builder: (context, state) => const AiInterviewScreen()),
-    GoRoute(path: '/results',           builder: (context, state) => const ResultsScreen()),
-    GoRoute(path: '/offline-vault',     builder: (context, state) => const OfflineVaultScreen()),
-    GoRoute(path: '/global-search',     builder: (context, state) => const GlobalSearchScreen()),
-    GoRoute(path: '/bookmarks',         builder: (context, state) => const BookmarksScreen()),
-    GoRoute(path: '/quiz-arena',        builder: (context, state) => const QuizArenaScreen()),
-    GoRoute(path: '/auth',              builder: (context, state) => const FirebaseAuthScreen()),
-    GoRoute(path: '/login',             builder: (context, state) => const LoginScreen()),
-    GoRoute(path: '/register',          builder: (context, state) => const RegisterScreen()),
-    GoRoute(path: '/forgot-password',   builder: (context, state) => const ForgotPasswordScreen()),
-    GoRoute(path: '/profile',           builder: (context, state) => const StudentProfileScreen()),
+    GoRoute(path: '/internships',      builder: (context, state) => const InternshipHubScreen()),
+    GoRoute(path: '/academic-hub',     builder: (context, state) => const AcademicHubScreen()),
+    GoRoute(path: '/documents-vault',  builder: (context, state) => const DocumentsVaultScreen()),
+    GoRoute(path: '/uploaded-files',   builder: (context, state) => const UploadedFilesScreen()),
+    GoRoute(path: '/ai-interview',     builder: (context, state) => const AiInterviewScreen()),
+    GoRoute(path: '/results',          builder: (context, state) => const ResultsScreen()),
+    GoRoute(path: '/offline-vault',    builder: (context, state) => const OfflineVaultScreen()),
+    GoRoute(path: '/global-search',    builder: (context, state) => const GlobalSearchScreen()),
+    GoRoute(path: '/bookmarks',        builder: (context, state) => const BookmarksScreen()),
+    GoRoute(path: '/quiz-arena',       builder: (context, state) => const QuizArenaScreen()),
   ],
 );

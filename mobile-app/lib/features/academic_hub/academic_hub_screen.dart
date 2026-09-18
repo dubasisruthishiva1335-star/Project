@@ -50,7 +50,13 @@ class _AcademicHubScreenState extends State<AcademicHubScreen> {
     final Map<String, Map<String, dynamic>> subjectMap = {};
 
     try {
-      final res = await ApiClient.instance.dio.get('https://project-chi-six-62.vercel.app/api/notes');
+      final res = await ApiClient.instance.dio.get(
+        'https://project-chi-six-62.vercel.app/api/notes',
+        queryParameters: {
+          'branch': _branch,
+          'semester': _semester,
+        },
+      );
       final dynamic data = res.data;
       List<dynamic> notesList = [];
       if (data is List) {
@@ -60,11 +66,37 @@ class _AcademicHubScreenState extends State<AcademicHubScreen> {
       for (final raw in notesList) {
         if (raw is Map) {
           final note = Map<String, dynamic>.from(raw);
-          final noteBranch = (note['branch'] ?? 'ECE').toString().toUpperCase();
-          final noteSem = int.tryParse(note['semester']?.toString() ?? '1') ?? 1;
+          
+          // Parse semester cleanly from any format (int, "3", "Sem 3", "Semester 3")
+          int? noteSem;
+          final rawSem = note['semester'];
+          if (rawSem is int) {
+            noteSem = rawSem;
+          } else if (rawSem != null) {
+            final match = RegExp(r'\d+').firstMatch(rawSem.toString());
+            if (match != null) {
+              noteSem = int.tryParse(match.group(0)!);
+            }
+          }
 
-          if (noteBranch == _branch.toUpperCase() && noteSem == _semester) {
-            final subName = (note['subject'] ?? 'Engineering Study Material').toString();
+          // Parse branch
+          final noteBranch = (note['branch'] ?? '').toString().toUpperCase().trim();
+          final currentBranch = _branch.toUpperCase().trim();
+
+          // STRICT SEMESTER ISOLATION: Note semester must strictly match current selected semester
+          final bool isExactSem = (noteSem == _semester);
+
+          // Branch matching: Exact match or GENERAL
+          final bool isMatchingBranch = (noteBranch == currentBranch) ||
+              (noteBranch == 'GENERAL' && (currentBranch == 'GENERAL' || _semester <= 2)) ||
+              (noteBranch.isEmpty && currentBranch == 'GENERAL');
+
+          if (isExactSem && isMatchingBranch) {
+            final String titleStr = (note['title'] ?? '').toString();
+            final String defaultSubName = titleStr.contains('—') ? titleStr.split('—').first.trim() : (titleStr.isNotEmpty ? titleStr : 'Engineering Study Material');
+            final String subName = (note['subject'] != null && note['subject'].toString().trim().isNotEmpty)
+                ? note['subject'].toString().trim()
+                : defaultSubName;
             final codeKey = subName.replaceAll(RegExp(r'[^A-Za-z0-9]'), '').toUpperCase();
             final targetKey = codeKey.length > 5 ? codeKey.substring(0, 5) : (codeKey.isEmpty ? 'SUB101' : codeKey);
 

@@ -12,6 +12,7 @@ const notesConfig: UploadFormConfig = {
       label: "Branch",
       type: "select",
       required: true,
+      defaultValue: "ECE",
       options: [
         { value: "ECE", label: "ECE" },
         { value: "CSE", label: "CSE" },
@@ -27,6 +28,7 @@ const notesConfig: UploadFormConfig = {
       label: "Semester",
       type: "select",
       required: true,
+      defaultValue: "1",
       options: [
         { value: "1", label: "Sem 1 (1st Year)" },
         { value: "2", label: "Sem 2 (1st Year)" },
@@ -43,6 +45,7 @@ const notesConfig: UploadFormConfig = {
       label: "Unit Number",
       type: "select",
       required: true,
+      defaultValue: "1",
       options: [
         { value: "1", label: "Unit 1" },
         { value: "2", label: "Unit 2" },
@@ -56,6 +59,7 @@ const notesConfig: UploadFormConfig = {
       label: "Material Category",
       type: "select",
       required: true,
+      defaultValue: "NOTES",
       options: [
         { value: "NOTES", label: "📄 Lecture Notes" },
         { value: "VIDEO_LECTURE", label: "🎬 Video Lecture" },

@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/colors.dart';
 import '../../core/api_client.dart';
+import '../../services/auth_service.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -23,12 +24,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   final ScrollController _tickerController = ScrollController();
   Timer? _tickerTimer;
 
-  // Student Profile Data
-  final String _userName = 'Abhimanu S.';
-  final String _branch = 'ECE';
-  final int _semester = 1;
-  final String _college = 'College of Engineering & Tech';
-  final String _rollNo = '2026-ECE-1042';
+  // Dynamic Student Profile Data from AuthService
+  String get _userName => AuthService.instance.currentStudent.fullName;
+  String get _branch => AuthService.instance.currentStudent.branch;
+  int get _semester => AuthService.instance.currentStudent.semester;
+  String get _college => AuthService.instance.currentStudent.college;
+  String get _rollNo => AuthService.instance.currentStudent.usn;
 
   @override
   void initState() {
@@ -266,6 +267,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             _profileInfoTile(Icons.security_rounded, 'Vault Security', 'End-to-End Encrypted'),
             _profileInfoTile(Icons.verified_user_rounded, 'Firebase Auth', 'Linked (myvault-9d7f3)'),
             const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              height: 44,
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.pop(ctx);
+                  context.push('/profile');
+                },
+                icon: const Icon(Icons.badge_outlined, size: 18, color: Colors.black),
+                label: const Text('Open Digital Student ID & Profile', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.black)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF00F2FE),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
             SizedBox(
               width: double.infinity,
               height: 42,

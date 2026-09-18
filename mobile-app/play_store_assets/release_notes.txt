@@ -1,0 +1,9 @@
+<en-US>
+What's new in MyVault v1.0.1:
+• 🔐 Firebase Studio Auth Suite: 1-Tap Google Sign-In, Email registration & instant password recovery.
+• 📚 Strict Semester & Branch Isolation: Study materials and notes filtered accurately by selected semester and engineering discipline.
+• ✏️ In-App PDF Annotation Toolbar: Highlighting, freehand pen tool, eraser, and bookmarking.
+• 🏆 Timed Quiz Arena & Live Leaderboards: Test your skills in GATE, placement aptitude, and core engineering subjects.
+• 🎓 Digital Student ID Badge: Access and edit your scholar credentials with real-time sync.
+• ⚖️ High Availability Load Balancer: Zero-downtime failover across distributed cloud endpoints.
+</en-US>

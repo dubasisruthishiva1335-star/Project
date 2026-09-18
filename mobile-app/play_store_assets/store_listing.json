@@ -1,0 +1,22 @@
+{
+  "app_name": "MyVault — Engineering Academics & Placement Vault",
+  "short_description": "Curated notes, question banks, offline PDF viewer, quizzes & internship prep.",
+  "full_description": "MyVault is the premier all-in-one digital academic companion and career accelerator built specifically for Engineering & Technology students.\n\n📚 STRICT SEMESTER & BRANCH ISOLATION\nAccess verified lecture notes, question banks, previous years' university exam papers, lab manuals, and syllabus copies filtered strictly by your branch (CSE, ECE, AI/ML, EEE, MECH, CIVIL) and semester (Sem 1 to 8). Zero noise, zero cross-contamination.\n\n✏️ IN-APP PDF VIEWER WITH LIVE ANNOTATIONS\nRead academic materials with high-speed rendering, freehand pen tool, highlighter, bookmarking, and local encrypted offline caching for study on the go.\n\n🏆 REAL-TIME QUIZ & LEADERBOARD ARENA\nTest your knowledge with timed competitive quizzes tailored for GATE, coding assessments, placement aptitude, and core subject exams with live rankings.\n\n🔐 SECURE FIREBASE STUDENT AUTHENTICATION\nSign in with 1-tap Google Sign-In or your student college credentials. Manage your Digital Student ID Badge with end-to-end data encryption.\n\n💼 INTERNSHIPS & PLACEMENT BOOTCAMP\nExplore verified engineering internships, technical mock interview simulations, and verified certificate generation.\n\n⚡ HIGH AVAILABILITY & CLOUD RESILIENCE\nPowered by AWS S3 permanent multi-region storage and multi-node load balancing with automatic circuit breaker failover.",
+  "category": "EDUCATION",
+  "content_rating": "Everyone",
+  "developer_contact": {
+    "website": "https://project-chi-six-62.vercel.app",
+    "email": "support@myvault.edu",
+    "privacy_policy_url": "https://project-chi-six-62.vercel.app/privacy-policy"
+  },
+  "tags": [
+    "Education",
+    "Engineering",
+    "University Notes",
+    "GATE Preparation",
+    "Placement Quiz",
+    "PDF Annotator",
+    "Student Vault"
+  ],
+  "default_language": "en-US"
+}
